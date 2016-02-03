@@ -1,0 +1,29 @@
+// mixins
+
+button-color(color)
+	text-shadow shadow-outset lighten(color, 75%)
+	border-color lighten(color, 50%)
+	background lighten(color, 75%)
+	transition background trans-speed trans-ease, border-color trans-speed trans-ease
+
+	&:hover
+	&:focus
+		border-color lighten(color, 25%)
+		background lighten(color, 50%)
+
+	&:active
+		border-color lighten(color, 0%)
+		background lighten(color, 25%)
+
+button-link-color(color)
+	transition unquote('color') trans-speed trans-ease
+	link-color color
+	text-shadow none
+	outline none
+	outline-offset 0
+	padding 0
+	margin 0
+	display inline
+	border inherit
+	background inherit
+	font inherit

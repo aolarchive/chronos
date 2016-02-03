@@ -1,0 +1,98 @@
+// styles
+
+.runs-list
+  position absolute
+  top 0
+  left 0
+  bottom 0
+  right 0
+  overflow hidden
+  background-color white
+  user-select none
+
+//
+
+.runs-list-nav-links
+  position absolute
+  top 0
+  left 0
+  right 0
+  height 2.5
+  display flex
+  background-color white
+  font-weight bold
+
+.runs-list-nav-link
+  flex 1
+  border-bottom 1px solid fieldedge
+  transition border trans-anim
+  line-height 2.5
+  text-align center
+  text-transform uppercase
+  cursor pointer
+
+  &.active
+    border-bottom 5px solid selected
+
+  &:hover
+    border-bottom 5px solid selectedbg
+
+//
+
+.runs-list-items
+  position absolute
+  top base-calc(2.5)
+  left 0
+  right 0
+  bottom 0
+  overflow-x hidden
+  overflow-y scroll
+
+  &::-webkit-scrollbar
+    width 0 !important
+
+.runs-list-item
+  hoverblock()
+  transition background trans-anim
+  padding f2
+
+.runs-list-item-header
+  margin-bottom f2
+  display flex
+
+  .runs-list-item-time
+    text-align right
+
+.runs-list-item-name
+  font-weight bold
+  flex 0 1 75%
+
+  .error &
+    color red
+
+.runs-list-item-footer
+  margin-top f2
+  display flex
+
+.runs-list-item-actions
+  flex 1 1 50%
+  text-align right
+
+.runs-list-item-action
+  cursor pointer
+  text-transform uppercase
+  opacity 0
+  color selected
+  transition color trans-anim
+  margin-left f2
+
+  &:hover
+    color lighten(selected, 50%)
+
+  .runs-list-item:hover &
+    opacity 1
+
+.runs-list-item-time
+  flex 1 1 25%
+  text-transform uppercase
+  color fieldedge

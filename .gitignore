@@ -1,0 +1,12 @@
+*.iml
+.idea
+ui/node_modules
+ui/coverage
+ui/deploy
+ui/*.log
+*.swp
+chronos-web/src/main/resources/site
+ui/public
+!ui/public/ico
+!ui/public/index.html
+.env

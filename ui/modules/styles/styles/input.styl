@@ -1,0 +1,105 @@
+// styles
+
+textarea
+  resize vertical
+  height auto
+  overflow-x hidden
+  overflow-y auto
+  min-height 6
+
+select[multiple]
+select[size]
+  min-height 6
+  height auto
+
+input
+select
+  line-height 1
+
+input
+textarea
+select
+  color black
+  font-family body-family
+  box-sizing border-box
+  border-padding-height f4 1px
+  padding-width f3
+  border-radius b8
+  width 100%
+  border 1px solid gray
+  margin-bottom f2
+  transition border, outline, color, background-color, padding, margin, box-shadow trans-speed trans-ease
+  box-shadow shadow-inset
+  placeholder(color: gray)
+
+  &:focus
+    input-shadow blue
+
+  &.valid
+    input-shadow green
+
+  &:invalid
+  &.invalid
+    input-shadow red
+
+  &.mini
+    border-padding-bottom f12 1px
+    font-line f90 f34
+    padding-width f8
+
+  &.half
+    width 50%
+
+  &.third
+    width 100% / 3
+
+  &.quarter
+    width 25%
+
+select
+  appearance none
+  padding-height b6
+  text-indent 0.01px
+  text-overflow ''
+
+input
+  &[type="search"]
+    border-radius b1*4
+    padding-width f2
+    box-sizing border-box
+
+  &[type="file"]
+    display block
+    background-color white
+    border-padding-top f4 2px
+
+  &[type="date"]
+    border-padding-height f4 2px
+
+  &[type="radio"]
+  &[type="checkbox"]
+    margin f6 0 0
+    line-height inherit
+    width auto
+    display inline-block
+    box-shadow none
+
+    &:focus
+      box-shadow shadow-outset blue
+      outline 0
+
+input
+select
+textarea
+option
+fieldset
+  &:disabled
+    border-color pale
+    color pale
+    cursor default
+
+th
+td
+  input
+  select
+    margin-bottom 0

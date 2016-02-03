@@ -1,0 +1,59 @@
+// styles
+
+dl
+  > dt
+    font-style normal
+    font-weight bold
+
+  > dd
+    margin-bottom 0
+
+  &.flat
+    clearfix()
+
+    > dt
+      width 33%
+      text-align right
+      float left
+      padding-right f1
+      clear both
+
+    > dd
+      width 67%
+      float right
+      margin-left 0
+
+  &.comma
+    clearfix()
+
+    > dt
+      display inline-block
+      float left
+      clear left
+      margin-right f8
+      text-transform capitalize
+
+      &:after
+        content ":"
+
+      & + dd
+        &:before
+          content none
+
+    > dd
+      margin-left 0
+      display inline-block
+      float left
+
+      &:before
+        content ', '
+
+  &.inline-block
+    display inline-block
+    margin-bottom 0
+    padding-left 0
+
+  &.inline
+    display inline
+    margin-bottom 0
+    padding-left 0

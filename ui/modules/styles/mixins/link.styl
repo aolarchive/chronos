@@ -1,0 +1,15 @@
+// mixins
+
+link-color(color)
+  text-decoration none
+  cursor pointer
+
+  &:link, &.link,
+  &:visited, &.visited
+    color color
+
+  &:hover, &.hover
+    color mix(color, white, 50%)
+
+  &:active, &.active
+    color mix(color, white, 25%)

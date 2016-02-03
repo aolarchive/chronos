@@ -1,0 +1,80 @@
+// styles
+
+input
+textarea
+select
+  color black
+  border 1px solid fieldedge
+  placeholder fieldedge
+
+  &:focus
+    input-shadow selected
+
+  &:invalid
+    input-shadow error
+    background-color errorbg
+
+input
+  &[type="file"]
+    background-color white
+
+  &[type="radio"]
+  &[type="checkbox"]
+    &:focus
+      box-shadow shadow-outset selected
+      border-color selected
+
+select
+  background-color white
+  padding-height 5px
+  cursor pointer
+
+.select-overlay
+  position relative
+
+  &:before
+  &:after
+    content ''
+    size 0
+    position absolute
+    border-width b4
+    border-style solid
+    border-color transparent
+    right 12px
+
+  &:before
+    border-top-color fieldedge
+    top 20px
+
+  &:after
+    border-bottom-color fieldedge
+    top 4px
+
+input
+select
+textarea
+option
+fieldset
+  &:disabled
+    border-color fieldedge
+    background-color sitemainbg
+
+.input-affix-group
+  .input-prefix + input
+    border-top-left-radius 0
+    border-bottom-left-radius 0
+    display inline-block
+    width "calc(100% - %s)" % 25%
+    border-left-width 0
+
+.input-prefix
+  border-radius b3 0 0 b3
+  display inline-block
+  width 25%
+  text-align right
+  color white
+  background-color siteheadbg
+  padding-right b3
+  line-height 1.5
+  position relative
+  top -1px

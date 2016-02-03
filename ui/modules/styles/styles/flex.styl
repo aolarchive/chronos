@@ -1,0 +1,40 @@
+// styles
+
+.flex-grid
+.flex-grid-fluid
+.flex-grid-fixed
+  display flex
+  flex-flow row wrap
+  justify-content center
+  margin 0 auto
+
+.flex-soft
+.flex-hard
+[class*="flex-soft-"]
+[class*="flex-hard-"]
+  padding-left (flex-gutter/2)
+  padding-right (flex-gutter/2)
+  clearfix()
+
+  .flex-grid-tight &
+    padding 0
+
+.flex-item-fullpad
+  padding (flex-gutter/2)
+
+// media
+
+@media screen and (min-width: (flex-cell-width)) and (max-width: (flex-mobile-width - 1))
+  flex-grid(cell, flex-cell-columns, flex-cell-width, flex-fluid, flex-gutter)
+
+@media screen and (min-width: flex-mobile-width) and (max-width: (flex-tablet-width - 1))
+  flex-grid(mobile, flex-mobile-columns, flex-mobile-width, flex-fluid, flex-gutter)
+
+@media screen and (min-width: flex-tablet-width) and (max-width: (flex-laptop-width - 1))
+  flex-grid(tablet, flex-tablet-columns, flex-tablet-width, flex-fluid, flex-gutter)
+
+@media screen and (min-width: flex-laptop-width) and (max-width: (flex-desktop-width - 1))
+  flex-grid(laptop, flex-laptop-columns, flex-laptop-width, flex-fluid, flex-gutter)
+
+@media screen and (min-width: flex-desktop-width)
+  flex-grid(desktop, flex-desktop-columns, flex-desktop-width, 0, flex-gutter)

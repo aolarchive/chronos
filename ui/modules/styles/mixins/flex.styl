@@ -1,0 +1,41 @@
+// mixins
+
+flex-grid(keyword, key-columns, key-fixed, key-fluid, key-gutter)
+  flex-grids(keyword, key-columns, key-fixed, key-fluid, key-gutter)
+  flex-items(keyword, key-columns, key-fixed, key-fluid, key-gutter)
+
+// flex container
+
+flex-grids(keyword, key-columns, key-fixed, key-fluid, key-gutter)
+  .flex-grid
+  .flex-grid-fluid
+    max-width key-fixed + key-fluid
+    width 100%
+
+  .flex-grid-fixed
+    max-width key-fixed + key-fluid
+    width key-fixed
+
+// flex items
+
+flex-items(keyword, key-columns, key-fixed, key-fluid, key-gutter)
+  .flex-soft
+  .flex-soft-{keyword}
+    flex key-columns
+
+  .flex-hard
+  .flex-hard-{keyword}
+    flex 100%
+
+  for col in (1..key-columns)
+    .flex-soft-{keyword}-{col}
+      flex col
+
+    .flex-hard-{keyword}-{col}
+      flex (100%/key-columns) * col
+
+    .flex-push-{keyword}-{col}
+      order col
+
+    .flex-pull-{keyword}-{col}
+      order col*-1

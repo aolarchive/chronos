@@ -1,0 +1,140 @@
+// vars
+
+red = hsl(0, 50%, 50%)
+orange = hsl(30, 50%, 50%)
+yellow = hsl(60, 50%, 50%)
+green = hsl(120, 40%, 50%)
+blue = hsl(210, 50%, 50%)
+purple = hsl(300, 50%, 50%)
+
+pitch = #000
+black = #333
+dark = #666
+gray = #999
+pale = #ccc
+white = #fff
+
+// typo
+
+body-family = 'Open Sans', Arial, Helvetica, sans-serif
+heading-family = 'Open Sans', Arial, Helvetica, sans-serif
+mono-family = 'Lucida Console', monospace
+
+// base
+
+basesize ?= 24px
+basefont ?= 16px
+
+// don't touch!
+
+f1 = 1
+f2 = 1 / 2
+f3 = 1 / 3
+f4 = 1 / 4
+f6 = 1 / 6
+f8 = 1 / 8
+f12 = 1 / 12
+f24 = 1 / 24
+
+f23 = 2 / 3
+f34 = 3 / 4
+f90 = 9 / 10
+
+// don't touch!
+
+-f1 = f1 * -1
+-f2 = f2 * -1
+-f3 = f3 * -1
+-f4 = f4 * -1
+-f6 = f6 * -1
+-f8 = f8 * -1
+-f12 = f12 * -1
+-f24 = f24 * -1
+
+-f23 = f23 * -1
+-f34 = f34 * -1
+-f90 = f90 * -1
+
+// don't touch!
+
+b1 = round(basesize * f1)
+b2 = round(basesize * f2)
+b3 = round(basesize * f3)
+b4 = round(basesize * f4)
+b6 = round(basesize * f6)
+b8 = round(basesize * f8)
+b12 = round(basesize * f12)
+b24 = round(basesize * f24)
+
+b23 = round(basesize * f23)
+b34 = round(basesize * f34)
+b90 = round(basesize * f90)
+
+// don't touch!
+
+-b1 = round(b1 * -1)
+-b2 = round(b2 * -1)
+-b3 = round(b3 * -1)
+-b4 = round(b4 * -1)
+-b6 = round(b6 * -1)
+-b8 = round(b8 * -1)
+-b12 = round(b12 * -1)
+-b24 = round(b24 * -1)
+
+-b23 = round(b23 * -1)
+-b34 = round(b34 * -1)
+-b90 = round(b90 * -1)
+
+// grid
+
+grid-column = basefont * 3.5
+grid-gutter = basefont * 1.5
+
+grid-desktop-spread = 15
+grid-desktop-width = basefont * 76
+
+grid-laptop-spread = 12
+grid-laptop-width = basefont * 61
+
+grid-tablet-spread = 9
+grid-tablet-width = basefont * 46
+
+grid-mobile-spread = 6
+grid-mobile-width = basefont * 32
+
+grid-cell-spread = 1
+grid-cell-width = basefont * 0
+
+// flex
+
+flex-gutter = basesize
+flex-fluid = basefont * 16
+
+flex-desktop-columns = 16
+flex-desktop-width = basefont * 80
+
+flex-laptop-columns = 12
+flex-laptop-width = basefont * 64
+
+flex-tablet-columns = 8
+flex-tablet-width = basefont * 48
+
+flex-mobile-columns = 4
+flex-mobile-width = basefont * 32
+
+flex-cell-columns = 1
+flex-cell-width = basefont * 16
+
+// effects
+
+trans-speed = .15s
+trans-ease = linear
+trans-anim = trans-speed trans-ease
+
+default-transition = all trans-speed trans-ease
+default-box-shadow = 0 0 2px gray
+
+// input
+
+shadow-inset = inset 0 1px 1px pale
+shadow-outset = 0 0 b8

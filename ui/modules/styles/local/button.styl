@@ -1,0 +1,95 @@
+// mixins
+
+button-color-local(c)
+	color white
+	background-color c
+	margin 0
+	padding-height f4
+
+	&:before
+		content none
+
+	&:hover
+		background-color darken(c, 50%)
+// styles
+
+button
+.button
+	display inline-block
+	padding-height b6
+	padding-width f1
+	border-radius b8
+	font-size 1
+	line-height 1
+	border-width 0
+	position relative
+	margin b12
+	transition color trans-anim, background trans-anim
+	color fieldedge
+	background-color sitemainbg
+
+	&:before
+		content ''
+		display block
+		position absolute
+		border-radius b6
+		float left
+		top -b12
+		bottom -b12
+		left -b12
+		right -b12
+		z-index -1
+		background-color fieldedge
+		transition background trans-anim
+
+	&:hover
+		text-decoration none
+		color selected
+		background-color sitemainbg
+
+		&:before
+			background-color selected
+
+	&.primary
+		button-color-local(selected)
+
+	&:disabled
+		disabled-background = linear-gradient(to top, mix(gray, white, 75%), mix(gray, white, 50%))
+		cursor default
+		text-shadow shadow-outset lighten(gray, 75%)
+		border-color lighten(gray, 50%)
+		background disabled-background
+
+		&:hover
+			background disabled-background
+
+		&:active
+			background disabled-background
+
+	&.mini
+		font-size f34
+		line-height f2
+		padding-top f6
+		border-padding-bottom f6 1px
+		padding-width f6
+
+	.button-group &
+		margin-right b6
+
+	input&
+		width auto
+		box-shadow none
+
+// link button
+
+a.button
+	&:link, &.link,
+	&:visited, &.visited,
+	&:hover, &.hover,
+	&:active, &.active
+		color black !important
+
+// button link
+
+button.link
+	button-link-color blue

@@ -1,0 +1,100 @@
+// styles
+
+.site-loader
+  position fixed
+  top site-header-height
+  left 0
+  right 0
+  bottom 0
+  opacity 0
+  pointer-events none
+  transition opacity trans-anim
+  background-color sitemainbg
+  z-index 1500
+  user-select none
+
+  &.active
+    opacity 1
+    pointer-events auto
+
+.loader
+  position absolute
+  left "calc(50% - %s)" % 20px
+  top "calc(50% - %s)" % 16px
+  width 40px
+  height 32px
+  display block
+  font-size 0
+  color textinvbg
+  box-sizing border-box
+
+  &.small
+    width 20px
+    height 16px
+    left "calc(50% - %s)" % 10px
+    top "calc(50% - %s)" % 8px
+
+    .loader-bar
+      width 2px
+      height 16px
+      margin 0 1px
+
+  &.large
+    width 80px
+    height 64px
+    left "calc(50% - %s)" % 40px
+    top "calc(50% - %s)" % 32px
+
+    .loader-bar
+      width 8px
+      height 64px
+      margin 0 4px
+
+  &.jumbo
+    width 120px
+    height 96px
+    left "calc(50% - %s)" % 60px
+    top "calc(50% - %s)" % 48px
+
+    .loader-bar
+      width 12px
+      height 96px
+      margin 0 6px
+
+.loader-bar
+  position relative
+  box-sizing border-box
+  display inline-block
+  float none
+  background-color currentColor
+  border 0 solid currentColor
+  width 4px
+  height 32px
+  margin 0 2px
+  border-radius 100px
+  animation line-scale 1.2s infinite ease
+
+  &:nth-child(1)
+    animation-delay -1.2s
+
+  &:nth-child(2)
+    animation-delay -1.1s
+
+  &:nth-child(3)
+    animation-delay -1s
+
+  &:nth-child(4)
+    animation-delay -.9s
+
+  &:nth-child(5)
+    animation-delay -.8s
+
+//
+
+@keyframes line-scale
+  0%
+  40%
+  100%
+    transform scaleY(.4)
+  20%
+    transform scaleY(1)

@@ -1,0 +1,57 @@
+// media
+
+@media screen
+  .show-print
+    hide()
+
+@media print
+  .hide-print
+    hide()
+
+  @page
+    margin 1in 1.5in
+
+  *
+    text-shadow none !important
+    color pitch !important
+    background transparent !important
+    box-shadow none !important
+
+  a
+  a:visited
+    text-decoration underline
+
+  a[href]:after
+    content " (" attr(href) ")"
+
+  a[href^="javascript:"]:after
+  a[href^="#"]:after
+  a[href^=""]:after
+    content ""
+
+  abbr[title]:after
+    content " (" attr(title) ")"
+
+  pre
+  blockquote
+    page-break-inside avoid
+
+  thead
+    display table-header-group
+
+  tr
+  img
+    page-break-inside avoid
+
+  img
+    max-width 100% !important
+
+  p, h1, h2, h3, h4, h5, h6
+    orphans 3
+    widows 3
+
+  h1, h2, h3, h4, h5, h6
+    page-break-after avoid
+
+  figure
+    display none

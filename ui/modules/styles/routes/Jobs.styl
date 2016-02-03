@@ -1,0 +1,130 @@
+// styles
+
+.jobs-filter
+  margin-bottom 0
+
+// table
+
+.jobs-list
+  margin-bottom 0
+  min-height "calc(100% - %s)" % base-calc(2.5)
+  min-width 100%
+  position relative
+  display block
+
+  th
+  td
+    height 1.5
+    padding-top 10px
+    display inline-block
+
+  thead
+  tbody
+  tr
+    width 100%
+    display block
+
+.jobs-list-head
+  tr
+    display flex
+
+  th
+    cursor pointer
+
+.jobs-list-body
+  display block
+  overflow-y scroll
+  overflow-x hidden
+  position absolute
+  top base-calc(1.5)
+  left 0
+  right 0
+  bottom 0
+  border-width 1px 1px 0
+  -ms-overflow-style none
+
+  &::-webkit-scrollbar
+    width 0 !important
+
+  tr
+    hoverblock()
+    width 100%
+    display flex
+
+    *
+      cursor pointer
+
+    &:nth-child(even)
+      background-color zebrarow
+
+  td
+    display inline-block
+
+// columns
+
+.jobs-list-name
+  min-width 200px
+  width "calc(100% - %s)" % 400px
+  flex 0 1 100%
+  overflow hidden
+  white-space nowrap
+
+.jobs-list-next
+  width 200px
+  min-width 200px
+  flex 0 0 200px
+
+.jobs-list-icon
+.jobs-list-type
+  width 29px
+  flex 0 0 29px
+
+  &.sorted
+    &:after
+      margin-left 5px
+
+    div
+      display none
+
+.jobs-list-icon
+  &.sorted
+    &:after
+      margin-left 5px
+      
+.jobs-list-type
+  &.sorted
+    &:after
+      margin-left 3px
+
+// icons
+
+.jobs-list-enabled
+  width 9px
+  height 9px
+  margin-top 3px
+  margin-left 6px
+  display inline-block
+  background-color selected
+  border-radius 100px
+
+.sorted
+  &:after
+    content ''
+    display inline-block
+    position relative
+    width 0
+    height 0
+    border-style solid
+    border-width 5px
+    border-color transparent
+    margin-left 4px
+
+  &.sortedAsc
+    &:after
+      border-bottom-color white
+      top -3px
+
+  &.sortedDesc
+    &:after
+      border-top-color white
+      top 3px

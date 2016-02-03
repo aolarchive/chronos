@@ -1,0 +1,65 @@
+// styles
+
+.site-modal
+  position fixed
+  top 0
+  left 0
+  right 0
+  bottom 0
+  display flex
+  flex-direction row
+  flex-wrap nowrap
+  justify-content center
+  align-content space-around
+  align-items center
+  pointer-events none
+  z-index 10000
+
+  &.active
+    pointer-events auto
+
+.site-modal-background
+  position absolute
+  top 0
+  left 0
+  right 0
+  bottom 0
+  background-color siteheadbg
+  opacity 0
+  transition opacity trans-anim
+
+  .active &
+    opacity .85
+
+.site-modal-float
+  flex 1 1 auto
+  align-self center
+  position relative
+  min-width 14
+  max-width 21
+  max-height "calc(100% - %s)" % base-calc(4)
+  opacity 0
+  transition opacity trans-anim
+  z-index 1
+
+  .active &
+    opacity 1
+
+.site-modal-item
+  overflow hidden
+  background-color white
+  max-height "calc(100% - %s)" % base-calc(4)
+  border-radius b8
+
+.site-modal-head
+  line-height 3
+  font-weight bold
+  text-transform uppercase
+  padding-width 1
+  text-align center
+
+.site-modal-body
+  overflow-x hidden
+  overflow-y scroll
+  max-height "calc(100% - %s)" % base-calc(8)
+  padding 0 1 1 1

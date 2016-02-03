@@ -1,0 +1,9 @@
+{
+	"ignore": ["node_modules/**/*.js"],
+	"presets": ["es2015-loose", "react", "stage-0"],
+	"plugins": [
+		["transform-runtime", {"loose": true}],
+		["transform-decorators-legacy", {"loose": true}],
+		["typecheck", {"disable": {"production": true}}]
+	]
+}
