@@ -13,9 +13,8 @@
     </modules>
     <scm>
         <url>https://github.com/aol/chronos</url>
-        <connection>https://github.com/aol/chronos</connection>
+        <connection>scm:git:git@github.com:aol/chronos.git</connection>
         <developerConnection>scm:git:git@github.com:aol/chronos.git</developerConnection>
-        <tag>HEAD</tag>
     </scm>
 	<build>
 		<pluginManagement>
