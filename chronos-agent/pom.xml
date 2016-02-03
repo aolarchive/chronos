@@ -3,7 +3,7 @@
     <parent>
         <groupId>com.huffingtonpost</groupId>
         <artifactId>chronos-parent</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
+        <version>1.0.1-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>chronos-agent</artifactId>
@@ -12,6 +12,7 @@
         <url>https://github.com/aol/chronos</url>
         <connection>scm:git:git@github.com:aol/chronos.git</connection>
         <developerConnection>scm:git:git@github.com:aol/chronos.git</developerConnection>
+        <tag>HEAD</tag>
     </scm>
     <repositories>
         <repository>
