@@ -60,8 +60,9 @@ _chronos_ uses a Java-based [spring config][sc].
 [sc]: chronos-web/src/main/java/com/huffingtonpost/chronos/servlet/TestConfig.java
 
 ## Test
+[![Build Status](https://travis-ci.org/aol/chronos.svg?branch=master)](https://travis-ci.org/aol/chronos)
 
-   mvn clean test
+    mvn clean test
 
 
 ### Run locally
