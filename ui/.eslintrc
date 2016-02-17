@@ -1,5 +1,4 @@
 {
-  "parser": "babel-eslint",
 
   "rules": {
     "comma-dangle": [1, "always-multiline"],
@@ -45,7 +44,7 @@
     "no-caller": 1,
     "no-div-regex": 1,
     "no-else-return": 1,
-    "no-empty-label": 1,
+    "no-labels": 1,
     "no-eq-null": 0,
     "no-eval": 1,
     "no-extend-native": 1,
@@ -54,7 +53,6 @@
     "no-floating-decimal": 1,
     "no-implied-eval": 1,
     "no-iterator": 1,
-    "no-labels": 1,
     "no-lone-blocks": 1,
     "no-loop-func": 1,
     "no-multi-spaces": 1,
@@ -94,7 +92,7 @@
     "no-undef": 1,
     "no-undefined": 1,
     "no-unused-vars": [1, { "vars": "local", "args": "after-used" }],
-    "no-use-before-define": 0,
+    "no-use-before-define": 1,
     "no-empty-pattern": 1,
 
     "handle-callback-err": 1,

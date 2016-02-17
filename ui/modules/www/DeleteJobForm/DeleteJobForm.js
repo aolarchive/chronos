@@ -9,7 +9,7 @@ import {deleteModal} from '../ModalStore/ModalStore';
 @reduxForm({
   form: 'deleteJob',
   fields: ['job'],
-  validate: function validateDeleteJobForm() {
+  validate() {
     return {};
   },
 })
@@ -46,7 +46,7 @@ export default class DeleteJobForm extends Component {
     const {handleSubmit} = this.props;
 
     return (
-      <form id="form-deletejob" className="form-deletejob" onSubmit={handleSubmit}>
+      <form className="form-deletejob" onSubmit={handleSubmit}>
         <p>Are you sure you want to delete job <strong>{this.props.job.name}</strong>?</p>
 
         <div className="deletejob-button-group">
