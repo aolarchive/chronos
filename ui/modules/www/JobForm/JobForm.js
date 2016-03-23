@@ -64,6 +64,7 @@ export default class JobForm extends Component {
   static propTypes = {
     deletedJobs: PropTypes.array.isRequired,
     fields: PropTypes.object.isRequired,
+    form: PropTypes.object,
     formKey: PropTypes.string.isRequired,
     handleSubmit: PropTypes.func.isRequired,
     initializeForm: PropTypes.func.isRequired,
@@ -71,6 +72,7 @@ export default class JobForm extends Component {
     loader: PropTypes.object.isRequired,
     resetForm: PropTypes.func.isRequired,
     sources: PropTypes.array,
+    stopSubmit: PropTypes.func,
   };
 
   state = {
