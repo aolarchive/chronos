@@ -3,6 +3,8 @@
 import path from 'path';
 import webpack from 'webpack';
 
+import postcssAutoprefixer from 'autoprefixer';
+
 // vars
 
 const __PRODUCTION__ = process.env.NODE_ENV === 'production';
@@ -71,10 +73,10 @@ module.exports = {
       include,
     }, {
       test: /\.styl$/,
-      loader: 'style!css!autoprefixer?browsers=last 2 version!stylus',
+      loader: 'style!css!postcss!stylus',
     }, {
       test: /\.css$/,
-      loader: 'style!css!autoprefixer?browsers=last 2 version',
+      loader: 'style!css!postcss',
     }, {
       test: /\.json$/,
       loader: 'json',
@@ -83,6 +85,14 @@ module.exports = {
 
   stylus: {
     use: [require('nib')()],
+  },
+
+  postcss() {
+    return [
+      postcssAutoprefixer({
+        browsers: ['last 2 version'],
+      }),
+    ];
   },
 
   eslint: {
