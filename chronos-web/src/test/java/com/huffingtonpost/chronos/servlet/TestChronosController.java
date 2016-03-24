@@ -57,6 +57,8 @@ public class TestChronosController {
   private MockMvc mockMvc;
   private ChronosController controller;
   private Reporting reporting = new NoReporting();
+  final int numOfConcurrentReruns = 10;
+  final int maxReruns = 5;
   ArrayList<SupportedDriver> drivers = H2TestUtil.createDriverForTesting();
 
   @Mock
@@ -75,7 +77,7 @@ public class TestChronosController {
       spy(new AgentConsumer(jobDao, reporting, "testing.hostname.com",
         new MailInfo("", "", "", ""),
         Session.getDefaultInstance(new Properties()),
-        drivers, 10, 60));
+        drivers, 10, numOfConcurrentReruns, maxReruns, 60));
     controller = new ChronosController(jobDao, agentDriver, agentConsumer, drivers);
 
     MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter();

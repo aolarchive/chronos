@@ -37,9 +37,9 @@ public class AgentConsumer extends Stoppable {
    * rerunPool - this pool is used for handling the timeout (waitBeforeRetrySeconds)
    *             before jobs are enqueued
    */
-  private final ExecutorService rerunPool = Executors.newFixedThreadPool(10);
+  private final ExecutorService rerunPool;
   private final long waitBeforeRetrySeconds;
-  public static final int MAX_RERUNS = 5;
+  public static int maxReruns;
   private static final List<PlannedJob> pendingReruns =
     Collections.synchronizedList(new ArrayList<PlannedJob>());
 
@@ -49,22 +49,26 @@ public class AgentConsumer extends Stoppable {
   private final Session session;
   private final List<SupportedDriver> drivers;
   private final int numOfConcurrentJobs;
+  private final int numOfConcurrentReruns;
   private static boolean shouldSendErrorReports = true;
   public final static int LIMIT_JOB_RUNS = 100;
   
   public AgentConsumer(JobDao dao, Reporting reporter,
       String hostname, MailInfo mailInfo, Session session,
       List<SupportedDriver> drivers, int numOfConcurrentJobs,
-      long waitBeforeRetrySeconds) {
+      int numOfConcurrentReruns, int maxReruns, long waitBeforeRetrySeconds) {
     this.dao = dao;
     this.reporter = reporter;
     this.hostname = hostname;
     this.mailInfo = mailInfo;
     this.session = session;
     this.numOfConcurrentJobs = numOfConcurrentJobs;
+    this.numOfConcurrentReruns = numOfConcurrentReruns;
+    AgentConsumer.maxReruns = maxReruns;
     this.drivers = drivers;
     this.waitBeforeRetrySeconds = waitBeforeRetrySeconds;
     me = new Thread(this);
+    rerunPool = Executors.newFixedThreadPool(this.numOfConcurrentReruns);
     executor = Executors.newFixedThreadPool(this.numOfConcurrentJobs);
   }
 
@@ -108,7 +112,7 @@ public class AgentConsumer extends Stoppable {
     synchronized (pendingReruns) {
       handleReruns(
         new ArrayList<CallableJob>(getFailedQueries(LIMIT_JOB_RUNS).values()),
-              MAX_RERUNS, this.waitBeforeRetrySeconds);
+              AgentConsumer.maxReruns, this.waitBeforeRetrySeconds);
     }
   }
 
@@ -118,6 +122,9 @@ public class AgentConsumer extends Stoppable {
     for (final CallableJob cj : failed) {
       final PlannedJob pj = cj.getPlannedJob();
       final String jobName = pj.getJobSpec().getName();
+      if (pj.getJobSpec().getShouldRerun() == false) {
+        continue;
+      }
 
       boolean alreadyRan = false;
       synchronized (pendingReruns) {
@@ -219,7 +226,7 @@ public class AgentConsumer extends Stoppable {
       return;
     }
     String subject = String.format("Chronos job failed - rerun was scheduled - %s", jobSpec.getName());
-    if (attemptNumber >= MAX_RERUNS){
+    if (attemptNumber >= maxReruns){
       subject = String.format("Chronos - LAST ATTEMPT FAILED - %s", jobSpec.getName());
     }
     String messageFormat = "<h3>Attempt %s of %s</h3><br/>"
@@ -227,7 +234,7 @@ public class AgentConsumer extends Stoppable {
             + "<pre>%s</pre>"
             + "<br/><h3>Error was:</h3><br/><pre>%s</pre><br/>"
             + "<br/><a href='http://%s:8080/api/queue?id=%s'>Rerun job</a><br/>";
-    String messageBody = String.format(messageFormat, attemptNumber, MAX_RERUNS, query, ex.getMessage(),
+    String messageBody = String.format(messageFormat, attemptNumber, maxReruns, query, ex.getMessage(),
         hostname, myId);
     SendMail.doSend(subject, messageBody, mailInfo, session);
   }

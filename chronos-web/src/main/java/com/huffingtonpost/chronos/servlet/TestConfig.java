@@ -127,6 +127,16 @@ public class TestConfig extends WebMvcConfigurerAdapter {
   public int numOfConcurrentJobs() {
     return 4;
   }
+  
+  @Bean
+  public int numOfConcurrentReruns() {
+    return 10;
+  }
+  
+  @Bean
+  public int maxReruns() {
+    return 5;
+  }
 
   @Bean
   public Session authSession() {
@@ -180,7 +190,8 @@ public class TestConfig extends WebMvcConfigurerAdapter {
   @Bean(initMethod="init", destroyMethod="close", name="agentConsumer")
   public AgentConsumer consumer() {
     return new AgentConsumer(jobDao(), reporting(), hostname(), mailInfo(),
-        relaySession(), drivers(), numOfConcurrentJobs(), 1200);
+        relaySession(), drivers(), numOfConcurrentJobs(), numOfConcurrentReruns(),
+        maxReruns(), 1200);
   }
 
   @DependsOn(value="jobDao")

@@ -45,6 +45,7 @@ public class JobSpec {
   private int startDay;
   private String driver;
   private boolean enabled;
+  private boolean shouldRerun = true;
   private String resultQuery;
   private List<String> resultEmail = new ArrayList<>();
   private List<String> statusEmail = new ArrayList<>();
@@ -77,7 +78,7 @@ public class JobSpec {
       ", resultTable:" + resultTable + ", interval:" + interval +
       ", startDay:" + startDay + ", startHour:" + startHour +
       ", startMinute:" +  startMinute + ", driver:" + driver +
-      ", enabled:" + enabled +
+      ", enabled:" + enabled + ", shouldRerun:" + shouldRerun +
       ", statusEmail:" + statusEmail + ", lastModified:" + lastModified + ">");
   }
 
@@ -85,8 +86,8 @@ public class JobSpec {
   public int hashCode() {
     return Objects.hash(name, description, code,
                         resultTable, interval, startMinute,
-                        startHour, startDay, driver, enabled, resultQuery,
-                        resultEmail, statusEmail, jobType);
+                        startHour, startDay, driver, enabled, shouldRerun,
+                        resultQuery, resultEmail, statusEmail, jobType);
   }
   
   @Override
@@ -107,6 +108,7 @@ public class JobSpec {
              Objects.equals(startDay, other.startDay) &&
              Objects.equals(driver, other.driver) &&
              Objects.equals(enabled, other.enabled) &&
+             Objects.equals(shouldRerun, other.shouldRerun) &&
              Objects.equals(resultQuery, other.resultQuery) &&
              Objects.equals(resultEmail, other.resultEmail) &&
              Objects.equals(statusEmail, other.statusEmail) &&
@@ -202,6 +204,14 @@ public class JobSpec {
 
   public void setEnabled(boolean enabled) {
     this.enabled = enabled;
+  }
+
+  public boolean getShouldRerun() {
+    return shouldRerun;
+  }
+
+  public void setShouldRerun(boolean shouldRerun) {
+    this.shouldRerun = shouldRerun;
   }
 
   public String getResultQuery() {
