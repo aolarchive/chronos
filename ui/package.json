@@ -14,7 +14,7 @@
   "license": "BSD",
   "dependencies": {
     "async": "1.5.2",
-    "autoprefixer-loader": "3.2.0",
+    "autoprefixer": "6.3.4",
     "babel": "6.5.2",
     "babel-cli": "6.6.5",
     "babel-core": "6.7.4",
