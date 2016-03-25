@@ -88,7 +88,7 @@ public class WithSql implements WithBackend {
         + "`code` TEXT, resultQuery TEXT, resultTable VARCHAR(100), "
         + "`interval` VARCHAR(100), startMinute INTEGER, "
         + "startHour INTEGER, startDay INTEGER, driver VARCHAR(100), enabled BIT, "
-        + "resultEmail TEXT, statusEmail TEXT, lastModified DATETIME,"
+        + "shouldRerun BIT, resultEmail TEXT, statusEmail TEXT, lastModified DATETIME,"
         + "PRIMARY KEY (id, lastModified))",
         jobTableName));
     jobs.execute();
@@ -248,8 +248,8 @@ public class WithSql implements WithBackend {
           String.format("INSERT INTO %s (user, password, name, "
             + "description, jobType, `code`, resultQuery, resultTable, `interval`, "
             + "startMinute, startHour, startDay, driver, "
-            + "enabled, resultEmail, statusEmail, lastModified) "
-            + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", jobTableName),
+            + "enabled, shouldRerun, resultEmail, statusEmail, lastModified) "
+            + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", jobTableName),
             Statement.RETURN_GENERATED_KEYS);
       int i = 1;
       stat.setString(i++, job.getUser());
@@ -266,6 +266,7 @@ public class WithSql implements WithBackend {
       stat.setInt(i++, job.getStartDay());
       stat.setString(i++, job.getDriver());
       stat.setBoolean(i++, job.isEnabled());
+      stat.setBoolean(i++, job.getShouldRerun());
       stat.setString(i++,
         objToString(job.getResultEmail()));
       stat.setString(i++,
@@ -312,8 +313,8 @@ public class WithSql implements WithBackend {
           String.format("INSERT INTO %s (id, user, password, name, "
             + "description, jobType, `code`, resultQuery, resultTable, `interval`, "
             + "startMinute, startHour, startDay, driver, "
-            + "enabled, resultEmail, statusEmail, lastModified) "
-            + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ", jobTableName),
+            + "enabled, shouldRerun, resultEmail, statusEmail, lastModified) "
+            + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ", jobTableName),
           Statement.RETURN_GENERATED_KEYS);
       int i = 1;
       stat.setLong(i++, job.getId());
@@ -331,6 +332,7 @@ public class WithSql implements WithBackend {
       stat.setInt(i++, job.getStartDay());
       stat.setString(i++, job.getDriver());
       stat.setBoolean(i++, job.isEnabled());
+      stat.setBoolean(i++, job.getShouldRerun());
       stat.setString(i++,
        objToString(job.getResultEmail()));
       stat.setString(i++,
@@ -404,6 +406,7 @@ public class WithSql implements WithBackend {
     job.setStartDay(rs.getInt("startDay"));
     job.setDriver(rs.getString("driver"));
     job.setEnabled(rs.getBoolean("enabled"));
+    job.setShouldRerun(rs.getBoolean("shouldRerun"));
     String resultEmail = rs.getString("resultEmail");
     try {
       job.setResultEmail((List<String>)
