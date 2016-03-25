@@ -8,6 +8,12 @@ import {connect} from 'react-redux';
 import {routeJobUpdate} from '../RouterStore/RouterStore.js';
 import _ from 'lodash';
 
+// vars
+
+const initialValues = {
+  shouldRerun: true,
+};
+
 // export
 
 @connect((state) => {
@@ -42,7 +48,7 @@ export default class JobCreateRoute extends Component {
     return (
       <DocumentTitle title={'Create Job // Chronos'}>
         <main id="route-job" className="site-main route-job">
-          <JobForm formKey="create" onSubmit={::this.handleSubmit}/>
+          <JobForm formKey="create" onSubmit={::this.handleSubmit} initialValues={initialValues}/>
         </main>
       </DocumentTitle>
     );

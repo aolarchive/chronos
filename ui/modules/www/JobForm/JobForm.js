@@ -23,7 +23,7 @@ const requiredFields = ['interval', 'driver', 'startMinute'];
 
 @reduxForm({
   form: 'job',
-  fields: ['enabled', 'name', 'type', 'description', 'driver', 'user', 'password', 'interval', 'startDay', 'startHour', 'startMinute', 'resultEmail', 'statusEmail', 'id', 'lastModified', 'code', 'resultQuery'],
+  fields: ['enabled', 'shouldRerun', 'name', 'type', 'description', 'driver', 'user', 'password', 'interval', 'startDay', 'startHour', 'startMinute', 'resultEmail', 'statusEmail', 'id', 'lastModified', 'code', 'resultQuery'],
   validate(vals, props) {
     const errors = {};
 
@@ -192,7 +192,7 @@ export default class JobForm extends Component {
   }
 
   render() {
-    const {fields: {enabled, type, name, description, driver, user, password, interval, startDay, startHour, startMinute, resultEmail, statusEmail, id, lastModified, code, resultQuery}, handleSubmit} = this.props;
+    const {fields: {enabled, shouldRerun, type, name, description, driver, user, password, interval, startDay, startHour, startMinute, resultEmail, statusEmail, id, lastModified, code, resultQuery}, handleSubmit} = this.props;
 
     const thisQuery = this.state.thisQuery === 'code' ? code : resultQuery;
 
@@ -215,9 +215,14 @@ export default class JobForm extends Component {
             <label>Description</label>
             <textarea {...description} className={this.fieldClass(description, 'job-input job-input-body')}/>
 
-            <label className="option job-checkbox">
+            <label className="option job-checkbox no-foot">
               <input {...enabled} type="checkbox" className={this.fieldClass(enabled, 'job-input job-input-enabled')}/>
               Enabled
+            </label>
+
+            <label className="option job-checkbox">
+              <input {...shouldRerun} type="checkbox" className={this.fieldClass(shouldRerun, 'job-input job-input-enabled')}/>
+              Rerun on error
             </label>
 
             <hr/>
