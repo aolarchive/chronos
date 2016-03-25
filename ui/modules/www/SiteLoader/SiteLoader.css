@@ -1,0 +1,125 @@
+/* import */
+
+@import '../Styles/Vars.css';
+
+/* styles */
+
+.SiteLoader {
+  position: fixed;
+  top: var(--header-height);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--trans-anima);
+  background-color: var(--loader-background);
+  z-index: 1000;
+  user-select: none;
+}
+
+.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.loader {
+  position: absolute;
+  left: calc(50% - 20px);
+  top: calc(50% - 16px);
+  width: 40px;
+  height: 32px;
+  display: block;
+  font-size: 0;
+  color: var(--loader-foreground);
+  box-sizing: border-box;
+}
+
+/* sizes */
+
+.small {
+  width: 20px;
+  height: 16px;
+  left: calc(50% - 10px);
+  top: calc(50% - 8px);
+}
+
+.small .loaderBar {
+  width: 2px;
+  height: 16px;
+  margin: 0 1px;
+}
+
+.large {
+  width: 80px;
+  height: 64px;
+  left: calc(50% - 40px);
+  top: calc(50% - 32px);
+}
+
+.large .loaderBar {
+  width: 8px;
+  height: 64px;
+  margin: 0 4px;
+}
+
+.jumbo {
+  width: 120px;
+  height: 96px;
+  left: calc(50% - 60px);
+  top: calc(50% - 48px);
+}
+
+.jumbo .loaderBar {
+  width: 12px;
+  height: 96px;
+  margin: 0 6px;
+}
+
+/* bars */
+
+.loaderBar {
+  position: relative;
+  box-sizing: border-box;
+  display: inline-block;
+  float: none;
+  background-color: currentColor;
+  border: 0 solid currentColor;
+  width: 4px;
+  height: 32px;
+  margin: 0 2px;
+  border-radius: 100px;
+  animation: line-scale 1.2s infinite ease;
+}
+
+.loaderBar:nth-child(1) {
+  animation-delay: -1.2s;
+}
+
+.loaderBar:nth-child(2) {
+  animation-delay: -1.1s;
+}
+
+.loaderBar:nth-child(3) {
+  animation-delay: -1s;
+}
+
+.loaderBar:nth-child(4) {
+  animation-delay: -0.9s;
+}
+
+.loaderBar:nth-child(5) {
+  animation-delay: -0.8s;
+}
+
+/* animation */
+
+@keyframes line-scale {
+  0%, 40%, 100% {
+    transform: scaleY(0.4);
+  }
+
+  20% {
+    transform: scaleY(1);
+  }
+}

@@ -2,8 +2,8 @@
 
 import React, {Component, PropTypes} from 'react';
 import DeleteJobForm from '../DeleteJobForm/DeleteJobForm.js';
-import {deleteJob} from '../JobStore/JobStore.js';
-import {deleteModal} from '../ModalStore/ModalStore.js';
+import {deleteJob} from '../JobsStore/JobsStore.js';
+import {deleteModal} from '../SiteModalStore/SiteModalStore.js';
 import {routeJobs} from '../RouterStore/RouterStore.js';
 
 // export

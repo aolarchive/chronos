@@ -1,0 +1,14 @@
+/* import */
+
+@import '../Styles/Vars.css';
+
+/* styles */
+
+.JobsRoute {
+  display: relative;
+}
+
+.button {
+  margin-left: 24px;
+  flex: 0 0 5.5bl;
+}

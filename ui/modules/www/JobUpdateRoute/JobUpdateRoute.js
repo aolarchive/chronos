@@ -1,34 +1,43 @@
 // import
 
 import React, {Component, PropTypes} from 'react';
-import DocumentTitle from 'react-document-title';
-import {updateLoader} from '../LoaderStore/LoaderStore';
-import {getJob, updateJob} from '../JobStore/JobStore.js';
+import {enableSiteLoader, disableSiteLoader} from '../SiteLoaderStore/SiteLoaderStore';
+import {getJob, updateJob} from '../JobsStore/JobsStore.js';
 import JobForm from '../JobForm/JobForm';
 import {connect} from 'react-redux';
+import styles from './JobUpdateRoute.css';
+import SiteMain from '../SiteMain/SiteMain.js';
+import cn from 'classnames';
 
 // export
 
 @connect((state, props) => {
+  console.log(state.jobs.jobs);
   return {
     job: state.jobs.jobs[props.routeParams.id],
   };
 })
 export default class JobUpdateRoute extends Component {
   static propTypes = {
+    className: PropTypes.string,
     job: PropTypes.object,
     routeParams: PropTypes.object.isRequired,
   };
 
   componentDidMount() {
     getJob(this.props.routeParams.id);
-    updateLoader('global', {active: true});
+    enableSiteLoader('route');
   }
 
   componentDidUpdate(prevProps) {
+    console.log(prevProps.job, this.props.job);
     if (this.props.job !== prevProps.job) {
-      updateLoader('global', {active: false});
+      disableSiteLoader('route');
     }
+  }
+
+  className() {
+    return cn(styles.JobUpdateRoute, this.props.className);
   }
 
   handleSubmit(data) {
@@ -36,12 +45,13 @@ export default class JobUpdateRoute extends Component {
   }
 
   render() {
+    const {className, job, ...props} = this.props;
+    const title = this.props.job ? 'Job: ' + this.props.job.name : 'Loading...';
+
     return (
-      <DocumentTitle title={(this.props.job ? 'Job: ' + this.props.job.name : 'Loading...') + ' || Chronos'}>
-        <main id="route-job" className="site-main route-job">
+      <SiteMain {...props} title={title} className={this.className()}>
           <JobForm formKey={this.props.routeParams.id} onSubmit={this.handleSubmit.bind(this)} job={this.props.job}/>
-        </main>
-      </DocumentTitle>
+      </SiteMain>
     );
   }
 }

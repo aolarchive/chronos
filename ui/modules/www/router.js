@@ -2,16 +2,16 @@
 
 import React from 'react';
 import {Provider} from 'react-redux';
+import {syncHistoryWithStore} from 'react-router-redux';
 import {Router, Route, Redirect, browserHistory} from 'react-router';
 import store from './store';
 
 // routes
 
-import AppRoute from './AppRoute/AppRoute';
-import JobUpdateRoute from './JobUpdateRoute/JobUpdateRoute';
-import JobCreateRoute from './JobCreateRoute/JobCreateRoute';
-import JobsRoute from './JobsRoute/JobsRoute';
-import RunsList from './RunsList/RunsList';
+import AppRoute from './AppRoute/AppRoute.js';
+import JobUpdateRoute from './JobUpdateRoute/JobUpdateRoute.js';
+import JobCreateRoute from './JobCreateRoute/JobCreateRoute.js';
+import JobsRoute from './JobsRoute/JobsRoute.js';
 
 // export
 
@@ -20,9 +20,9 @@ export const routes = (
     <Redirect path="/" to="/jobs"/>
     <Redirect path="/job" to="/jobs"/>
 
-    <Route path="/jobs" components={{main: JobsRoute, side: RunsList}} mainClassName="route-main-jobs" sideClassName="route-side-runs route-side-runs-all"/>
-    <Route path="/job/create" components={{main: JobCreateRoute, side: RunsList}} mainClassName="route-main-job route-main-job-create" sideClassName="route-side-runs route-side-runs-one"/>
-    <Route path="/job/:id" components={{main: JobUpdateRoute, side: RunsList}} mainClassName="route-main-job route-main-job-update" sideClassName="route-side-runs route-side-runs-one"/>
+    <Route path="/jobs" component={JobsRoute}/>
+    <Route path="/job/create" component={JobCreateRoute}/>
+    <Route path="/job/:id" components={JobUpdateRoute}/>
 
     <Redirect path="/*" to="/jobs"/>
   </Route>
@@ -30,6 +30,6 @@ export const routes = (
 
 export default (
   <Provider store={store}>
-    <Router history={browserHistory} routes={routes}/>
+    <Router history={syncHistoryWithStore(browserHistory, store)} routes={routes}/>
   </Provider>
 );

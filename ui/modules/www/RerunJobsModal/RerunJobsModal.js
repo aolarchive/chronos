@@ -3,7 +3,7 @@
 import React, {Component, PropTypes} from 'react';
 import RerunJobsForm from '../RerunJobsForm/RerunJobsForm';
 import {rerunJobs} from '../RunStore/RunStore';
-import {deleteModal} from '../ModalStore/ModalStore';
+import {deleteModal} from '../SiteModalStore/SiteModalStore';
 
 // export
 

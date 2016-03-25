@@ -1,0 +1,13 @@
+/* import */
+
+@import '../Styles/Vars.css';
+
+/* styles */
+
+.JobsFilter {
+  width: 100%;
+  border: 1px solid var(--input-border-color);
+  background-color: var(--input-background-color);
+  border-radius: var(--input-border-radius);
+  padding: var(--input-padding);
+}

@@ -3,13 +3,14 @@
 import React, {Component, PropTypes} from 'react';
 import cn from 'classnames';
 import {connect} from 'react-redux';
-import {createModal, updateModal, deleteModal} from '../ModalStore/ModalStore';
+import {createModal, updateModal, deleteModal} from '../SiteModalStore/SiteModalStore.js';
+import styles from './SiteModal.css';
 
 // export
 
 @connect((state) => {
   return {
-    modal: state.modal,
+    modal: state.siteModal,
   };
 })
 export default class SiteModal extends Component {
@@ -20,10 +21,9 @@ export default class SiteModal extends Component {
 
   className() {
     return cn(
-      this.props.className,
-      'site-modal',
-      {
-        'active': this.props.modal.component,
+      styles.SiteModal,
+      this.props.className, {
+        [styles.active]: this.props.modal.component,
       }
     );
   }
@@ -37,25 +37,27 @@ export default class SiteModal extends Component {
   }
 
   render() {
-    const {...props} = this.props;
+    const {className, modal, ...props} = this.props;
 
     return (
-      <section {...props} id="site-modal" className={this.className()}>
-        <div className="site-modal-background" onClick={this::this.handleClick}/>
+      <section {...props} className={this.className()}>
+        <div className={styles.background} onClick={this::this.handleClick}/>
 
-        {this.props.modal.component &&
-        <div className="site-modal-float">
-          <div className="site-modal-item">
-            {this.props.modal.title &&
-            <header className="site-modal-head">
-              {this.props.modal.title}
-            </header>}
+        {modal.component ? (
+          <div className={styles.float}>
+            <div className={styles.item}>
+              {modal.title ? (
+                <header className={styles.head}>
+                  {modal.title}
+                </header>
+              ) : null}
 
-            <div className="site-modal-body">
-              <this.props.modal.component {...this.props.modal.props} actions={{createModal, updateModal, deleteModal}}/>
+              <div className={styles.body}>
+                <modal.component {...this.props.modal.props} actions={{createModal, updateModal, deleteModal}}/>
+              </div>
             </div>
           </div>
-        </div>}
+        ) : null}
       </section>
     );
   }

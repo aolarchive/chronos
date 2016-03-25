@@ -14,35 +14,35 @@ import promiseWare from './PromiseWare/PromiseWare.js';
 // config
 
 import {reducer as formReducer} from 'redux-form';
-import {loaderReducer} from './LoaderStore/LoaderStore.js';
-import {modalReducer} from './ModalStore/ModalStore.js';
+import {siteLoaderReducer} from './SiteLoaderStore/SiteLoaderStore.js';
+import {siteModalReducer} from './SiteModalStore/SiteModalStore.js';
 import {runReducer} from './RunStore/RunStore.js';
-import {jobReducer} from './JobStore/JobStore.js';
+import {jobsReducer} from './JobsStore/JobsStore.js';
 import {sourceReducer} from './SourceStore/SourceStore.js';
 import {messageReducer} from './MessageStore/MessageStore.js';
-import {routeReducer, syncHistory} from 'react-router-redux';
+import {routerReducer, routerMiddleware} from 'react-router-redux';
+import {localStorageReducer} from './LocalStorageStore/LocalStorageStore.js';
 
 const reducers = {
-  routing: routeReducer,
+  routing: routerReducer,
   form: formReducer,
 
-  loader: loaderReducer,
-  modal: modalReducer,
+  siteLoader: siteLoaderReducer,
+  siteModal: siteModalReducer,
   message: messageReducer,
+  localStorage: localStorageReducer,
 
   runs: runReducer,
-  jobs: jobReducer,
+  jobs: jobsReducer,
   sources: sourceReducer,
 };
 
 // ware
 
-const reduxWare = syncHistory(browserHistory);
-
 const ware = [
   thunkWare,
   promiseWare,
-  reduxWare,
+  routerMiddleware(browserHistory),
 ];
 
 if (!__PRODUCTION__ && __CLIENT__) {
@@ -54,12 +54,6 @@ if (!__PRODUCTION__ && __CLIENT__) {
 
 // export
 
-const store = compose(
+export default compose(
   applyMiddleware(...ware)
 )(createStore)(combineReducers(reducers), {});
-
-if (!__PRODUCTION__ && __CLIENT__) {
-  reduxWare.listenForReplays(store);
-}
-
-export default store;

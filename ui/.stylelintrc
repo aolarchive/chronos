@@ -1,0 +1,139 @@
+{
+  "ignoreFiles": [
+    "node_modules/**/*"
+  ],
+
+  "rules": {
+    "at-rule-empty-line-before": ["always", {
+      "except": ["blockless-group", "all-nested"]
+    }],
+    "at-rule-no-vendor-prefix": true,
+
+    "block-closing-brace-newline-after": "always",
+    "block-closing-brace-newline-before": "always-multi-line",
+    "block-closing-brace-space-after": null,
+    "block-closing-brace-space-before": "always-single-line",
+    "block-no-empty": true,
+    "block-opening-brace-newline-after": "always-multi-line",
+    "block-opening-brace-newline-before": null,
+    "block-opening-brace-space-after": "always-single-line",
+    "block-opening-brace-space-before": "always",
+
+    "color-hex-case": "lower",
+    "color-hex-length": "long",
+    "color-no-hex": true,
+    "color-no-invalid-hex": true,
+    "color-named": "never",
+
+    "comment-empty-line-before": ["always", {
+      "except": ["first-nested"],
+      "ignore": ["stylelint-commands"]
+    }],
+    "comment-whitespace-inside": "always",
+
+    "custom-media-pattern": null,
+
+    "custom-property-no-outside-root": null,
+    "custom-property-pattern": null,
+
+    "declaration-bang-space-after": "never",
+    "declaration-bang-space-before": "always",
+    "declaration-colon-newline-after": null,
+    "declaration-colon-space-after": "always",
+    "declaration-colon-space-before": "never",
+    "declaration-no-important": true,
+
+    "block-no-single-line": null,
+    "declaration-block-semicolon-newline-after": "always-multi-line",
+    "declaration-block-semicolon-newline-before": "never-multi-line",
+    "declaration-block-semicolon-space-after": "always-single-line",
+    "declaration-block-semicolon-space-before": "never",
+    "declaration-block-single-line-max-declarations": 1,
+
+    "function-blacklist": null,
+    "function-calc-no-unspaced-operator": true,
+    "function-comma-newline-after": "never-multi-line",
+    "function-comma-newline-before": "never-multi-line",
+    "function-comma-space-after": "always",
+    "function-comma-space-before": "never",
+    "function-linear-gradient-no-nonstandard-direction": true,
+    "function-parentheses-newline-inside": "never-multi-line",
+    "function-parentheses-space-inside": "never",
+    "function-url-quotes": "single",
+    "function-whitelist": null,
+    "function-whitespace-after": "always",
+
+    "indentation": [2, {
+      "except": ["value", "param"]
+    }],
+    "max-line-length": null,
+    "max-empty-lines": 1,
+    "no-eol-whitespace": true,
+    "no-missing-eof-newline": true,
+
+    "media-feature-colon-space-after": "always",
+    "media-feature-colon-space-before": "never",
+    "media-feature-name-no-vendor-prefix": true,
+    "media-feature-range-operator-space-after": "always",
+    "media-feature-range-operator-space-before": "always",
+
+    "media-query-list-comma-newline-after": null,
+    "media-query-list-comma-newline-before": null,
+    "media-query-list-comma-space-after": "always",
+    "media-query-list-comma-space-before": "never",
+
+    "media-query-parentheses-space-inside": "never",
+
+    "number-leading-zero": "always",
+    "number-max-precision": 4,
+    "number-no-trailing-zeros": true,
+    "number-zero-length-no-unit": true,
+
+    "property-blacklist": null,
+    "property-no-vendor-prefix": true,
+    "property-unit-blacklist": null,
+    "property-unit-whitelist": null,
+    "property-whitelist": null,
+
+    "root-no-standard-properties": true,
+
+    "rule-nested-empty-line-before": ["always", {
+      "except": ["first-nested"]
+    }],
+    "declaration-block-no-duplicate-properties": true,
+    "declaration-block-no-shorthand-property-overrides": true,
+    "rule-non-nested-empty-line-before": "always-multi-line",
+    "declaration-block-properties-order": null,
+    "declaration-block-trailing-semicolon": "always",
+
+    "selector-class-pattern": "\\w[\\w\\d]+",
+    "selector-combinator-space-after": "always",
+    "selector-combinator-space-before": "always",
+    "selector-id-pattern": "\\w[\\w\\d]+",
+    "selector-no-attribute": null,
+    "selector-no-combinator": null,
+    "selector-no-id": true,
+    "selector-no-type": null,
+    "selector-no-universal": true,
+    "selector-no-vendor-prefix": true,
+    "selector-pseudo-element-colon-notation": "double",
+    "selector-root-no-composition": true,
+
+    "selector-list-comma-newline-after": "always-multi-line",
+    "selector-list-comma-newline-before": null,
+    "selector-list-comma-space-after": "always-single-line",
+    "selector-list-comma-space-before": "never",
+
+    "string-quotes": "single",
+
+    "unit-blacklist": ["em"],
+    "unit-whitelist": null,
+
+    "value-list-comma-newline-after": "never-multi-line",
+    "value-list-comma-newline-before": "never-multi-line",
+    "value-list-comma-space-after": "always",
+    "value-list-comma-space-before": "never",
+
+    "value-no-vendor-prefix": true
+  }
+}

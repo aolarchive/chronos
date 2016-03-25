@@ -1,0 +1,29 @@
+/* rules */
+
+/* stylelint-disable selector-no-universal */
+
+/* import */
+
+@import '../Vars.css';
+@import '../../../../node_modules/sanitize.css/sanitize.css';
+
+/* styles */
+
+*:focus {
+  outline: none;
+}
+
+html {
+  overflow-y: hidden;
+  overflow-x: hidden;
+}
+
+body {
+  width: 100%;
+  color: var(--black);
+  background-color: var(--white);
+  font-size: var(--basefont);
+  line-height: var(--baseline);
+  font-family: var(--open-sans-family);
+  font-weight: 300;
+}

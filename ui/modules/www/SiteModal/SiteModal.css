@@ -1,0 +1,78 @@
+/* import */
+
+@import '../Styles/Vars.css';
+
+/* styles */
+
+.SiteModal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: center;
+  align-content: space-around;
+  align-items: center;
+  pointer-events: none;
+  z-index: 10000;
+}
+
+.active {
+  pointer-events: auto;
+
+  .background {
+    opacity: 0.85;
+  }
+
+  .float {
+    opacity: 1;
+  }
+}
+
+.background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--site-header-background);
+  opacity: 0;
+  transition: opacity var(--trans-anima);
+}
+
+.float {
+  flex: 1 1 auto;
+  align-self: center;
+  position: relative;
+  min-width: 14bl;
+  max-width: 21bl;
+  max-height: calc(100% - 4bl);
+  opacity: 0;
+  transition: opacity var(--trans-anima);
+  z-index: 1;
+}
+
+.item {
+  overflow: hidden;
+  background-color: var(--white);
+  max-height: calc(100% - 4bl);
+  border-radius: calc(1bl / 3);
+}
+
+.head {
+  line-height: 3bl;
+  font-weight: bold;
+  text-transform: uppercase;
+  padding-width: 1bl;
+  text-align: center;
+}
+
+.body {
+  overflow-x: hidden;
+  overflow-y: scroll;
+  max-height: calc(100% - 8bl);
+  padding: 0 1bl 1bl;
+}

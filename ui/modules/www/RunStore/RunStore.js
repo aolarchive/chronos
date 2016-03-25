@@ -4,7 +4,7 @@ import _ from 'lodash';
 import async from 'async';
 import moment from 'moment';
 import {createRequestAction, createDispatcher} from '../ActionHelper/ActionHelper';
-import {jobToServer} from '../JobHelper/JobHelper';
+import {jobToServer} from '../JobsHelper/JobsHelper';
 import {createMessage, createRequestMessage} from '../MessageStore/MessageStore';
 
 // vars

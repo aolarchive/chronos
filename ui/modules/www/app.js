@@ -2,8 +2,8 @@
 
 import ReactDOM from 'react-dom';
 import router from './router';
-import './font.js';
-import '../styles/index.styl';
+import './../font/font.js';
+import './Styles/Core.css';
 
 // start
 

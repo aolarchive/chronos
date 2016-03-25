@@ -5,9 +5,9 @@ import _ from 'lodash';
 
 // webpack
 
-import 'codemirror/lib/codemirror.css';
 import 'codemirror/mode/sql/sql.js';
 import 'codemirror/mode/shell/shell.js';
+import 'style!css!codemirror/lib/codemirror.css';
 
 // fns
 

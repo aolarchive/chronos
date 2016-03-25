@@ -6,6 +6,9 @@ import {queryHistory, queryFuture, rerunRun} from '../RunStore/RunStore';
 import moment from 'moment';
 import {routeJobUpdate} from '../RouterStore/RouterStore';
 import _ from 'lodash';
+import cn from 'classnames';
+import styles from './RunsList.css';
+import shared from '../Styles/Shared.css';
 
 // fns
 
@@ -36,7 +39,7 @@ function formatNext(run) {
 // export
 
 @connect((state, props) => {
-  if (!props.routeParams.id) {
+  if (!props.id) {
     return {
       job: null,
       last: state.runs.last,
@@ -44,20 +47,21 @@ function formatNext(run) {
     };
   }
 
-  const runs = state.runs.jobs[props.routeParams.id];
+  const runs = state.runs.jobs[props.id];
 
   return {
-    job: state.jobs.jobs[props.routeParams.id],
+    job: state.jobs.jobs[props.id],
     last: runs ? runs.last : null,
     next: runs ? runs.next : null,
   };
 })
 export default class RunsList extends Component {
   static propTypes = {
+    className: PropTypes.string,
+    id: PropTypes.string,
     job: PropTypes.object,
     last: PropTypes.array,
     next: PropTypes.array,
-    routeParams: PropTypes.object.isRequired,
   };
 
   state = {
@@ -70,7 +74,7 @@ export default class RunsList extends Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    if (prevProps.routeParams.id !== this.props.routeParams.id || prevProps.job !== this.props.job || prevState.last !== this.state.last) {
+    if (prevProps.id !== this.props.id || prevProps.job !== this.props.job || prevState.last !== this.state.last) {
       this.tick();
     }
   }
@@ -81,27 +85,19 @@ export default class RunsList extends Component {
   }
 
   tick() {
-    (this.state.last ? queryHistory : queryFuture)(this.props.routeParams.id);
+    (this.state.last ? queryHistory : queryFuture)(this.props.id);
   }
 
   navLinkClassName(last) {
-    const cls = ['runs-list-nav-link'];
-
-    if (this.state.last === last) {
-      cls.push('active');
-    }
-
-    return cls.join(' ');
+    return cn(shared.tab, {
+      [shared.activeTab]: this.state.last === last,
+    });
   }
 
   runClassName(run) {
-    const cls = ['runs-list-item'];
-
-    if (run.id && !run.success) {
-      cls.push('error');
-    }
-
-    return cls.join(' ');
+    return cn(styles.item, {
+      [styles.error]: run.id && !run.success,
+    });
   }
 
   setPast() {
@@ -130,40 +126,42 @@ export default class RunsList extends Component {
   }
 
   render() {
+    const {className, ...props} = this.props;
+
     return (
-      <aside id="runs-list" className="runs-list">
-        <nav className="runs-list-nav-links">
+      <aside className={cn(styles.RunsList, className)}>
+        <nav className={shared.tabs}>
           <div className={this.navLinkClassName(true)} onClick={::this.setPast}>last run</div>
           <div className={this.navLinkClassName(false)} onClick={::this.setFuture}>next run</div>
         </nav>
 
-        <div className="runs-list-items">
+        <div className={styles.items}>
           {this.getRunsArray().map((run, i) => {
             run = this.state.last ? formatLast(run) : formatNext(run);
 
             return (
               <section key={i} className={this.runClassName(run)}>
-                <header className="runs-list-item-header">
-                  <div className="runs-list-item-name" dangerouslySetInnerHTML={{__html: run.niceName}}/>
+                <header className={styles.itemHeader}>
+                  <div className={styles.name} dangerouslySetInnerHTML={{__html: run.niceName}}/>
 
-                  <time className="runs-list-item-time">
+                  <time className={styles.time}>
                     {moment(run.time).format('M/D/YY')}
                   </time>
                 </header>
 
                 {run.err &&
-                <div className="runs-list-item-body">
+                <div className={styles.body}>
                   {run.err}
                 </div>}
 
-                <footer className="runs-list-item-footer cf">
-                  <time className="runs-list-item-time">
+                <footer className={cn(styles.itemFooter, shared.clearfix)}>
+                  <time className={styles.time}>
                     {moment(run.time).format('h:mm A')}
                   </time>
 
-                  <div className="runs-list-item-actions">
-                    {!this.props.routeParams.id && this.state.last ? <span className="runs-list-item-action action-view" onClick={this.view(run)}>view</span> : null}
-                    {!this.state.last ? null : <span className="runs-list-item-action action-rerun" onClick={this.rerun(run)}>re-run</span>}
+                  <div className={styles.actions}>
+                    {!this.props.id && this.state.last ? <span className={styles.action} onClick={this.view(run)}>view</span> : null}
+                    {!this.state.last ? null : <span className={styles.action} onClick={this.rerun(run)}>re-run</span>}
                   </div>
                 </footer>
               </section>

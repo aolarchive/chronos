@@ -2,7 +2,7 @@
 
 import React, {Component, PropTypes} from 'react';
 import {reduxForm} from 'redux-form';
-import {deleteModal} from '../ModalStore/ModalStore';
+import {deleteModal} from '../SiteModalStore/SiteModalStore';
 
 // export
 

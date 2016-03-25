@@ -1,0 +1,211 @@
+/* rules */
+
+/* stylelint-disable declaration-no-important */
+
+/* import */
+
+@import '../Styles/Vars.css';
+
+/* styles */
+
+.JobsList {
+  height: calc(100% - 2.5bl);
+  width: 100%;
+  position: relative;
+  display: block;
+}
+
+.head,
+.body {
+  border-color: var(--table-border-color);
+  border-width: 0 1px;
+}
+
+.row {
+  cursor: pointer;
+}
+
+.head,
+.body,
+.row {
+  width: 100%;
+  display: flex;
+}
+
+.head {
+  text-align: left;
+  text-transform: uppercase;
+  color: var(--white);
+  border-radius: 0.333bl 0.333bl 0 0;
+  background-color: var(--table-head-background-color);
+}
+
+.cell {
+  line-height: 1bl;
+  padding: 6px 6px;
+  display: inline-block;
+  flex: 0 0 auto;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.cell :global(.icon) {
+  line-height: 1bl;
+}
+
+.body {
+  display: block;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  position: absolute;
+  top: 1.5bl;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--white);
+  -ms-overflow-style: none;
+
+  &::-webkit-scrollbar {
+    width: 0 !important;
+  }
+
+  .row {
+    position: relative;
+    margin-bottom: 1px;
+    transition: background var(--trans-anima);
+
+    &:nth-child(odd) {
+      background-color: var(--table-row-odd);
+    }
+
+    &:nth-child(even) {
+      background-color: var(--table-row-even);
+    }
+
+    &::before,
+    &::after {
+      content: '';
+      display: block;
+      position: absolute;
+      width: calc(100% + 1px);
+      height: calc(1.5bl + 1px);
+      pointer-events: none;
+      transition: border var(--trans-anima);
+    }
+
+    &::before {
+      top: -1px;
+      left: -1px;
+      border-top: 1px solid var(--table-border-color);
+      border-left: 1px solid var(--table-border-color);
+    }
+
+    &::after {
+      bottom: -1px;
+      right: -1px;
+      border-bottom: 1px solid var(--table-border-color);
+      border-right: 1px solid var(--table-border-color);
+    }
+
+    &:hover {
+      background-color: color(var(--selected-color) tint(80%)) !important;
+      z-index: 1;
+
+      &::before,
+      &::after {
+        border-color: var(--selected-color);
+      }
+    }
+  }
+}
+
+/* sorted */
+
+.orderBy::after {
+  content: '';
+  display: inline-block;
+  position: relative;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 5px;
+  border-color: transparent;
+  margin-left: 4px;
+}
+
+.orderAsc::after {
+  border-bottom-color: var(--white);
+  top: -3px;
+}
+
+.orderDesc::after {
+  border-top-color: var(--white);
+  top: 3px;
+}
+
+/* cells */
+
+.cellEnabled,
+.cellType {
+  &.orderBy div {
+    display: none;
+  }
+}
+
+.cellEnabled {
+  flex: 0 0 29px;
+
+  &.orderBy::after {
+    margin-left: 5px;
+  }
+}
+
+.cellType {
+  flex: 0 0 29px;
+
+  &.orderBy::after {
+    margin-left: 3px;
+  }
+}
+
+.cellName {
+  flex: 0 1 100%;
+  white-space: normal;
+}
+
+.cellInterval {
+  flex: 0 0 200px;
+}
+
+.cellActions {
+  flex: 0 0 125px;
+  text-align: center;
+}
+
+/* looks */
+
+.enabled {
+  position: relative;
+  top: -1px;
+  width: 9px;
+  height: 9px;
+  margin-left: 6px;
+  display: inline-block;
+  background-color: var(--selected-color);
+  border-radius: 100px;
+}
+
+.name {
+  font-weight: bold;
+}
+
+.action {
+  color: var(--selected-color);
+  transition: color var(--trans-anima);
+  font-size: 1.125bf;
+  margin-right: 0.125bl;
+
+  &:hover {
+    color: var(--logo-color);
+  }
+}

@@ -1,0 +1,70 @@
+/* import */
+
+@import '../Vars.css';
+
+/* styles */
+
+.button {
+  display: inline-block;
+  border-radius: var(--input-border-radius);
+  background-color: var(--pale);
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: background var(--trans-anima);
+
+  &:hover {
+    background-color: var(--palewhite);
+  }
+}
+
+.buttonPrimary {
+  background-color: var(--selected-color);
+
+  &:hover {
+    background-color: color(var(--selected-color) tint(40%));
+  }
+}
+
+/* modal button */
+
+.modalButton {
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-align: center;
+  color: var(--white);
+  width: 100%;
+}
+
+/* hollow button */
+
+.hollowButton {
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-align: center;
+  color: var(--pale);
+  background-color: var(--pale);
+  border-radius: var(--input-border-radius);
+  display: block;
+  padding: 2px;
+  position: relative;
+  transition: color var(--trans-anima), background-color var(--trans-anima);
+  cursor: pointer;
+
+  &:hover {
+    color: var(--selected-color);
+    background-color: var(--selected-color);
+  }
+
+  & span {
+    display: block;
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    bottom: 2px;
+    right: 2px;
+    border-radius: var(--input-border-radius);
+    line-height: 32px;
+    background-color: var(--site-main-background);
+  }
+}

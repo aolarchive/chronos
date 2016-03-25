@@ -22,7 +22,7 @@ function getStore(state) {
 describe('SiteLoader', () => {
   it('should render without issue', () => {
     const cmp = Utils.renderIntoDocument(
-      <SiteLoader.WrappedComponent loader={{global: {active: true}}}/>
+      <SiteLoader.WrappedComponent loader={{active: true, reasons: []}}/>
     );
 
     expect(cmp).to.exist;
@@ -30,8 +30,8 @@ describe('SiteLoader', () => {
 });
 
 describe('Connect(SiteLoader)', () => {
-  it('should pass global loader to props', () => {
-    const loader = {global: {active: true}};
+  it('should pass loader state to props', () => {
+    const loader = {active: true, reasons: []};
 
     const cmp = Utils.renderIntoDocument(
       <SiteLoader store={getStore({loader})}/>

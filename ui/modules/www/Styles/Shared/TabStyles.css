@@ -1,0 +1,34 @@
+/* import */
+
+@import '../Vars.css';
+
+/* styles */
+
+.tabs {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2.5bl;
+  display: flex;
+  background-color: var(--white);
+  font-weight: bold;
+}
+
+.tab {
+  flex: 1;
+  border-bottom: 1px solid var(--input-border-color);
+  transition: border var(--trans-anima);
+  line-height: 2.5bl;
+  text-align: center;
+  text-transform: uppercase;
+  cursor: pointer;
+
+  &.activeTab {
+    border-bottom: 5px solid var(--selected-color);
+  }
+
+  &:hover {
+    border-bottom: 5px solid var(--selected-background);
+  }
+}

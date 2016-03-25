@@ -1,0 +1,87 @@
+/* import */
+
+@import '../Vars.css';
+
+/* styles */
+
+.input {
+  width: 100%;
+  border: 1px solid var(--input-border-color);
+  background-color: var(--input-background-color);
+  border-radius: var(--input-border-radius);
+  padding: var(--input-padding);
+}
+
+.inputError {
+  border-color: var(--logo-color);
+}
+
+/* affix */
+
+.affixGroup {
+  margin-bottom: 0.5bl;
+  display: flex;
+}
+
+.affix {
+  flex: 0 0 5bl;
+  background-color: var(--black);
+  border-radius: var(--input-border-radius) 0 0 var(--input-border-radius);
+  line-height: 1.5bl;
+  text-align: right;
+  padding-right: 0.5bl;
+  color: var(--white);
+  text-transform: uppercase;
+  font-weight: bold;
+}
+
+.affixed {
+  border-radius: 0 var(--input-border-radius) var(--input-border-radius) 0;
+  border-left-width: 0;
+}
+
+/* label */
+
+.label {
+  font-weight: bold;
+  text-transform: uppercase;
+  font-size: 0.9bf;
+  display: block;
+}
+
+/* select overlay */
+
+.selectOverlay {
+  position: relative;
+
+  &::before,
+  &::after {
+    content: '';
+    size: 0;
+    position: absolute;
+    border-width: 0.25bl;
+    border-style: solid;
+    border-color: transparent;
+    right: 12px;
+  }
+
+  &::before {
+    border-top-color: var(--input-border-color);
+    top: 20px;
+  }
+
+  &::after {
+    border-bottom-color: var(--input-border-color);
+    top: 4px;
+  }
+}
+
+/* checkbox label */
+
+.checkboxLabel {
+  input {
+    display: inline-block;
+    width: auto;
+    margin-right: 4px;
+  }
+}

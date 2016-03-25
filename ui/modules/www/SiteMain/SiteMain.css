@@ -1,0 +1,30 @@
+/* import */
+
+@import '../Styles/Vars.css';
+
+/* styles */
+
+.SiteMain {
+  position: fixed;
+  overflow-x: hidden;
+  overflow-y: scroll;
+  top: var(--header-height);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 1bl calc(var(--sidebar-width) + 1bl) 0 1bl;
+  background-color: var(--site-main-background);
+  transition: padding var(--trans-anima);
+}
+
+.runsList {
+  transition: right var(--trans-anima);
+}
+
+.hideSidebar {
+  padding-right: 1bl;
+
+  .runsList {
+    right: calc(var(--sidebar-width) * -1);
+  }
+}
