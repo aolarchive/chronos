@@ -27,7 +27,7 @@ const requiredFields = ['interval', 'driver', 'startMinute', 'name'];
 
 @reduxForm({
   form: 'job',
-  fields: ['enabled', 'name', 'type', 'description', 'driver', 'user', 'password', 'interval', 'startDay', 'startHour', 'startMinute', 'resultEmail', 'statusEmail', 'id', 'lastModified', 'code', 'resultQuery'],
+  fields: ['enabled', 'shouldRerun', 'name', 'type', 'description', 'driver', 'user', 'password', 'interval', 'startDay', 'startHour', 'startMinute', 'resultEmail', 'statusEmail', 'id', 'lastModified', 'code', 'resultQuery'],
   validate(vals) {
     const errors = {};
 
@@ -61,6 +61,7 @@ export default class JobForm extends Component {
     deletedJobs: PropTypes.array.isRequired,
     errors: PropTypes.object.isRequired,
     fields: PropTypes.object.isRequired,
+    form: PropTypes.object,
     formKey: PropTypes.string.isRequired,
     handleSubmit: PropTypes.func.isRequired,
     hideSidebar: PropTypes.bool.isRequired,
@@ -197,7 +198,7 @@ export default class JobForm extends Component {
   }
 
   render() {
-    const {fields: {enabled, type, name, description, driver, user, password, interval, startDay, startHour, startMinute, resultEmail, statusEmail, id, lastModified, code, resultQuery}, handleSubmit, hideSidebar} = this.props;
+    const {fields: {enabled, shouldRerun, type, name, description, driver, user, password, interval, startDay, startHour, startMinute, resultEmail, statusEmail, id, lastModified, code, resultQuery}, handleSubmit, hideSidebar} = this.props;
 
     const thisQuery = this.state.thisQuery === 'code' ? code : resultQuery;
 
@@ -225,6 +226,11 @@ export default class JobForm extends Component {
             <label className={formStyles.checkboxLabel}>
               <input {...enabled} type="checkbox" className={this.fieldClass(enabled)}/>
               Enabled
+            </label>
+
+            <label className={formStyles.checkboxLabel}>
+              <input {...shouldRerun} type="checkbox" className={this.fieldClass(shouldRerun)}/>
+              Rerun on error
             </label>
 
             <hr/>

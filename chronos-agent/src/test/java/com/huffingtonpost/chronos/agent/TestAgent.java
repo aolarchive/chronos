@@ -40,6 +40,8 @@ public class TestAgent {
   static H2TestJobDaoImpl dao;
   Reporting reporting;
   final int numOfConcurrentJobs = 5;
+  final int numOfConcurrentReruns = 10;
+  final int maxReruns = 5;
   List<SupportedDriver> drivers = H2TestUtil.createDriverForTesting();
 
   @Before
@@ -56,8 +58,7 @@ public class TestAgent {
     consumer = new AgentConsumer(dao, reporting, "testing.huffpo.com",
         new MailInfo("", "", "", ""),
         Session.getDefaultInstance(new Properties()), drivers,
-        numOfConcurrentJobs,
-        60);
+        numOfConcurrentJobs, numOfConcurrentReruns, maxReruns, 60);
     AgentConsumer.setShouldSendErrorReports(false);
     consumer.SLEEP_FOR = 1;
   }

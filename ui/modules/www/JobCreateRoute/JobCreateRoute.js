@@ -10,6 +10,12 @@ import styles from './JobCreateRoute.css';
 import SiteMain from '../SiteMain/SiteMain.js';
 import cn from 'classnames';
 
+// vars
+
+const initialValues = {
+  shouldRerun: true,
+};
+
 // export
 
 @connect((state) => {
@@ -50,7 +56,7 @@ export default class JobCreateRoute extends Component {
 
     return (
       <SiteMain {...props} title="Create Job" className={this.className()}>
-        <JobForm formKey="create" onSubmit={::this.handleSubmit}/>
+        <JobForm formKey="create" onSubmit={::this.handleSubmit} initialValues={initialValues}/>
       </SiteMain>
     );
   }

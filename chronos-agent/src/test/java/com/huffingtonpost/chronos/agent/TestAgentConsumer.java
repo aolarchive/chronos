@@ -18,7 +18,6 @@ import org.powermock.modules.junit4.PowerMockRunner;
 
 import javax.mail.Session;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,6 +40,8 @@ public class TestAgentConsumer {
   H2TestJobDaoImpl dao;
   AgentConsumer consumer;
   final int numOfConcurrentJobs = 5;
+  final int numOfConcurrentReruns = 10;
+  final int maxReruns = 5;
   List<SupportedDriver> drivers = H2TestUtil.createDriverForTesting();
   MailInfo mailInfo = new MailInfo("f", "f", "t", "t");
 
@@ -55,7 +56,8 @@ public class TestAgentConsumer {
         .thenReturn(new DateTime(0).withZone(DateTimeZone.UTC));
     consumer = new AgentConsumer(dao, reporting, "testing.huffpo.com",
         new MailInfo("", "", "", ""),
-        Session.getDefaultInstance(new Properties()), drivers, numOfConcurrentJobs, 0);
+        Session.getDefaultInstance(new Properties()), drivers, numOfConcurrentJobs,
+        numOfConcurrentReruns, maxReruns, 0);
     consumer.SLEEP_FOR = 20;
 
     AgentConsumer.setShouldSendErrorReports(false);
@@ -220,8 +222,8 @@ public class TestAgentConsumer {
   public void testJobResubmitMaxFailAttempts() {
     consumer = new AgentConsumer(dao, reporting, "testing.huffpo.com",
       new MailInfo("", "", "", ""),
-      Session.getDefaultInstance(new Properties()), drivers,numOfConcurrentJobs,
-      1);
+      Session.getDefaultInstance(new Properties()), drivers, numOfConcurrentJobs,
+      numOfConcurrentReruns, maxReruns, 1);
     consumer.SLEEP_FOR = 1;
     JobSpec aJob = TestAgent.getTestJob("Simone de Beauvoir", dao);
     aJob.setCode("not a valid query...");
@@ -314,10 +316,51 @@ public class TestAgentConsumer {
         "testing.huffpo.com",
         new MailInfo("", "", "", ""),
         Session.getDefaultInstance(new Properties()), drivers,
-        numOfConcurrentJobs, 0);
+        numOfConcurrentJobs, numOfConcurrentReruns, maxReruns, 0);
     local.init();
     assertEquals(1,
       local.getJobRuns(AgentConsumer.LIMIT_JOB_RUNS).values().size());
   }
 
+  @Test(timeout=2000)
+  public void testJobNoResubmit() {
+    consumer = new AgentConsumer(dao, reporting, "testing.huffpo.com",
+      new MailInfo("", "", "", ""),
+      Session.getDefaultInstance(new Properties()), drivers,numOfConcurrentJobs,
+      numOfConcurrentReruns, maxReruns, 1);
+    consumer.SLEEP_FOR = 1;
+    JobSpec aJob = TestAgent.getTestJob("Hannah Arendt", dao);
+    aJob.setCode("not a valid query...");
+    aJob.setShouldRerun(false);
+    dao.createJob(aJob);
+    PlannedJob pj = new PlannedJob(aJob, Utils.getCurrentTime());
+
+    CallableJob cj = new CallableQuery(pj, dao, reporting,
+      "example.com", mailInfo, null, drivers.get(0), 1);
+    consumer.submitJob(cj);
+
+    // let the job run and fail
+    TestAgent.waitUntilJobsFinished(consumer, 1);
+    boolean isSuccess = cj.getSuccess().get();
+    assertEquals(false, isSuccess);
+    Map<Long, CallableJob> expected = new HashMap<>();
+    expected.put(cj.getJobId(), cj);
+    assertEquals(expected, consumer.getFailedQueries(limit));
+
+    // See if the job retries
+    TestAgent.runRunnable(consumer);
+    try {
+      Thread.sleep(1000);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
+
+    assertEquals(0, consumer.getRunningJobs(limit).size());
+    assertEquals(0, consumer.getPendingJobs(limit).size());
+    Map<Long, CallableJob> jobRuns =
+      consumer.getJobRuns(AgentConsumer.LIMIT_JOB_RUNS);
+    assertEquals("jobRuns: " + jobRuns, 1, jobRuns.values().size());
+    assertEquals(1, consumer.getFinishedJobs(limit).size());
+    assertEquals(0, consumer.getSuccesfulQueries(limit).size());
+  }
 }

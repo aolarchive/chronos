@@ -1,3 +1,7 @@
+// rules
+
+/* eslint-disable import/no-commonjs */
+
 // import
 
 import path from 'path';
