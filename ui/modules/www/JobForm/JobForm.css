@@ -151,6 +151,15 @@
   color: var(--white);
 }
 
+.hollowButton {
+  display: block;
+  margin-left: 24px;
+  flex: 0 0 5.5bl;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
 /* codemirror */
 
 :global {

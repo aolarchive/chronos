@@ -21,14 +21,14 @@ import cn from 'classnames';
 
 // vars
 
-const requiredFields = ['interval', 'driver', 'startMinute'];
+const requiredFields = ['interval', 'driver', 'startMinute', 'name'];
 
 // export
 
 @reduxForm({
   form: 'job',
   fields: ['enabled', 'name', 'type', 'description', 'driver', 'user', 'password', 'interval', 'startDay', 'startHour', 'startMinute', 'resultEmail', 'statusEmail', 'id', 'lastModified', 'code', 'resultQuery'],
-  validate(vals, props) {
+  validate(vals) {
     const errors = {};
 
     _.forEach(vals, (val, key) => {
@@ -45,21 +45,12 @@ const requiredFields = ['interval', 'driver', 'startMinute'];
       delete errors.driver;
     }
 
-    if (!_.isEmpty(errors) && props.submitFailed) {
-      props.stopSubmit(false);
-      createMessage({
-        title: 'Save Job',
-        message: 'Please fill in required fields.',
-        level: 'error',
-      });
-    }
-
     return errors;
   },
 })
 @connect((state) => {
   return {
-    loader: state.siteLoader || {},
+    loader: state.siteLoader,
     sources: state.sources.query,
     deletedJobs: state.jobs.deleted,
     hideSidebar: state.localStorage.hideSidebar === 'true',
@@ -68,6 +59,7 @@ const requiredFields = ['interval', 'driver', 'startMinute'];
 export default class JobForm extends Component {
   static propTypes = {
     deletedJobs: PropTypes.array.isRequired,
+    errors: PropTypes.object.isRequired,
     fields: PropTypes.object.isRequired,
     formKey: PropTypes.string.isRequired,
     handleSubmit: PropTypes.func.isRequired,
@@ -77,7 +69,6 @@ export default class JobForm extends Component {
     loader: PropTypes.object.isRequired,
     resetForm: PropTypes.func.isRequired,
     sources: PropTypes.array,
-    stopSubmit: PropTypes.func,
     submitFailed: PropTypes.bool.isRequired,
   };
 
@@ -108,17 +99,24 @@ export default class JobForm extends Component {
   }
 
   componentDidUpdate(prevProps) {
-    if (this.props.sources && this.props.loader.active) {
+    if (this.props.sources && this.props.loader.active && this.props.loader.reasons.indexOf('JobForm') > -1) {
       disableSiteLoader('JobForm');
     }
 
     if (prevProps.job !== this.props.job) {
-      console.log(this.props.job);
       this.props.initializeForm(this.props.job);
     }
 
     if (prevProps.job && this.props.deletedJobs.length && prevProps.job.id === _.last(this.props.deletedJobs).id) {
       routeJobs();
+    }
+
+    if (!_.isEmpty(this.props.errors) && this.props.submitFailed) {
+      createMessage({
+        title: 'Save Job',
+        message: 'Please fill in required fields.',
+        level: 'error',
+      });
     }
   }
 
@@ -210,9 +208,13 @@ export default class JobForm extends Component {
 
           <button className={cn(formStyles.button, formStyles.buttonPrimary, styles.button)} onClick={handleSubmit}>Save</button>
           {this.props.formKey !== 'create' &&
-            <button type="button" className={cn(formStyles.button, formStyles.hollowButton)} onClick={::this.rerun}>Re-run</button>}
+            <button type="button" className={cn(formStyles.button, formStyles.hollowButton, styles.hollowButton)} onClick={::this.rerun}>
+              <span>Re-run</span>
+            </button>}
           {this.props.formKey !== 'create' &&
-            <button type="button" className={cn(formStyles.button, formStyles.hollowButton)} onClick={::this.deleteJob}>Delete</button>}
+            <button type="button" className={cn(formStyles.button, formStyles.hollowButton, styles.hollowButton)} onClick={::this.deleteJob}>
+              <span>Delete</span>
+            </button>}
         </FilterBar>
 
         <section className={cn(styles.editRegion, {[styles.hideSidebar]: hideSidebar})}>

@@ -33,6 +33,10 @@ export function siteLoaderReducer(state = initialState, action) {
     return _.clone(state);
 
   case siteLoaderConstants.disable:
+    if (!state.active) {
+      return state;
+    }
+
     if (_.isBoolean(action.reason)) {
       state.reasons = [];
     } else if (action.reason && _.includes(state.reasons, action.reason)) {

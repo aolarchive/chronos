@@ -12,7 +12,6 @@ import cn from 'classnames';
 // export
 
 @connect((state, props) => {
-  console.log(state.jobs.jobs);
   return {
     job: state.jobs.jobs[props.routeParams.id],
   };
@@ -30,7 +29,6 @@ export default class JobUpdateRoute extends Component {
   }
 
   componentDidUpdate(prevProps) {
-    console.log(prevProps.job, this.props.job);
     if (this.props.job !== prevProps.job) {
       disableSiteLoader('route');
     }
