@@ -79,6 +79,8 @@
 /* checkbox label */
 
 .checkboxLabel {
+  display: block;
+
   input {
     display: inline-block;
     width: auto;
