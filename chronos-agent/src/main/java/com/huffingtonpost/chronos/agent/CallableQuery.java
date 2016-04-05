@@ -98,7 +98,7 @@ public class CallableQuery extends CallableJob implements Callable<Void>  {
       throw new RuntimeException(ex);
     }
     reporting.mark("chronos.query." + jobName + "." + "passed");
-    success.set(true);
+    setStatus(0);
   }
 
   private void sendEmail(MailInfo info, DataSource attachment, String body, JobSpec currJob) {
@@ -259,8 +259,8 @@ public class CallableQuery extends CallableJob implements Callable<Void>  {
     builder.append(start);
     builder.append(", finish=");
     builder.append(finish);
-    builder.append(", success=");
-    builder.append(success);
+    builder.append(", status=");
+    builder.append(status);
     builder.append(", jobId=");
     builder.append(jobId);
     builder.append(", attemptNumber=");
@@ -278,7 +278,7 @@ public class CallableQuery extends CallableJob implements Callable<Void>  {
     result = prime * result + (int)jobId;
     result = prime * result + ((plannedJob == null) ? 0 : plannedJob.hashCode());
     result = prime * result + ((start == null) ? 0 : start.hashCode());
-    result = prime * result + ((success == null) ? 0 : success.hashCode());
+    result = prime * result + ((status == null) ? 0 : status.hashCode());
     return result;
   }
 
@@ -321,11 +321,11 @@ public class CallableQuery extends CallableJob implements Callable<Void>  {
     } else if (start.get() != other.start.get()) {
       return false;
     }
-    if (success == null) {
-      if (other.success != null) {
+    if (status == null) {
+      if (other.status != null) {
         return false;
       }
-    } else if (success.get() != other.success.get()) {
+    } else if (status.get() != other.status.get()) {
       return false;
     }
     return true;

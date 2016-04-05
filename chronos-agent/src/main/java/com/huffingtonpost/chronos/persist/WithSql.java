@@ -77,7 +77,7 @@ public class WithSql implements WithBackend {
     PreparedStatement jobRuns =
       conn.prepareStatement(String.format("CREATE TABLE IF NOT EXISTS %s "
         + "(id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, dt DATETIME, callable_job TEXT, "
-        + "name TEXT, `code` TEXT, success BIT, exception TEXT)", jobRunTableName));
+        + "name TEXT, `code` TEXT, status INTEGER, exception TEXT)", jobRunTableName));
     jobRuns.execute();
     jobRuns.close();
 
@@ -121,7 +121,7 @@ public class WithSql implements WithBackend {
       conn = newConnection();
       stat =
         conn.prepareStatement(
-          String.format("INSERT INTO %s (dt, callable_job, name, `code`, success, exception) "
+          String.format("INSERT INTO %s (dt, callable_job, name, `code`, status, exception) "
             + "VALUES (?, ?, ?, ?, ?, ?)", jobRunTableName),
                         Statement.RETURN_GENERATED_KEYS);
       int i = 1;
@@ -129,7 +129,7 @@ public class WithSql implements WithBackend {
       stat.setString(i++, objToString(cj));
       stat.setString(i++, cj.getPlannedJob().getJobSpec().getName());
       stat.setString(i++, cj.getPlannedJob().getJobSpec().getCode());
-      stat.setBoolean(i++, cj.getSuccess().get());
+      stat.setInt(i++, cj.getStatus().get());
       stat.setString(i++, cj.getExceptionMessage() != null ? cj.getExceptionMessage().get() : "");
       
       int rows = stat.executeUpdate();
@@ -164,14 +164,14 @@ public class WithSql implements WithBackend {
       conn = newConnection();
       stat =
         conn.prepareStatement(
-          String.format("UPDATE %s SET dt = ?, callable_job = ?, name = ?, `code` = ?, success = ?, exception = ? "
+          String.format("UPDATE %s SET dt = ?, callable_job = ?, name = ?, `code` = ?, status = ?, exception = ? "
             + "WHERE id = ?", jobRunTableName));
       int i = 1;
       stat.setTimestamp(i++, new Timestamp(dt.getMillis()));
       stat.setString(i++, objToString(cj));
       stat.setString(i++, cj.getPlannedJob().getJobSpec().getName());
       stat.setString(i++, cj.getPlannedJob().getJobSpec().getCode());
-      stat.setBoolean(i++, cj.getSuccess().get());
+      stat.setInt(i++, cj.getStatus().get());
       stat.setString(i++, cj.getExceptionMessage() != null ? cj.getExceptionMessage().get() : "");
       stat.setLong(i++, cj.getJobId());
       int rows = stat.executeUpdate();
@@ -611,6 +611,43 @@ public class WithSql implements WithBackend {
       
       int rows = stat.executeUpdate();
       LOG.info(String.format("Rows updated: %d", rows));
+    } catch (SQLException ex) {
+      throw new BackendException(ex);
+    } finally {
+      try {
+        if (stat != null) stat.close();
+      } catch (SQLException e) {
+        LOG.error(e);
+      }
+      try {
+        if (conn != null) conn.close();
+      } catch (SQLException e) {
+        LOG.error(e);
+      }
+    }
+  }
+  
+  @Override
+  public void deleteFromQueue(PlannedJob pj)
+    throws BackendException {
+    Connection conn = null;
+    PreparedStatement stat = null;
+    try {
+      conn = newConnection();
+      stat =
+        conn.prepareStatement(
+          String.format("DELETE FROM %s WHERE job_id = ? AND job_lastModified = ? AND replaceTime = ?",
+                        queueTableName));
+      int i = 1;
+      stat.setLong(i++, pj.getJobSpec().getId());
+      Timestamp lm =
+        new Timestamp(pj.getJobSpec().getLastModified().getMillis());
+      stat.setTimestamp(i++, lm);
+      Timestamp rt =
+        new Timestamp(pj.getReplaceTime().getMillis());
+      stat.setTimestamp(i++, rt);
+      int rows = stat.executeUpdate();
+      LOG.info(String.format("Rows deleted: %d", rows));
     } catch (SQLException ex) {
       throw new BackendException(ex);
     } finally {

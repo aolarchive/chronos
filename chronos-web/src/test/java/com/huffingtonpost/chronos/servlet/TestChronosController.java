@@ -599,4 +599,19 @@ public class TestChronosController {
       .andExpect(content().string(OM.writeValueAsString(expectedId)))
       .andExpect(status().isOk());
   }
+
+  @Test
+  public void testCancelJob() throws Exception {
+    PlannedJob aJob =
+      new PlannedJob(getTestJob("Some Job"), Utils.getCurrentTime());
+
+    MockHttpServletRequestBuilder request = delete(String.format("/api/queue"))
+      .contentType(MediaType.APPLICATION_JSON)
+      .content(OM.writeValueAsString(aJob));
+    mockMvc.perform(request)
+      .andExpect(status().isOk())
+      .andExpect(content().string(success));
+
+    verify(jobDao, times(1)).cancelJob(aJob);
+  }
 }

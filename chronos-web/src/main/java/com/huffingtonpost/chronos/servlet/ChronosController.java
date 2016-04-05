@@ -329,4 +329,10 @@ public class ChronosController {
     return SUCCESS;
   }
 
+  @RequestMapping(value="/queue", method=RequestMethod.DELETE)
+  public @ResponseBody Response cancelJob(@RequestBody final PlannedJob aJob) {
+    jobDao.cancelJob(aJob);
+    return SUCCESS;
+  }
+
 }

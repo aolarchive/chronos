@@ -95,8 +95,15 @@ public class AgentConsumer extends Stoppable {
 
   public void doRun() {
     List<PlannedJob> queue = dao.getQueue();
-    if (queue.size() == 0) {
-      LOG.debug("Job queue is empty. Sleeping...");
+    boolean zeroInQueue = queue.size() == 0;
+    boolean maxJobsRunning = getRunningJobs(LIMIT_JOB_RUNS).size() >= numOfConcurrentJobs;
+    if (zeroInQueue || maxJobsRunning) {
+      if (zeroInQueue) {
+        LOG.debug("Job queue is empty. Sleeping...");
+      }
+      if (maxJobsRunning) {
+        LOG.debug("Max # of concurrent jobs running. Sleeping...");
+      }
       try {
         Thread.sleep(SLEEP_FOR);
       } catch (InterruptedException e) {
@@ -140,7 +147,7 @@ public class AgentConsumer extends Stoppable {
       final int attempt = latest.getAttemptNumber();
       boolean notMaxed = attempt < maxReruns;
       boolean latestFailed = latest.isDone() && !latest.isRunning() &&
-        !latest.getSuccess().get();
+        latest.isFailed();
       if (latest != null && latestFailed && notMaxed) {
         synchronized (pendingReruns) {
           pendingReruns.add(pj);
@@ -295,7 +302,7 @@ public class AgentConsumer extends Stoppable {
   public static boolean isJobFailed(CallableJob cj) {
     boolean isRunning = cj.isRunning();
     boolean isDone = cj.isDone();
-    boolean isSuccess = cj.getSuccess().get();
+    boolean isSuccess = cj.isSuccess();
     return !isRunning && isDone && !isSuccess;
   }
 
@@ -320,7 +327,7 @@ public class AgentConsumer extends Stoppable {
       CallableJob value = entry.getValue();
       boolean isRunning = value.isRunning();
       boolean isDone = value.isDone();
-      boolean isSuccess = value.getSuccess().get();
+      boolean isSuccess = value.isSuccess();
       if (!isRunning && isDone && isSuccess) {
         toRet.put(key, value);
       }

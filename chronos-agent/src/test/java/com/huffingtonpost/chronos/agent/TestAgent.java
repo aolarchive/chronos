@@ -372,7 +372,7 @@ public class TestAgent {
     CallableJob actual =
       consumer.getJobRuns(AgentConsumer.LIMIT_JOB_RUNS).get(new Long(1));
     assertEquals("", actual.getExceptionMessage().get());
-    assertEquals(true, actual.getSuccess().get());
+    assertEquals(true, actual.isSuccess());
   }
 
   @Test(timeout=2000)
@@ -386,7 +386,8 @@ public class TestAgent {
     waitUntilJobsFinished(consumer, 1);
     CallableJob actual =
       consumer.getJobRuns(AgentConsumer.LIMIT_JOB_RUNS).get(new Long(1));
-    assertEquals(false, actual.getSuccess().get());
+    assertEquals(false, actual.isSuccess());
+    assertEquals(true, actual.isFailed());
     String expected = CallableScript.genErrorMessage(aJob, error+"\n");
     assertEquals(expected, actual.getExceptionMessage().get());
   }
@@ -410,7 +411,8 @@ public class TestAgent {
     waitUntilJobsFinished(consumer, 1);
     CallableJob actual =
       consumer.getJobRuns(AgentConsumer.LIMIT_JOB_RUNS).get(new Long(1));
-    assertEquals(false, actual.getSuccess().get());
+    assertEquals(false, actual.isSuccess());
+    assertEquals(true, actual.isFailed());
     String expected = CallableScript.genErrorMessage(aJob, error+"\n");
     assertEquals(expected, actual.getExceptionMessage().get());
   }
