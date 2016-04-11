@@ -164,7 +164,7 @@ public class TestAgentConsumer {
 
     TestAgent.waitForFail(consumer, 1);
 
-    boolean isSuccess = cj.getSuccess().get();
+    boolean isSuccess = cj.isSuccess();
     assertEquals(false, isSuccess);
     assertEquals(true, cj.isDone());
 
@@ -188,7 +188,7 @@ public class TestAgentConsumer {
     consumer.submitJob(cj);
 
     TestAgent.waitForFail(consumer, 1);
-    boolean isSuccess = cj.getSuccess().get();
+    boolean isSuccess = cj.isSuccess();
     assertEquals(false, isSuccess);
     Map<Long, CallableJob> expected = new HashMap<>();
     expected.put(cj.getJobId(), cj);
@@ -213,7 +213,7 @@ public class TestAgentConsumer {
     assertEquals(2, consumer.getFinishedJobs(limit).size());
     assertEquals(1, consumer.getSuccesfulQueries(limit).size());
     assertEquals(true,
-      consumer.getFinishedJobs(limit).get(nextId).getSuccess().get());
+      consumer.getFinishedJobs(limit).get(nextId).getStatus().get());
     dao.execute(
       String.format("DROP TABLE IF EXISTS %s", tableName));
   }
@@ -237,7 +237,7 @@ public class TestAgentConsumer {
 
     // let the job run and fail
     TestAgent.waitUntilJobsFinished(consumer, 1);
-    boolean isSuccess = cj.getSuccess().get();
+    boolean isSuccess = cj.isSuccess();
     assertEquals(false, isSuccess);
     Map<Long, CallableJob> expected = new HashMap<>();
     expected.put(cj.getJobId(), cj);
@@ -277,7 +277,7 @@ public class TestAgentConsumer {
     assertEquals(5, consumer.getFinishedJobs(limit).size());
     assertEquals(0, consumer.getSuccesfulQueries(limit).size());
     assertEquals(false,
-      consumer.getFinishedJobs(limit).get(nextId).getSuccess().get());
+      consumer.getFinishedJobs(limit).get(nextId).isSuccess());
   }
 
   @Test
@@ -341,7 +341,7 @@ public class TestAgentConsumer {
 
     // let the job run and fail
     TestAgent.waitUntilJobsFinished(consumer, 1);
-    boolean isSuccess = cj.getSuccess().get();
+    boolean isSuccess = cj.isSuccess();
     assertEquals(false, isSuccess);
     Map<Long, CallableJob> expected = new HashMap<>();
     expected.put(cj.getJobId(), cj);
@@ -362,5 +362,71 @@ public class TestAgentConsumer {
     assertEquals("jobRuns: " + jobRuns, 1, jobRuns.values().size());
     assertEquals(1, consumer.getFinishedJobs(limit).size());
     assertEquals(0, consumer.getSuccesfulQueries(limit).size());
+  }
+
+  public void testCancelPendingJob() {
+    JobSpec aJob = TestAgent.getTestJob("Foucault", dao);
+    aJob.setShouldRerun(true);
+    long id = dao.createJob(aJob);
+    PlannedJob pj = new PlannedJob(dao.getJob(id),
+      Utils.getCurrentTime());
+
+    dao.addToQueue(pj);
+    dao.cancelJob(pj);
+
+    TestAgent.runRunnable(consumer);
+
+    assertEquals(0, consumer.getRunningJobs(limit).size());
+    assertEquals(0, consumer.getPendingJobs(limit).size());
+    assertEquals(0, consumer.getFinishedJobs(limit).size());
+    assertEquals(0, consumer.getSuccesfulQueries(limit).size());
+    assertEquals(0, consumer.getFailedQueries(limit).size());
+  }
+
+  @Test(timeout=2000)
+  public void testQueueLarge() {
+    int extra = numOfConcurrentJobs;
+    int total = numOfConcurrentJobs*2;
+
+    // queue up a bunch of long-running jobs
+    for (int i = 0; i < numOfConcurrentJobs; i++) {
+      JobSpec aJob = TestAgent.getTestJob("Foucault "+i, dao);
+      aJob.setShouldRerun(true);
+      long id = dao.createJob(aJob);
+      PlannedJob pj = new PlannedJob(dao.getJob(id),
+        Utils.getCurrentTime());
+      CallableJob cj = new SleepyCallableQuery(pj, dao, reporting,
+        "example.com", null, null, drivers.get(0), 1, 10000);
+      consumer.submitJob(cj);
+    }
+
+    // and now queue some extra
+    for (int i = 0; i < numOfConcurrentJobs; i++) {
+      JobSpec aJob = TestAgent.getTestJob("Foucault "+(numOfConcurrentJobs), dao);
+      aJob.setShouldRerun(true);
+      long id = dao.createJob(aJob);
+      PlannedJob pj = new PlannedJob(dao.getJob(id),
+        Utils.getCurrentTime());
+      dao.addToQueue(pj);
+    }
+    assertEquals(extra, dao.getQueue().size());
+    assertEquals(0, consumer.getFinishedJobs(limit).size());
+    assertEquals(0, consumer.getSuccesfulQueries(limit).size());
+    assertEquals(0, consumer.getFailedQueries(limit).size());
+    
+    TestAgent.runRunnable(consumer);
+    try {
+      Thread.sleep(500);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
+    TestAgent.runRunnable(consumer);
+    
+    // make sure queue is populated with extra
+    assertEquals(numOfConcurrentJobs, consumer.getRunningJobs(limit).size());
+    assertEquals(extra, dao.getQueue().size());
+    assertEquals(0, consumer.getFinishedJobs(limit).size());
+    assertEquals(0, consumer.getSuccesfulQueries(limit).size());
+    assertEquals(0, consumer.getFailedQueries(limit).size());
   }
 }

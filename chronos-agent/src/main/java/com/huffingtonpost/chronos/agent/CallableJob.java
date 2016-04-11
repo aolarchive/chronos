@@ -2,6 +2,7 @@ package com.huffingtonpost.chronos.agent;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -20,12 +21,21 @@ public abstract class CallableJob implements Callable<Void> {
 
   public static Logger LOG = Logger.getLogger(CallableJob.class);
 
+  public enum Status {
+    SUCCESS(0),
+    FAIL(1);
+    public final int code;
+    Status(int code) {
+      this.code = code;
+    }
+  }
+
   @JsonIgnore
   protected JobDao dao;
   protected PlannedJob plannedJob;
   protected final AtomicLong start = new AtomicLong(0);
   protected final AtomicLong finish = new AtomicLong(0);
-  protected AtomicBoolean success = new AtomicBoolean(false);
+  protected AtomicInteger status = new AtomicInteger(Status.FAIL.code);
   protected Reporting reporting;
   protected String hostname;
   protected long jobId;
@@ -74,7 +84,7 @@ public abstract class CallableJob implements Callable<Void> {
   protected void handleException(Exception ex) {
     String jobName = plannedJob.getJobSpec().getName();
     LOG.error(ex);
-    exceptionMessage.set(ex.getMessage());
+    setExceptionMessage(ex.getMessage());
     JobSpec spec = plannedJob.getJobSpec();
     if (spec.getStatusEmail() != null &&
         spec.getStatusEmail().size() > 0 &&
@@ -90,7 +100,7 @@ public abstract class CallableJob implements Callable<Void> {
           jobId, hostname, mailInfo, session, attemptNumber);
     }
     reporting.mark("chronos.query." + jobName + "." + "failed");
-    success.set(false);
+    setStatus(1);
   }
 
   @JsonIgnore
@@ -120,12 +130,30 @@ public abstract class CallableJob implements Callable<Void> {
     return finish;
   }
 
-  public AtomicBoolean getSuccess() {
-    return success;
+  public AtomicInteger getStatus() {
+    return status;
+  }
+
+  @JsonIgnore
+  public boolean isSuccess() {
+    return status.get() == Status.SUCCESS.code;
+  }
+
+  @JsonIgnore
+  public boolean isFailed() {
+    return status.get() == Status.FAIL.code;
+  }
+
+  public void setStatus(int status) {
+    this.status.set(status);
   }
 
   public AtomicReference<String> getExceptionMessage() {
     return exceptionMessage;
+  }
+
+  public void setExceptionMessage(String message) {
+    this.exceptionMessage.set(message);
   }
 
   public void setJobId(Long jobId) {

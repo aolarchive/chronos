@@ -171,4 +171,14 @@ public class JobDaoImpl extends WithSql implements JobDao {
     }
   }
 
+  public void cancelJob(PlannedJob pj) {
+    try {
+      deleteFromQueue(pj);
+      LOG.debug("Canceled job: " + pj.getJobSpec().getId() +
+        " with replace time: " + pj.getReplaceTime());
+    } catch (BackendException e) {
+      throw new RuntimeException("Exception when canceling job: " + e.getMessage());
+    }
+  }
+
 }
