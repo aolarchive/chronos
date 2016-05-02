@@ -1,0 +1,135 @@
+/* rules */
+
+/* stylelint-disable declaration-no-important */
+
+/* import */
+
+@import '../Styles/Vars.css';
+
+/* styles */
+
+.RunsList {
+  position: fixed;
+  top: var(--header-height);
+  right: 0;
+  bottom: 0;
+  width: var(--sidebar-width);
+  overflow: hidden;
+  background-color: var(--white);
+  z-index: 500;
+  box-shadow: 0 0 12px var(--gray);
+  user-select: none;
+}
+
+/* list */
+
+.items {
+  position: absolute;
+  top: 2.5bl;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow-x: hidden;
+  overflow-y: scroll;
+
+  &::-webkit-scrollbar {
+    width: 0 !important;
+  }
+}
+
+.item {
+  position: relative;
+  padding: 0.5bl;
+  margin-bottom: 1px;
+  transition: background var(--trans-anima);
+
+  &:nth-child(odd) {
+    background-color: var(--table-row-odd);
+  }
+
+  &::before,
+  &::after {
+    content: '';
+    display: block;
+    position: absolute;
+    width: calc(100% + 1px);
+    height: calc(1.5bl + 1px);
+    pointer-events: none;
+    transition: border var(--trans-anima);
+  }
+
+  &::before {
+    top: -1px;
+    left: -1px;
+    border-top: 1px solid var(--table-border-color);
+    border-left: 1px solid var(--table-border-color);
+  }
+
+  &::after {
+    bottom: -1px;
+    right: -1px;
+    border-bottom: 1px solid var(--table-border-color);
+    border-right: 1px solid var(--table-border-color);
+  }
+
+  &:hover {
+    background-color: color(var(--selected-color) tint(80%)) !important;
+    z-index: 1;
+
+    &::before,
+    &::after {
+      border-color: var(--selected-color);
+    }
+  }
+}
+
+.itemHeader {
+  margin-bottom: 0.5bl;
+  display: flex;
+
+  .time {
+    text-align: right;
+  }
+}
+
+.name {
+  font-weight: bold;
+  flex: 0 1 75%;
+
+  .error & {
+    color: var(--red);
+  }
+}
+
+.itemFooter {
+  margin-top: 0.5bl;
+  display: flex;
+}
+
+.actions {
+  flex: 1 1 50%;
+  text-align: right;
+}
+
+.action {
+  cursor: pointer;
+  text-transform: uppercase;
+  opacity: 0;
+  color: var(--selected-color);
+  transition color: var(--trans-anima);
+  margin-left: 0.5bl;
+
+  &:hover {
+    color: color(var(--selected-color) l(+20%));
+  }
+
+  .item:hover & {
+    opacity: 1;
+  }
+}
+
+.time {
+  flex: 1 1 25%;
+  text-transform: uppercase;
+  color: var(--input-border-color);
+}

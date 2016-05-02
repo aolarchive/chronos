@@ -1,185 +1,56 @@
 // import
 
 import React, {Component, PropTypes} from 'react';
-import DocumentTitle from 'react-document-title';
-import FilterBar from '../FilterBar/FilterBar.js';
-import {updateLoader} from '../LoaderStore/LoaderStore.js';
-import {queryJobs} from '../JobStore/JobStore.js';
-import {connect} from 'react-redux';
-import {routeJobUpdate} from '../RouterStore/RouterStore.js';
-import RerunJobsModal from '../RerunJobsModal/RerunJobsModal.js';
-import {createModal} from '../ModalStore/ModalStore.js';
-import _ from 'lodash';
+import styles from './JobsRoute.css';
+import formStyles from '../Styles/Form.css';
 import cn from 'classnames';
-
-// vars
-
-const daysOfWeek = [
-  'Sundays',
-  'Mondays',
-  'Tuesdays',
-  'Wednesdays',
-  'Thursdays',
-  'Fridays',
-  'Saturdays',
-];
-
-const intervals = [
-  'Hourly',
-  'Daily',
-  'Weekly',
-  'Monthly',
-];
-
-const types = [
-  'script',
-  'query',
-  'report',
-];
-
-// fns
-
-function getJobType(job) {
-  return job.resultQuery && job.resultQuery.trim() ? 'report' : job.type === 'Script' ? 'script' : 'query';
-}
-
-function jobContainsText(job, textArr) {
-  if (textArr.length === 0) {
-    return true;
-  }
-
-  return textArr.every((text) => {
-    return _.some(job, (val) => {
-      if (!_.isString(val)) {
-        return false;
-      }
-
-      return text && _.includes(val.toString().toLowerCase(), text);
-    });
-  });
-}
-
-function nextRun(job) {
-  switch (job.interval) {
-  case 'Hourly':
-    return `Hourly at :${_.padStart(job.startMinute, 2, '0')}`;
-  case 'Daily':
-    return `Daily at ${job.startHour}:${_.padStart(job.startMinute, 2, '0')}`;
-  case 'Weekly':
-    return `${daysOfWeek[job.startDay % 7]} at ${job.startHour}:${_.padStart(job.startMinute, 2, '0')}`;
-  case 'Monthly':
-    return `Monthly at ${job.startHour}:${_.padStart(job.startMinute, 2, '0')}`;
-  }
-
-  return 'N/A';
-}
-
-const sortFns = {
-  name(job) {
-    return job.name.toLowerCase().trim();
-  },
-
-  type(job) {
-    return [
-      types.indexOf(getJobType(job)),
-      job.name.toLowerCase().trim(),
-    ].join(' ');
-  },
-
-  enabled(job) {
-    return [
-      (job.enabled ? 0 : 1),
-      job.name.toLowerCase().trim(),
-    ].join(' ');
-  },
-
-  interval(job) {
-    return [
-      intervals.indexOf(job.interval),
-      job.interval === 'Weekly' ? _.padStart(job.startDay, 2, '0') : '00',
-      job.interval !== 'Hourly' ? _.padStart(job.startHour, 2, '0') : '00',
-      _.padStart(job.startMinute, 2, '0'),
-      (job.enabled ? 0 : 1),
-      job.name.toLowerCase().trim(),
-    ].join(' ');
-  },
-};
+import {connect} from 'react-redux';
+import SiteMain from '../SiteMain/SiteMain.js';
+import JobsList from '../JobsList/JobsList.js';
+import {queryJobs} from '../JobsStore/JobsStore.js';
+import {enableSiteLoader, disableSiteLoader} from '../SiteLoaderStore/SiteLoaderStore.js';
+import FilterBar from '../FilterBar/FilterBar.js';
+import JobsFilter from '../JobsFilter/JobsFilter.js';
+import {createModal} from '../SiteModalStore/SiteModalStore.js';
+import RerunJobsModal from '../RerunJobsModal/RerunJobsModal.js';
 
 // export
 
 @connect((state) => {
   return {
     jobs: state.jobs.query,
-    loader: state.loader.global || {},
   };
 })
 export default class JobsRoute extends Component {
   static propTypes = {
+    className: PropTypes.string,
     jobs: PropTypes.array,
-    loader: PropTypes.object.isRequired,
   };
 
   state = {
-    filters: {
-      text: [],
-    },
-    sortDir: 'asc',
-    sortBy: 'name',
+    jobs: null,
   };
 
   componentDidMount() {
     queryJobs();
-    updateLoader('global', {active: true});
-  }
 
-  componentDidUpdate() {
-    if (this.props.jobs && this.props.loader.active) {
-      updateLoader('global', {active: false});
-    }
-  }
-
-  getJobs() {
     if (!this.props.jobs) {
-      return [];
+      enableSiteLoader('route');
     }
-
-    return _.chain(this.props.jobs)
-    .filter((job) => {
-      return jobContainsText(job, this.state.filters.text);
-    })
-    .orderBy([sortFns[this.state.sortBy]], [this.state.sortDir])
-    .value();
   }
 
-  getJobsDOM() {
-    return (this.getJobs()).map((job, i) => {
-      const jobType = getJobType(job);
-
-      return (
-        <tr key={i} onClick={this.viewJob(job)}>
-          <td className="jobs-list-icon">
-            {job.enabled ? (
-              <div className="jobs-list-enabled"/>
-            ) : null}
-          </td>
-          <td className="jobs-list-type">
-            <div className={'jobs-list-type-icon icon icon-' + jobType}/>
-          </td>
-          <td className="jobs-list-name">{job.name}</td>
-          <td className="jobs-list-next">{nextRun(job).toLowerCase()}</td>
-        </tr>
-      );
-    });
+  componentDidUpdate(prevProps) {
+    if (this.props.jobs && !prevProps.jobs) {
+      disableSiteLoader('route');
+    }
   }
 
-  viewJob(job) {
-    return () => {
-      routeJobUpdate(job);
-    };
+  className() {
+    return cn(styles.JobsRoute, this.props.className);
   }
 
-  readFilters(event) {
-    this.setState({filters: {text: _.compact(event.target.value.toLowerCase().split(' '))}});
+  filterJobs(jobs) {
+    this.setState({jobs});
   }
 
   rerun() {
@@ -187,58 +58,25 @@ export default class JobsRoute extends Component {
       title: 'Re-Run All Jobs',
       component: RerunJobsModal,
       props: {
-        jobs: this.getJobs(),
+        jobs: this.state.jobs || this.props.jobs,
       },
     });
   }
 
-  sortClick(sortBy) {
-    return () => {
-      this.setState({
-        sortBy,
-        sortDir: this.state.sortBy !== sortBy ? 'asc' : this.state.sortDir === 'asc' ? 'desc' : 'asc',
-      });
-    };
-  }
-
-  hrClassName(key, cls) {
-    return cn(cls, {
-      sorted: this.state.sortBy === key,
-      sortedAsc: this.state.sortBy === key && this.state.sortDir === 'asc',
-      sortedDesc: this.state.sortBy === key && this.state.sortDir === 'desc',
-    });
-  }
-
   render() {
+    const {className, jobs, ...props} = this.props;
+
     return (
-      <DocumentTitle title={'Jobs List || Chronos'}>
-        <main id="route-jobs" className="site-main route-jobs">
-          <FilterBar>
-            <input ref="textFilter" className="jobs-filter jobs-filter-text" type="text" placeholder="Search" onChange={::this.readFilters}/>
+      <SiteMain {...props} title="Jobs List" className={this.className()}>
+        <FilterBar>
+          <JobsFilter className={styles.filter} jobs={jobs} onFilter={::this.filterJobs}/>
+          <button className={cn(styles.button, formStyles.hollowButton)} onClick={::this.rerun}>
+            <span>Re-run</span>
+          </button>
+        </FilterBar>
 
-            <button className="job-button job-button-run" onClick={::this.rerun}>Re-run</button>
-          </FilterBar>
-
-          <table className="jobs-list">
-            <thead className="jobs-list-head">
-              <tr>
-                <th className={this.hrClassName('enabled', 'jobs-list-icon')} onClick={this.sortClick('enabled')}>
-                  <div className="jobs-list-enabled"/>
-                </th>
-                <th className={this.hrClassName('type', 'jobs-list-type')} onClick={this.sortClick('type')}>
-                  <div className={'jobs-list-type-icon icon icon-query'}/>
-                </th>
-                <th className={this.hrClassName('name', 'jobs-list-name')} onClick={this.sortClick('name')}>Job</th>
-                <th className={this.hrClassName('interval', 'jobs-list-next')} onClick={this.sortClick('interval')}>Run Interval</th>
-              </tr>
-            </thead>
-
-            <tbody className="jobs-list-body">
-              {this.getJobsDOM()}
-            </tbody>
-          </table>
-        </main>
-      </DocumentTitle>
+        <JobsList className={styles.list} jobs={this.state.jobs}/>
+      </SiteMain>
     );
   }
 }

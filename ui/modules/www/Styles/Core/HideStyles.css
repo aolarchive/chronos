@@ -1,0 +1,166 @@
+/* rules */
+
+/* stylelint-disable declaration-no-important */
+
+/* import */
+
+@import '../Vars.css';
+
+/* styles */
+
+.hide {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+.hideText {
+  font-size: 0;
+  line-height: 0;
+  color: transparent;
+  text-shadow: none;
+}
+
+.hideEyes {
+  visibility: hidden;
+}
+
+/* media */
+
+@media (--cell) {
+  .hideCell {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  .showMobile {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  .showTablet {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  .showLaptop {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  .showDesktop {
+    display: none !important;
+    visibility: hidden !important;
+  }
+}
+
+@media (--mobile) {
+  .showCell {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  .hideMobile {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  .showTablet {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  .showLaptop {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  .showDesktop {
+    display: none !important;
+    visibility: hidden !important;
+  }
+}
+
+@media (--tablet) {
+  .showCell {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  .showMobile {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  .hideTablet {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  .showLaptop {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  .showDesktop {
+    display: none !important;
+    visibility: hidden !important;
+  }
+}
+
+@media (--laptop) {
+  .showCell {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  .showMobile {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  .showTablet {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  .hideLaptop {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  .showDesktop {
+    display: none !important;
+    visibility: hidden !important;
+  }
+}
+
+@media (--desktop) {
+  .showCell {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  .showMobile {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  .showTablet {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  .showLaptop {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  .hideDesktop {
+    display: none !important;
+    visibility: hidden !important;
+  }
+}
+
+/* rules */
+
+/* stylelint-enable */

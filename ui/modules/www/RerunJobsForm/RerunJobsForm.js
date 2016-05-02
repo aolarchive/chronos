@@ -3,6 +3,8 @@
 import React, {Component, PropTypes} from 'react';
 import {reduxForm} from 'redux-form';
 import moment from 'moment';
+import formStyles from '../Styles/Form.css';
+import cn from 'classnames';
 
 // export
 
@@ -50,18 +52,18 @@ export default class RerunJobsForm extends Component {
     const {fields: {start, end}, handleSubmit} = this.props;
 
     return (
-      <form id="form-job" className="form-job" onSubmit={handleSubmit}>
-        <div className="input-affix-group">
-          <label className="input-prefix">Start</label>
-          <input {...start} type="text" className="rerun-input-start"/>
+      <form onSubmit={handleSubmit}>
+        <div className={formStyles.affixGroup}>
+          <label className={formStyles.affix}>Start</label>
+          <input {...start} type="text" className={cn(formStyles.input, formStyles.affixed)}/>
         </div>
 
-        <div className="input-affix-group">
-          <label className="input-prefix">End</label>
-          <input {...end} type="text" className="rerun-input-end"/>
+        <div className={formStyles.affixGroup}>
+          <label className={formStyles.affix}>End</label>
+          <input {...end} type="text" className={cn(formStyles.input, formStyles.affixed)}/>
         </div>
 
-        <button className="rerun-input-button primary" onClick={handleSubmit}>Re-run</button>
+        <button className={cn(formStyles.button, formStyles.buttonPrimary, formStyles.modalButton)} onClick={handleSubmit}>Re-run</button>
       </form>
     );
   }

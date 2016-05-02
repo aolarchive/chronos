@@ -1,43 +1,52 @@
 // import
 
 import React, {Component, PropTypes} from 'react';
-import cn from 'classnames';
+import styles from './SiteLoader.css';
 import {connect} from 'react-redux';
+import cn from 'classnames';
+import _ from 'lodash';
+
+// vars
+
+const sizes = ['small', 'medium', 'large', 'jumbo'];
 
 // export
 
 @connect((state) => {
   return {
-    loader: state.loader,
+    siteLoader: state.siteLoader,
   };
 })
 export default class SiteLoader extends Component {
   static propTypes = {
     className: PropTypes.string,
-    loader: PropTypes.object.isRequired,
+    siteLoader: PropTypes.object.isRequired,
+    size: PropTypes.oneOf(sizes).isRequired,
+  };
+
+  static defaultProps = {
+    size: _.last(sizes),
   };
 
   className() {
     return cn(
-      this.props.className,
-      'site-loader',
-      {
-        'active': this.props.loader.global.active,
-      }
-    );
+    styles.SiteLoader,
+    this.props.className, {
+      [styles.active]: this.props.siteLoader.active,
+    });
   }
 
   render() {
-    const {loader, ...props} = this.props;
+    const {className, size, ...props} = this.props;
 
     return (
-      <section {...props} id="site-loader" className={this.className()}>
-        <div className="loader jumbo">
-          <div className="loader-bar"></div>
-          <div className="loader-bar"></div>
-          <div className="loader-bar"></div>
-          <div className="loader-bar"></div>
-          <div className="loader-bar"></div>
+      <section {...props} className={this.className()}>
+        <div className={cn(styles.loader, styles[this.props.size])}>
+          <div className={styles.loaderBar}></div>
+          <div className={styles.loaderBar}></div>
+          <div className={styles.loaderBar}></div>
+          <div className={styles.loaderBar}></div>
+          <div className={styles.loaderBar}></div>
         </div>
       </section>
     );

@@ -1,0 +1,27 @@
+/* styles */
+
+/* ie10 bug */
+@-ms-viewport {
+  width: device-width;
+}
+
+/** 
+ * firefox bug
+ * https://github.com/twbs/bootstrap/issues/7611
+ */
+select optgroup {
+  font-size: inherit;
+  font-style: inherit;
+  font-family: inherit;
+}
+
+/**
+ * chrome bug
+ * https://github.com/twbs/bootstrap/issues/8350
+ */
+input[type='number'] {
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button {
+    height: auto;
+  }
+}

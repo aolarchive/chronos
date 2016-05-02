@@ -1,9 +1,21 @@
+// rules
+
+/* eslint-disable import/no-commonjs */
+
 // import
 
 import path from 'path';
 import webpack from 'webpack';
 
+import postcssImport from 'postcss-import';
 import postcssAutoprefixer from 'autoprefixer';
+import postcssCssnano from 'cssnano';
+import postcssStylelint from 'stylelint';
+import postcssReporter from 'postcss-reporter';
+import postcssCssnext from 'postcss-cssnext';
+import postcssNested from 'postcss-nested';
+import postcssHCL from 'postcss-color-hcl';
+import postcssBaseline from './postcss/baseline.js';
 
 // vars
 
@@ -72,26 +84,36 @@ module.exports = {
       loader: 'react-hot!babel',
       include,
     }, {
-      test: /\.styl$/,
-      loader: 'style!css!postcss!stylus',
-    }, {
       test: /\.css$/,
-      loader: 'style!css!postcss',
+      loader: 'style!css?modules&localIdentName=[name]_[local]__[hash:base64:5]&importLoaders=1!postcss',
+      include,
     }, {
       test: /\.json$/,
       loader: 'json',
     }],
   },
 
-  stylus: {
-    use: [require('nib')()],
-  },
-
-  postcss() {
+  postcss(wp) {
     return [
+      postcssStylelint(),
+      postcssImport({
+        addDependencyTo: wp,
+      }),
+      postcssBaseline(),
+      postcssNested(),
+      postcssHCL(),
+      postcssCssnext({
+        features: {
+          autoprefixer: false,
+        },
+      }),
       postcssAutoprefixer({
         browsers: ['last 2 version'],
       }),
+      postcssCssnano({
+        autoprefixer: false,
+      }),
+      postcssReporter(),
     ];
   },
 

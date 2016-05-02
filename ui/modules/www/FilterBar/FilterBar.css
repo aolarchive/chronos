@@ -1,0 +1,11 @@
+/* import */
+
+@import '../Styles/Vars.css';
+
+/* styles */
+
+.FilterBar {
+  height: 1.5bl;
+  margin-bottom: 1bl;
+  display: flex;
+}

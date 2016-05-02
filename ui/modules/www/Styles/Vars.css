@@ -1,0 +1,102 @@
+/* vars */
+
+:root {
+  /* base */
+
+  --baseline: 24px;
+  --basefont: 16px;
+
+  /* grid */
+
+  --grid-cell-width: calc(16 * var(--basefont));
+  --grid-mobile-width: calc(32 * var(--basefont));
+  --grid-tablet-width: calc(48 * var(--basefont));
+  --grid-laptop-width: calc(64 * var(--basefont));
+  --grid-desktop-width: calc(80 * var(--basefont));
+
+  /* grays */
+
+  --white: hsl(0, 0%, 100%);
+  --palewhite: hsl(0, 0%, 90%);
+  --pale: hsl(0, 0%, 80%);
+  --palegray: hsl(0, 0%, 70%);
+  --gray: hsl(0, 0%, 60%);
+  --darkgray: hsl(0, 0%, 50%);
+  --dark: hsl(0, 0%, 40%);
+  --darkblack: hsl(0, 0%, 30%);
+  --black: hsl(0, 0%, 20%);
+  --pitchblack: hsl(0, 0%, 10%);
+  --pitch: hsl(0, 0%, 0%);
+
+  /* colors */
+
+  --red: hcl(0, 29%, 50%);
+  --redorange: hcl(30, 29%, 50%);
+  --orange: hcl(60, 29%, 50%);
+  --orangeyellow: hcl(90, 29%, 50%);
+  --yellow: hcl(120, 29%, 50%);
+  --yellowgreen: hcl(150, 29%, 50%);
+  --green: hcl(180, 29%, 50%);
+  --greenblue: hcl(210, 29%, 50%);
+  --blue: hcl(240, 29%, 50%);
+  --bluepurple: hcl(270, 29%, 50%);
+  --purple: hcl(300, 29%, 50%);
+  --purplered: hcl(330, 29%, 50%);
+
+  /* fonts */
+
+  --open-sans-family: 'Open Sans', Arial, Helvetica, sans-serif;
+  --roboto-family: 'Roboto', Arial, Helvetica, sans-serif;
+  --lucida-family: 'Lucida Console', monospace;
+
+  /* fx */
+
+  --trans-speed: 0.15s;
+  --trans-curve: linear;
+  --trans-anima: var(--trans-speed) var(--trans-curve);
+
+  --shadow-offset: 0 0;
+  --shadow-anima: var(--shadow-offset) 8px;
+  --input-inset: inset 0 1px 1px var(--pale);
+  --input-outset: var(--shadow-offset) 3px;
+
+  --default-transition: all var(--trans-anima);
+  --default-box-shadow: var(--shadow-anima) var(--gray);
+
+  /* app */
+
+  --header-height: 60px;
+  --header-margin: 16px;
+  --sidebar-width: 25%;
+
+  --logo-color: rgb(233, 98, 71);
+  --selected-color: rgb(53, 160, 220);
+  --selected-background: color(var(--selected-color) l(+25%));
+
+  --site-header-background: rgb(53, 60, 60);
+  --site-main-background: rgb(235, 235, 235);
+
+  --loader-foreground: rgb(112, 112, 112);
+  --loader-background: var(--site-main-background);
+
+  /* forms */
+
+  --input-border-radius: 3px;
+  --input-border-color: rgb(201, 201, 201);
+  --input-background-color: var(--white);
+  --input-padding: 5px 8px;
+
+  /* table */
+  --table-head-background-color: rgb(112, 112, 112);
+  --table-border-color: var(--input-border-color);
+  --table-row-odd: var(--white);
+  --table-row-even: rgb(247, 247, 247);
+}
+
+/* media */
+
+@custom-media --cell screen and (width < var(--grid-mobile-width));
+@custom-media --mobile screen and (width >= var(--grid-mobile-width)) and (width < var(--grid-tablet-width));
+@custom-media --tablet screen and (width >= var(--grid-tablet-width)) and (width < var(--grid-laptop-width));
+@custom-media --laptop screen and (width >= var(--grid-laptop-width)) and (width < var(--grid-desktop-width));
+@custom-media --desktop screen and (width >= var(--grid-desktop-width));

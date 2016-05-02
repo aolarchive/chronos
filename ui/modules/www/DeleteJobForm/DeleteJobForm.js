@@ -2,7 +2,10 @@
 
 import React, {Component, PropTypes} from 'react';
 import {reduxForm} from 'redux-form';
-import {deleteModal} from '../ModalStore/ModalStore';
+import {deleteModal} from '../SiteModalStore/SiteModalStore';
+import formStyles from '../Styles/Form.css';
+import cn from 'classnames';
+import styles from './DeleteJobForm.css';
 
 // export
 
@@ -46,12 +49,15 @@ export default class DeleteJobForm extends Component {
     const {handleSubmit} = this.props;
 
     return (
-      <form className="form-deletejob" onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit}>
         <p>Are you sure you want to delete job <strong>{this.props.job.name}</strong>?</p>
 
-        <div className="deletejob-button-group">
-          <button className="job-button deletejob-input-button" type="button" onClick={deleteModal}>Cancel</button>
-          <button className="job-button deletejob-input-button primary" onClick={handleSubmit}>Delete</button>
+        <div className={styles.buttonGroup}>
+          <button className={cn(formStyles.button, formStyles.buttonPrimary, styles.button)} onClick={handleSubmit}>Delete</button>
+
+          <button className={cn(formStyles.button, formStyles.hollowButton, styles.hollowButton)} type="button" onClick={deleteModal}>
+            <span>Cancel</span>
+          </button>
         </div>
       </form>
     );

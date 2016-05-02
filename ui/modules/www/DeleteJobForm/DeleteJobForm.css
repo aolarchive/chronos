@@ -1,0 +1,32 @@
+/* import */
+
+@import '../Styles/Vars.css';
+
+/* styles */
+
+.buttonGroup {
+  margin-top: 1bl;
+  text-align: right;
+  display: flex;
+  height: 1.5bl;
+}
+
+.button {
+  margin-right: 1bl;
+  flex: 0 0 5.5bl;
+  display: inline-block;
+  color: var(--white);
+  font-weight: bold;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.hollowButton {
+  margin-right: 1bl;
+  flex: 0 0 5.5bl;
+  display: inline-block;
+
+  span {
+    background-color: var(--white);
+  }
+}
