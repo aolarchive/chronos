@@ -96,7 +96,7 @@ export default class RunsList extends Component {
 
   runClassName(run) {
     return cn(styles.item, {
-      [styles.error]: run.id && !run.success,
+      [styles.error]: run.finish && run.status !== 0,
     });
   }
 
