@@ -17,6 +17,11 @@ import java.util.Map.Entry;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * This component pulls elements from the work queue and launches a
@@ -31,7 +36,7 @@ public class AgentConsumer extends Stoppable {
 
   private final JobDao dao;
   private final Thread me;
-  public final ExecutorService executor;
+  public final ThreadPoolExecutor executor;
 
   /**
    * rerunPool - this pool is used for handling the timeout (waitBeforeRetrySeconds)
@@ -69,16 +74,16 @@ public class AgentConsumer extends Stoppable {
     this.waitBeforeRetrySeconds = waitBeforeRetrySeconds;
     me = new Thread(this);
     rerunPool = Executors.newFixedThreadPool(this.numOfConcurrentReruns);
-    executor = Executors.newFixedThreadPool(this.numOfConcurrentJobs);
+    executor = new ThreadPoolExecutor(this.numOfConcurrentJobs,
+                                      this.numOfConcurrentJobs,
+                                      0L, TimeUnit.MILLISECONDS,
+                                      new LinkedBlockingQueue<Runnable>());
   }
 
   public void init() {
     LOG.info("Cleaning previously running jobs...");
-    Map<Long, CallableJob> jobRuns =
-      getJobRuns(LIMIT_JOB_RUNS);
-    cleanupPreviouslyRunningJobs(dao, jobRuns);
+    cleanupPreviouslyRunningJobs(dao, dao.getRunningJobs());
     LOG.info("Finished cleaning previously running jobs...");
-    LOG.debug("Updating jobRuns with: " + jobRuns);
     me.start();
   }
 
@@ -86,9 +91,7 @@ public class AgentConsumer extends Stoppable {
       JobDao dao, Map<Long, CallableJob> jobRuns) {
     for (Entry<Long, CallableJob> job : jobRuns.entrySet()) {
       CallableJob value = job.getValue();
-      if (isJobRunningAndNotDone(value)) {
-        value.finish.set(System.currentTimeMillis());
-      }
+      value.getFinish().set(System.currentTimeMillis());
       dao.updateJobRun(value);
     }
   }
@@ -96,7 +99,8 @@ public class AgentConsumer extends Stoppable {
   public void doRun() {
     List<PlannedJob> queue = dao.getQueue();
     boolean zeroInQueue = queue.size() == 0;
-    boolean maxJobsRunning = getRunningJobs(LIMIT_JOB_RUNS).size() >= numOfConcurrentJobs;
+    int running = dao.getRunningJobs().size();
+    boolean maxJobsRunning = running >= numOfConcurrentJobs;
     if (zeroInQueue || maxJobsRunning) {
       if (zeroInQueue) {
         LOG.debug("Job queue is empty. Sleeping...");
@@ -111,7 +115,8 @@ public class AgentConsumer extends Stoppable {
       }
     } else {
       PlannedJob toRun;
-      while ((toRun = dao.removeFromQueue()) != null) {
+      while (executor.getActiveCount() < numOfConcurrentJobs &&
+             (toRun = dao.removeFromQueue()) != null) {
         CallableJob cj = assembleCallableJob(toRun, 1);
         submitJob(cj);
       }
@@ -179,18 +184,20 @@ public class AgentConsumer extends Stoppable {
 
   public CallableJob assembleCallableJob(PlannedJob plannedJob,
       int attemptNumber) {
-    if (plannedJob.getJobSpec().getType().equals(JobSpec.JobType.Query)) {
-      SupportedDriver driver =
-        SupportedDriver.getSupportedDriverFromString(
-          plannedJob.getJobSpec().getDriver(), drivers);
-      return new CallableQuery(plannedJob, dao, reporter,
-        hostname, mailInfo, session, driver, attemptNumber);
-    } else if (plannedJob.getJobSpec().getType().equals(JobSpec.JobType.Script)) {
-      return new CallableScript(plannedJob, dao, reporter, -1L,
-        hostname, mailInfo, session, attemptNumber);
-    } else {
-      throw new UnsupportedOperationException(
-        String.format("Unknown jobtype...%s", plannedJob.getJobSpec().getType()));
+    switch(plannedJob.getJobSpec().getType()) {
+      case Query: {
+        SupportedDriver driver =
+          SupportedDriver.getSupportedDriverFromString(
+            plannedJob.getJobSpec().getDriver(), drivers);
+        return new CallableQuery(plannedJob, dao, reporter,
+          hostname, mailInfo, session, driver, attemptNumber);
+      }
+      case Script:
+        return new CallableScript(plannedJob, dao, reporter, -1L,
+          hostname, mailInfo, session, attemptNumber);
+      default:
+        throw new UnsupportedOperationException(
+          String.format("Unknown jobtype...%s", plannedJob.getJobSpec().getType()));
     }
   }
 
@@ -214,6 +221,14 @@ public class AgentConsumer extends Stoppable {
   @Override
   public void close() throws IOException {
     super.close();
+    try {
+      rerunPool.shutdown();
+      rerunPool.awaitTermination(1, TimeUnit.SECONDS);
+      executor.shutdown();
+      executor.awaitTermination(1, TimeUnit.SECONDS);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
     if (dao != null) {
       dao.close();
     }
@@ -246,47 +261,9 @@ public class AgentConsumer extends Stoppable {
     SendMail.doSend(subject, messageBody, mailInfo, session);
   }
 
-  public Map<Long, CallableJob> getJobRuns(int limit) {
-    return dao.getJobRuns(limit);
-  }
-
-  synchronized public Map<Long, CallableJob> getPendingJobs(int limit) {
-    Map<Long, CallableJob> toRet = new TreeMap<>();
-    Map<Long, CallableJob> runs = getJobRuns(limit);
-    for (Entry<Long, CallableJob> entry : runs.entrySet()) {
-      Long key = entry.getKey();
-      CallableJob value = entry.getValue();
-      boolean isRunning = value.isRunning();
-      boolean isDone = value.isDone();
-      if (!isRunning && !isDone) {
-        toRet.put(key, value);
-      }
-    }
-    return toRet;
-  }
-
-  public static boolean isJobRunningAndNotDone(CallableJob cj) {
-    boolean isRunning = cj.isRunning();
-    boolean isDone = cj.isDone();
-    return isRunning && !isDone;
-  }
-
-  synchronized public Map<Long, CallableJob> getRunningJobs(int limit) {
-    Map<Long, CallableJob> toRet = new TreeMap<>();
-    Map<Long, CallableJob> runs = getJobRuns(limit);
-    for (Entry<Long, CallableJob> entry : runs.entrySet()) {
-      Long key = entry.getKey();
-      CallableJob value = entry.getValue();
-      if (isJobRunningAndNotDone(value)) {
-        toRet.put(key, value);
-      }
-    }
-    return toRet;
-  }
-
   synchronized public Map<Long, CallableJob> getFinishedJobs(int limit) {
     Map<Long, CallableJob> toRet = new TreeMap<>();
-    Map<Long, CallableJob> runs = getJobRuns(limit);
+    Map<Long, CallableJob> runs = dao.getJobRuns(limit);
     for (Entry<Long, CallableJob> entry : runs.entrySet()) {
       Long key = entry.getKey();
       CallableJob value = entry.getValue();
@@ -308,7 +285,7 @@ public class AgentConsumer extends Stoppable {
 
   synchronized public Map<Long, CallableJob> getFailedQueries(int limit) {
     Map<Long, CallableJob> toRet = new TreeMap<>();
-    Map<Long, CallableJob> runs = getJobRuns(limit);
+    Map<Long, CallableJob> runs = dao.getJobRuns(limit);
     for (Entry<Long, CallableJob> entry : runs.entrySet()) {
       Long key = entry.getKey();
       CallableJob value = entry.getValue();
@@ -321,7 +298,7 @@ public class AgentConsumer extends Stoppable {
 
   synchronized public Map<Long, CallableJob> getSuccesfulQueries(int limit) {
     Map<Long, CallableJob> toRet = new TreeMap<>();
-    Map<Long, CallableJob> runs = getJobRuns(limit);
+    Map<Long, CallableJob> runs = dao.getJobRuns(limit);
     for (Entry<Long, CallableJob> entry : runs.entrySet()) {
       Long key = entry.getKey();
       CallableJob value = entry.getValue();
@@ -337,7 +314,7 @@ public class AgentConsumer extends Stoppable {
   
   synchronized public CallableJob getLatestMatching(PlannedJob pj, int limit) {
     Map<Long, CallableJob> toRet = new TreeMap<>();
-    Map<Long, CallableJob> runs = getJobRuns(limit);
+    Map<Long, CallableJob> runs = dao.getJobRuns(limit);
     for (Entry<Long, CallableJob> entry : runs.entrySet()) {
       Long key = entry.getKey();
       CallableJob value = entry.getValue();

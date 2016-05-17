@@ -79,7 +79,8 @@ public class TestAgent {
 
   public static void waitUntilJobsFinished(AgentConsumer c, int count) {
     while (c.getFinishedJobs(AgentConsumer.LIMIT_JOB_RUNS).size() != count) {
-      try { Thread.sleep(100); } catch (Exception ex) { ex.printStackTrace();}
+      runRunnable(c);
+      try { Thread.sleep(100); } catch (Exception ex) { }
     }
   }
 
@@ -273,7 +274,7 @@ public class TestAgent {
   private boolean areAllFuturesDone(AgentConsumer consumer){
     boolean result = true;
     for (Entry<Long, CallableJob> i :
-         consumer.getJobRuns(AgentConsumer.LIMIT_JOB_RUNS).entrySet()){
+         dao.getJobRuns(AgentConsumer.LIMIT_JOB_RUNS).entrySet()){
       if (!i.getValue().isDone()){
         result = false;
       }
@@ -295,13 +296,13 @@ public class TestAgent {
       allFuturesDone = areAllFuturesDone(consumer);
     }
     CallableJob value =
-      consumer.getJobRuns(AgentConsumer.LIMIT_JOB_RUNS).get(new Long(1));
+      dao.getJobRuns(AgentConsumer.LIMIT_JOB_RUNS).get(new Long(1));
     String name = value.getPlannedJob().getJobSpec().getName();
     CallableJob cj = consumer.assembleCallableJob(value.getPlannedJob(), 1);
     consumer.submitJob(cj);
 
     CallableJob rerun =
-      consumer.getJobRuns(AgentConsumer.LIMIT_JOB_RUNS).get(new Long(2));
+      dao.getJobRuns(AgentConsumer.LIMIT_JOB_RUNS).get(new Long(2));
     Assert.assertEquals(name, rerun.getPlannedJob().getJobSpec().getName());
 
     List<String> actual = getResults(aJob);
@@ -349,14 +350,11 @@ public class TestAgent {
     assertEquals(count, dao.getQueue().size());
 
     expected.clear();
-    runRunnable(consumer);
     waitUntilJobsFinished(consumer, count);
 
     assertEquals(0, dao.getQueue().size());
     assertEquals(count, dao.getJobRuns(count).size());
     assertEquals(0, consumer.getFailedQueries(count).size());
-    assertEquals(0,
-      consumer.getPendingJobs(AgentConsumer.LIMIT_JOB_RUNS).size());
     assertEquals(count, consumer.getFinishedJobs(count).size());
     assertEquals(count, consumer.getSuccesfulQueries(count).size());
   }
@@ -367,10 +365,9 @@ public class TestAgent {
     aJob.setCode("echo 'hi'; echo 'bye';");
     dao.createJob(aJob);
     runRunnable(agentDriver);
-    runRunnable(consumer);
     waitUntilJobsFinished(consumer, 1);
     CallableJob actual =
-      consumer.getJobRuns(AgentConsumer.LIMIT_JOB_RUNS).get(new Long(1));
+      dao.getJobRuns(AgentConsumer.LIMIT_JOB_RUNS).get(new Long(1));
     assertEquals("", actual.getExceptionMessage().get());
     assertEquals(true, actual.isSuccess());
   }
@@ -385,7 +382,7 @@ public class TestAgent {
     runRunnable(consumer);
     waitUntilJobsFinished(consumer, 1);
     CallableJob actual =
-      consumer.getJobRuns(AgentConsumer.LIMIT_JOB_RUNS).get(new Long(1));
+      dao.getJobRuns(AgentConsumer.LIMIT_JOB_RUNS).get(new Long(1));
     assertEquals(false, actual.isSuccess());
     assertEquals(true, actual.isFailed());
     String expected = CallableScript.genErrorMessage(aJob, error+"\n");
@@ -407,10 +404,9 @@ public class TestAgent {
     aJob.setCode(command);
     dao.createJob(aJob);
     runRunnable(agentDriver);
-    runRunnable(consumer);
     waitUntilJobsFinished(consumer, 1);
     CallableJob actual =
-      consumer.getJobRuns(AgentConsumer.LIMIT_JOB_RUNS).get(new Long(1));
+      dao.getJobRuns(AgentConsumer.LIMIT_JOB_RUNS).get(new Long(1));
     assertEquals(false, actual.isSuccess());
     assertEquals(true, actual.isFailed());
     String expected = CallableScript.genErrorMessage(aJob, error+"\n");

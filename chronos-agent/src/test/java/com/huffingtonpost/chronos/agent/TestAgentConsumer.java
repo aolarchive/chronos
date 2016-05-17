@@ -1,6 +1,8 @@
 package com.huffingtonpost.chronos.agent;
 
 import com.huffingtonpost.chronos.model.*;
+import com.huffingtonpost.chronos.model.JobSpec.JobType;
+import com.huffingtonpost.chronos.persist.BackendException;
 import com.huffingtonpost.chronos.util.H2TestUtil;
 
 import org.joda.time.DateTime;
@@ -22,7 +24,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -68,6 +69,12 @@ public class TestAgentConsumer {
     consumer.close();
   }
 
+  public void doSleep() {
+    try {
+      Thread.sleep(100);
+    } catch (InterruptedException e) { }
+  }
+
   @Test
   public void testReplace() {
     String strFormat = "YYYYMMdd";
@@ -100,7 +107,7 @@ public class TestAgentConsumer {
   }
 
   @Test(timeout=10000)
-  public void testNumOfConcurrentJobsIsHonored() {
+  public void testNumOfConcurrentJobsIsHonored() throws BackendException {
     int sleepFor = 1000; // millis
     int totalJobs = 0;
 
@@ -115,39 +122,30 @@ public class TestAgentConsumer {
       consumer.submitJob(cj);
       totalJobs++;
     }
+    doSleep();
 
-    Map<Long, CallableJob> pending = consumer.getPendingJobs(limit);
-    while ((pending = consumer.getPendingJobs(limit)).size() >= 1) {
-      // let the jobs start running
-      try { Thread.sleep(100); } catch (Exception ex) {}
-    }
     Map<Long, CallableJob> finished = consumer.getFinishedJobs(limit);
 
     assertEquals("finished:" + finished, 0, finished.size());
-    assertEquals("pending:" + pending, 0, pending.size());
-    assertEquals(numOfConcurrentJobs, consumer.getRunningJobs(limit).size());
+    assertEquals(numOfConcurrentJobs, dao.getRunningJobs().size());
 
     // add some short-lived jobs
     for (int i = 0; i < numOfConcurrentJobs; i++) {
       JobSpec aJob = TestAgent.getTestJob("Joblah " +
         String.valueOf(numOfConcurrentJobs+i), dao);
       dao.createJob(aJob);
-      PlannedJob pj = new PlannedJob(aJob, Utils.getCurrentTime());
-
-      CallableJob cj = new SleepyCallableQuery(pj, dao, reporting,
-        "example.com", null, null, drivers.get(0), 1, sleepFor);
-      consumer.submitJob(cj);
+      PlannedJob pj = new PlannedJob(dao.getJob(aJob.getId()), Utils.getCurrentTime());
+      dao.addToQueue(pj);
       totalJobs++;
     }
-
+    assertEquals(numOfConcurrentJobs, dao.getQueue().size());
+    TestAgent.runRunnable(consumer);
+    assertEquals(numOfConcurrentJobs, dao.getRunningJobs().size());
     assertEquals(0, consumer.getFinishedJobs(limit).size());
-    assertEquals(numOfConcurrentJobs, consumer.getPendingJobs(limit).size());
-    assertEquals(numOfConcurrentJobs, consumer.getRunningJobs(limit).size());
 
     TestAgent.waitUntilJobsFinished(consumer, totalJobs);
 
-    assertEquals(0, consumer.getRunningJobs(limit).size());
-    assertEquals(0, consumer.getPendingJobs(limit).size());
+    assertEquals(0, dao.getRunningJobs().size());
     assertEquals(totalJobs, consumer.getFinishedJobs(limit).size());
   }
 
@@ -174,9 +172,8 @@ public class TestAgentConsumer {
     assertEquals(1, consumer.getFinishedJobs(limit).size());
   }
 
-  //@Test(timeout=20000)
-  @Ignore
-  public void testJobResubmitSuccessSecondTime() {
+  @Test(timeout=20000)
+  public void testJobResubmitSuccessSecondTime() throws BackendException {
     JobSpec aJob = TestAgent.getTestJob("DFW", dao);
     String tableName = "table_dne_yet";
     aJob.setCode(String.format("select * from %s", tableName));
@@ -202,24 +199,23 @@ public class TestAgentConsumer {
     // run twice to verify job is not submitted again
     TestAgent.runRunnable(consumer);
     TestAgent.runRunnable(consumer);
-    try { Thread.sleep(250); } catch (Exception ex) {}
+    doSleep();
     TestAgent.runRunnable(consumer);
     TestAgent.runRunnable(consumer);
     
     TestAgent.waitUntilJobsFinished(consumer, 2);
 
-    assertEquals(0, consumer.getRunningJobs(limit).size());
-    assertEquals(0, consumer.getPendingJobs(limit).size());
+    assertEquals(0, dao.getRunningJobs().size());
     assertEquals(2, consumer.getFinishedJobs(limit).size());
     assertEquals(1, consumer.getSuccesfulQueries(limit).size());
-    assertEquals(true,
+    assertEquals(0,
       consumer.getFinishedJobs(limit).get(nextId).getStatus().get());
     dao.execute(
       String.format("DROP TABLE IF EXISTS %s", tableName));
   }
 
   @Test(timeout=20000)
-  public void testJobResubmitMaxFailAttempts() {
+  public void testJobResubmitMaxFailAttempts() throws BackendException {
     consumer = new AgentConsumer(dao, reporting, "testing.huffpo.com",
       new MailInfo("", "", "", ""),
       Session.getDefaultInstance(new Properties()), drivers, numOfConcurrentJobs,
@@ -253,26 +249,17 @@ public class TestAgentConsumer {
         public void run() {
           for (int i = 0 ; i < 1000; i++) {
             TestAgent.runRunnable(consumer);
-            try {
-              Thread.sleep(100);
-            } catch (InterruptedException e) {}
-            TestAgent.runRunnable(consumer);
+            doSleep();
           }
         }
       });
      }
     try { Thread.sleep(10000); } catch (Exception ex) {}
     executor.shutdownNow();
-    
-    while (consumer.getRunningJobs(limit).size() != 0 ||
-           consumer.getPendingJobs(limit).size() != 0) {
-      try { Thread.sleep(100); } catch (Exception ex) {}
-    }
 
-    assertEquals(0, consumer.getRunningJobs(limit).size());
-    assertEquals(0, consumer.getPendingJobs(limit).size());
+    assertEquals(0, dao.getRunningJobs().size());
     Map<Long, CallableJob> jobRuns =
-      consumer.getJobRuns(AgentConsumer.LIMIT_JOB_RUNS);
+      dao.getJobRuns(AgentConsumer.LIMIT_JOB_RUNS);
     assertEquals("jobRuns: " + jobRuns, 5, jobRuns.values().size());
     assertEquals(5, consumer.getFinishedJobs(limit).size());
     assertEquals(0, consumer.getSuccesfulQueries(limit).size());
@@ -283,19 +270,20 @@ public class TestAgentConsumer {
   @Test
   public void testCleanupPreviouslyRunningJobs() {
     JobSpec aJob = TestAgent.getTestJob("Mary Wollstonecraft", dao);
-    ConcurrentSkipListMap<Long, CallableJob> actual =
-      new ConcurrentSkipListMap<>();
-    PlannedJob pj = new PlannedJob(aJob, Utils.getCurrentTime());
-    CallableJob cj = new CallableQuery(
-      pj, dao, reporting, "example.com", mailInfo, null, drivers.get(0), 1);
-    cj.start.set(System.currentTimeMillis());
-    actual.put(cj.getJobId(), cj);
+    long id = dao.createJob(aJob);
+    PlannedJob pj = new PlannedJob(dao.getJob(id), Utils.getCurrentTime());
+    SleepyCallableQuery cj = new SleepyCallableQuery(
+      pj, dao, reporting, "example.com", mailInfo, null, drivers.get(0), 1,
+      10000);
+    consumer.submitJob(cj);
+    doSleep();
+    assertEquals(0, consumer.getFailedQueries(limit).size());
+    assertEquals(1, dao.getRunningJobs().size());
 
-    assertEquals(true, AgentConsumer.isJobRunningAndNotDone(cj));
-    assertEquals(false, AgentConsumer.isJobFailed(cj));
-
-    AgentConsumer.cleanupPreviouslyRunningJobs(dao, actual);
-    assertEquals(true, AgentConsumer.isJobFailed(cj));
+    AgentConsumer.cleanupPreviouslyRunningJobs(dao,
+      dao.getRunningJobs());
+    assertEquals(0, dao.getRunningJobs().size());
+    assertEquals(1, consumer.getFailedQueries(limit).size());
   }
 
   @Test
@@ -312,18 +300,14 @@ public class TestAgentConsumer {
     // Let job run and result doesn't matter
     // Now we should be able to get job history from a new consumer
     // and the job above should exist!
-    AgentConsumer local = new AgentConsumer(dao, reporting,
-        "testing.huffpo.com",
-        new MailInfo("", "", "", ""),
-        Session.getDefaultInstance(new Properties()), drivers,
-        numOfConcurrentJobs, numOfConcurrentReruns, maxReruns, 0);
-    local.init();
+    JobDao local = new H2TestJobDaoImpl();
+    local.setDataSource(H2TestUtil.getDataSource());
     assertEquals(1,
       local.getJobRuns(AgentConsumer.LIMIT_JOB_RUNS).values().size());
   }
 
   @Test(timeout=2000)
-  public void testJobNoResubmit() {
+  public void testJobNoResubmit() throws BackendException {
     consumer = new AgentConsumer(dao, reporting, "testing.huffpo.com",
       new MailInfo("", "", "", ""),
       Session.getDefaultInstance(new Properties()), drivers,numOfConcurrentJobs,
@@ -349,22 +333,17 @@ public class TestAgentConsumer {
 
     // See if the job retries
     TestAgent.runRunnable(consumer);
-    try {
-      Thread.sleep(1000);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    }
+    doSleep();
 
-    assertEquals(0, consumer.getRunningJobs(limit).size());
-    assertEquals(0, consumer.getPendingJobs(limit).size());
+    assertEquals(0, dao.getRunningJobs().size());
     Map<Long, CallableJob> jobRuns =
-      consumer.getJobRuns(AgentConsumer.LIMIT_JOB_RUNS);
+      dao.getJobRuns(AgentConsumer.LIMIT_JOB_RUNS);
     assertEquals("jobRuns: " + jobRuns, 1, jobRuns.values().size());
     assertEquals(1, consumer.getFinishedJobs(limit).size());
     assertEquals(0, consumer.getSuccesfulQueries(limit).size());
   }
 
-  public void testCancelPendingJob() {
+  public void testCancelPendingJob() throws BackendException {
     JobSpec aJob = TestAgent.getTestJob("Foucault", dao);
     aJob.setShouldRerun(true);
     long id = dao.createJob(aJob);
@@ -376,57 +355,59 @@ public class TestAgentConsumer {
 
     TestAgent.runRunnable(consumer);
 
-    assertEquals(0, consumer.getRunningJobs(limit).size());
-    assertEquals(0, consumer.getPendingJobs(limit).size());
+    assertEquals(0, dao.getRunningJobs().size());
     assertEquals(0, consumer.getFinishedJobs(limit).size());
     assertEquals(0, consumer.getSuccesfulQueries(limit).size());
     assertEquals(0, consumer.getFailedQueries(limit).size());
   }
 
-  @Test(timeout=2000)
-  public void testQueueLarge() {
-    int extra = numOfConcurrentJobs;
-    int total = numOfConcurrentJobs*2;
+  /**
+   * NOTE: sometimes the underlying OS is not happy with creating the script
+   * jobs and returns "Resource temporarily unavailable"
+   * @throws Exception
+   */
+  @Ignore
+  public void testQueueLarge() throws Exception {
+    for (int j = 0; j < 100; j++) {
+      cleanup();
+      setUp();
+      // queue up some long-running jobs
+      for (int i = 0; i < numOfConcurrentJobs-1; i++) {
+        JobSpec aJob = TestAgent.getTestJob("Foucault "+i, dao);
+        aJob.setShouldRerun(true);
+        long id = dao.createJob(aJob);
+        PlannedJob pj = new PlannedJob(dao.getJob(id),
+          Utils.getCurrentTime());
+        CallableJob cj = new SleepyCallableQuery(pj, dao, reporting,
+          "example.com", null, null, drivers.get(0), 1, 10000);
+        consumer.submitJob(cj);
+      }
 
-    // queue up a bunch of long-running jobs
-    for (int i = 0; i < numOfConcurrentJobs; i++) {
-      JobSpec aJob = TestAgent.getTestJob("Foucault "+i, dao);
-      aJob.setShouldRerun(true);
-      long id = dao.createJob(aJob);
-      PlannedJob pj = new PlannedJob(dao.getJob(id),
-        Utils.getCurrentTime());
-      CallableJob cj = new SleepyCallableQuery(pj, dao, reporting,
-        "example.com", null, null, drivers.get(0), 1, 10000);
-      consumer.submitJob(cj);
-    }
+      // 1 that will get dequeued and some extra
+      for (int i = 0; i < numOfConcurrentJobs+1; i++) {
+        JobSpec aJob = TestAgent.getTestJob("Foucault "+(numOfConcurrentJobs), dao);
+        aJob.setType(JobType.Script);
+        aJob.setCode("sleep 1; echo \"done\";");
+        long id = dao.createJob(aJob);
+        PlannedJob pj = new PlannedJob(dao.getJob(id),
+          Utils.getCurrentTime());
+        dao.addToQueue(pj);
+      }
+      assertEquals(numOfConcurrentJobs+1, dao.getQueue().size());
+      assertEquals(0, consumer.getFinishedJobs(limit).size());
+      assertEquals(0, consumer.getSuccesfulQueries(limit).size());
+      assertEquals(0, consumer.getFailedQueries(limit).size());
 
-    // and now queue some extra
-    for (int i = 0; i < numOfConcurrentJobs; i++) {
-      JobSpec aJob = TestAgent.getTestJob("Foucault "+(numOfConcurrentJobs), dao);
-      aJob.setShouldRerun(true);
-      long id = dao.createJob(aJob);
-      PlannedJob pj = new PlannedJob(dao.getJob(id),
-        Utils.getCurrentTime());
-      dao.addToQueue(pj);
+      TestAgent.runRunnable(consumer);
+      doSleep();
+      TestAgent.runRunnable(consumer);
+
+      // make sure queue is populated with extra
+      assertEquals(numOfConcurrentJobs+1, dao.getQueue().size());
+      assertEquals(consumer.getFinishedJobs(limit).toString(),
+                   0, consumer.getFinishedJobs(limit).size());
+      assertEquals(0, consumer.getSuccesfulQueries(limit).size());
+      assertEquals(0, consumer.getFailedQueries(limit).size());
     }
-    assertEquals(extra, dao.getQueue().size());
-    assertEquals(0, consumer.getFinishedJobs(limit).size());
-    assertEquals(0, consumer.getSuccesfulQueries(limit).size());
-    assertEquals(0, consumer.getFailedQueries(limit).size());
-    
-    TestAgent.runRunnable(consumer);
-    try {
-      Thread.sleep(500);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    }
-    TestAgent.runRunnable(consumer);
-    
-    // make sure queue is populated with extra
-    assertEquals(numOfConcurrentJobs, consumer.getRunningJobs(limit).size());
-    assertEquals(extra, dao.getQueue().size());
-    assertEquals(0, consumer.getFinishedJobs(limit).size());
-    assertEquals(0, consumer.getSuccesfulQueries(limit).size());
-    assertEquals(0, consumer.getFailedQueries(limit).size());
   }
 }

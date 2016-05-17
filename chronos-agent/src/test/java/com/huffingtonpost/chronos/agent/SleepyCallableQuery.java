@@ -40,6 +40,8 @@ public class SleepyCallableQuery extends CallableQuery {
     } finally {
       try {
         Thread.sleep(sleepFor);
+      } catch (InterruptedException ex) {
+        super.LOG.debug("interrupted");
       } catch (Exception ex) { ex.printStackTrace(); }
       finish.set(System.currentTimeMillis());
       sleepyFinish.set(System.currentTimeMillis());
@@ -52,12 +54,12 @@ public class SleepyCallableQuery extends CallableQuery {
   protected void end() {
     // do nothing, we'll handle after we've slept
   }
-  
+
   @Override
   public boolean isRunning() {
     return start.get() > 0 && sleepyFinish.get() == 0;
   }
-  
+
   @Override
   public boolean isDone() {
     return start.get() > 0 && sleepyFinish.get() > 0;

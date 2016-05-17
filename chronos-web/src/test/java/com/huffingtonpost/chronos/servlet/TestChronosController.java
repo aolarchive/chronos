@@ -408,7 +408,7 @@ public class TestChronosController {
       runs.put(new Long(i), cq);
     }
     Mockito.reset(agentConsumer);
-    when(agentConsumer.getJobRuns(AgentConsumer.LIMIT_JOB_RUNS)).thenReturn(runs);
+    when(jobDao.getJobRuns(AgentConsumer.LIMIT_JOB_RUNS)).thenReturn(runs);
     mockMvc.perform(get("/api/queue?running=true"))
       .andExpect(status().isOk())
       .andExpect(content().string(OM.writeValueAsString(twoJobs)));

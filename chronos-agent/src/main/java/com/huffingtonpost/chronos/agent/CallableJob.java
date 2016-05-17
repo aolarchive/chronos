@@ -68,8 +68,9 @@ public abstract class CallableJob implements Callable<Void> {
       callInternal();
     } catch (Exception ex) {
       handleException(ex);
+    } finally {
+      end();
     }
-    end();
     return null;
   }
 
