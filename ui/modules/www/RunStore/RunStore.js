@@ -69,6 +69,7 @@ export const types = {
   queryHistory: 'JOBS_LAST',
   queryFuture: 'JOBS_NEXT',
   rerunRun: 'JOBS_RERUN_RUN',
+  cancelRun: 'JOBS_CANCEL_RUN',
   rerunJob: 'JOBS_RERUN_JOB',
   rerunJobs: 'JOBS_RERUN_JOBS',
 };
@@ -131,6 +132,30 @@ export const rerunRun = createRequestAction({
   },
 });
 
+export const cancelRun = createRequestAction({
+  type: types.cancelRun,
+  endpoint: '/api/queue',
+  method: 'delete',
+  staticUrl: true,
+  requestFn(job) {
+    return {
+      id: null,
+      send: job.plannedJob || job,
+    };
+  },
+  successFn(action) {
+    createRequestMessage(action.err, action.res, {
+      title: 'Cancel Run',
+      message: 'Job will be canceled.',
+    });
+  },
+  failureFn(action) {
+    createRequestMessage(action.err, action.res, {
+      title: 'Cancel Run',
+    });
+  },
+});
+
 export const rerunJob = createRequestAction({
   type: types.rerunJob,
   endpoint: '/api/queue',
@@ -142,12 +167,15 @@ export const rerunJob = createRequestAction({
   },
 });
 
-export const rerunJobs = createDispatcher((jobs, start, end) => {
+export const rerunJobs = createDispatcher((jobs, start, end, intervals) => {
   const now = moment(new Date(start)).seconds(0).milliseconds(0);
   const then = moment(new Date(end)).seconds(0).milliseconds(1);
   const runs = [];
 
   const collector = collectRuns(runs, now);
+  jobs = jobs.filter((job) => {
+    return job.enabled && (!intervals || intervals.indexOf(job.interval) > -1);
+  });
 
   while (now.isBefore(then)) {
     jobs.forEach(collector);
@@ -194,6 +222,7 @@ export const rerunJobs = createDispatcher((jobs, start, end) => {
           return;
         }
 
+        queryHistory();
         resolve({res});
       });
     }),

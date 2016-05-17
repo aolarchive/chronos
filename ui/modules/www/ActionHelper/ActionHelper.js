@@ -21,7 +21,7 @@ export function createAction(type, params, payloadFn) {
 }
 
 export function createRequestAction(opts) {
-  const {type, endpoint, method, requestFn, cacheFn, successFn, failureFn, loadingFn} = opts;
+  const {type, endpoint, method, requestFn, cacheFn, successFn, failureFn, loadingFn, staticUrl} = opts;
 
   return function requestAction(id, query, send) {
     if (requestFn) {
@@ -40,7 +40,7 @@ export function createRequestAction(opts) {
     }
 
     const httpMethod = method === 'query' ? 'get' : method === 'delete' ? 'del' : method;
-    const useId = method !== 'query' && method !== 'post' && endpoint.indexOf(':') === -1 ? '/' + id : '';
+    const useId = !staticUrl && method !== 'query' && method !== 'post' && endpoint.indexOf(':') === -1 ? '/' + id : '';
 
     const req = request[httpMethod](`${endpoint.replace(':id', id)}${useId}`)
     .accept('json')
