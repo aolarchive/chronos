@@ -151,6 +151,14 @@ public class JobDaoImpl extends WithSql implements JobDao {
     }
   }
 
+  public Map<Long, CallableJob> getRunningJobs() {
+    try {
+      return super.getRunningJobs();
+    } catch (BackendException e) {
+      throw new RuntimeException("Exception when getting running jobs: " + e.getMessage());
+    }
+  }
+
   public long createJobRun(CallableJob cq) {
     try {
       long jobId = createJobRun(new DateTime().withZone(DateTimeZone.UTC), cq);

@@ -47,7 +47,8 @@ public class H2TestJobDaoImpl extends JobDaoImpl {
       for (String sql : new String[] {
           String.format("DROP TABLE IF EXISTS %s", testTableName),
           String.format("DROP TABLE IF EXISTS %s", jobRunTableName),
-          String.format("DROP TABLE IF EXISTS %s", jobTableName), }) {
+          String.format("DROP TABLE IF EXISTS %s", queueTableName),
+          String.format("DROP TABLE IF EXISTS %s", jobTableName) }) {
         Statement stat = conn.createStatement();
         stat.execute(sql);
         stat.close();

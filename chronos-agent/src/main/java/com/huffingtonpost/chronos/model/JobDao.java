@@ -36,6 +36,8 @@ public interface JobDao extends Closeable {
   public PlannedJob removeFromQueue();
 
   public Map<Long, CallableJob> getJobRuns(int limit);
+  
+  public Map<Long, CallableJob> getRunningJobs();
 
   public long createJobRun(CallableJob cq);
 

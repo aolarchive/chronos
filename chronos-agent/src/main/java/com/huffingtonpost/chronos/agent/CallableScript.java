@@ -54,7 +54,7 @@ public class CallableScript extends CallableJob {
         handleException(new Exception(aMessage));
       }
     } catch (BackendException ex) {
-      throw new RuntimeException(ex);
+      handleException(ex);
     } finally {
       runner.clean();
     }

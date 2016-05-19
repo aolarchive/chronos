@@ -77,7 +77,8 @@ public class WithSql implements WithBackend {
     PreparedStatement jobRuns =
       conn.prepareStatement(String.format("CREATE TABLE IF NOT EXISTS %s "
         + "(id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, dt DATETIME, callable_job TEXT, "
-        + "name TEXT, `code` TEXT, status INTEGER, exception TEXT)", jobRunTableName));
+        + "name TEXT, `code` TEXT, status INTEGER, exception TEXT,"
+        + "start DATETIME, finish DATETIME)", jobRunTableName));
     jobRuns.execute();
     jobRuns.close();
 
@@ -121,8 +122,8 @@ public class WithSql implements WithBackend {
       conn = newConnection();
       stat =
         conn.prepareStatement(
-          String.format("INSERT INTO %s (dt, callable_job, name, `code`, status, exception) "
-            + "VALUES (?, ?, ?, ?, ?, ?)", jobRunTableName),
+          String.format("INSERT INTO %s (dt, callable_job, name, `code`, status, exception, start, finish) "
+            + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)", jobRunTableName),
                         Statement.RETURN_GENERATED_KEYS);
       int i = 1;
       stat.setTimestamp(i++, new Timestamp(dt.getMillis()));
@@ -131,6 +132,8 @@ public class WithSql implements WithBackend {
       stat.setString(i++, cj.getPlannedJob().getJobSpec().getCode());
       stat.setInt(i++, cj.getStatus().get());
       stat.setString(i++, cj.getExceptionMessage() != null ? cj.getExceptionMessage().get() : "");
+      stat.setTimestamp(i++, new Timestamp(cj.getStart().get()));
+      stat.setTimestamp(i++, new Timestamp(cj.getFinish().get()));
       
       int rows = stat.executeUpdate();
       
@@ -164,8 +167,8 @@ public class WithSql implements WithBackend {
       conn = newConnection();
       stat =
         conn.prepareStatement(
-          String.format("UPDATE %s SET dt = ?, callable_job = ?, name = ?, `code` = ?, status = ?, exception = ? "
-            + "WHERE id = ?", jobRunTableName));
+          String.format("UPDATE %s SET dt = ?, callable_job = ?, name = ?, `code` = ?, status = ?, exception = ?,"
+            + " start = ?, finish = ? WHERE id = ?", jobRunTableName));
       int i = 1;
       stat.setTimestamp(i++, new Timestamp(dt.getMillis()));
       stat.setString(i++, objToString(cj));
@@ -173,6 +176,8 @@ public class WithSql implements WithBackend {
       stat.setString(i++, cj.getPlannedJob().getJobSpec().getCode());
       stat.setInt(i++, cj.getStatus().get());
       stat.setString(i++, cj.getExceptionMessage() != null ? cj.getExceptionMessage().get() : "");
+      stat.setTimestamp(i++, new Timestamp(cj.getStart().get()));
+      stat.setTimestamp(i++, new Timestamp(cj.getFinish().get()));
       stat.setLong(i++, cj.getJobId());
       int rows = stat.executeUpdate();
       LOG.info(String.format("Rows updated: %d", rows));
@@ -208,6 +213,47 @@ public class WithSql implements WithBackend {
         long id = rs.getLong("id");
         CallableJob cj = OBJECT_MAPPER.readValue(
             rs.getString("callable_job").getBytes(), CallableJob.class);
+        toRet.put(id, cj);
+      }
+      rs.close();
+    } catch (UnrecognizedPropertyException ex) {
+      ex.printStackTrace();
+      LOG.error("Exception when getting jobRuns: " + ex.getMessage());
+    } catch (SQLException | IOException ex) {
+      throw new BackendException(ex);
+    } finally {
+      try {
+        if (stat != null) stat.close();
+      } catch (SQLException e) {
+        LOG.error(e);
+      }
+      try {
+        if (conn != null) conn.close();
+      } catch (SQLException e) {
+        LOG.error(e);
+      }
+    }
+    return toRet;
+  }
+
+  public Map<Long, CallableJob> getRunningJobs() throws BackendException {
+    Map<Long, CallableJob> toRet = new LinkedHashMap<>();
+    Connection conn = null;
+    PreparedStatement stat = null;
+    try {
+      conn = newConnection();
+      stat =
+        conn.prepareStatement(
+          String.format("SELECT * FROM %s WHERE start > ? AND finish = ? ORDER BY dt DESC", jobRunTableName));
+      int i = 1;
+      stat.setTimestamp(i++, new Timestamp(0L));
+      stat.setTimestamp(i++, new Timestamp(0L));
+      ResultSet rs = stat.executeQuery();
+      while (rs.next()) {
+        long id = rs.getLong("id");
+        CallableJob cj = OBJECT_MAPPER.readValue(
+            rs.getString("callable_job").getBytes(), CallableJob.class);
+        cj.setJobId(id);
         toRet.put(id, cj);
       }
       rs.close();
@@ -679,7 +725,6 @@ public class WithSql implements WithBackend {
             + "AND t1.job_lastModified = t2.lastModified "
             + "ORDER BY t1.insertTime ASC LIMIT 1",
             queueTableName, jobTableName));
-
 
       ResultSet rs = selStat.executeQuery();
       if (rs != null && rs.next()) {
