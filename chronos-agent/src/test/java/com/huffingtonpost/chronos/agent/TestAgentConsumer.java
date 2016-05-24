@@ -351,7 +351,10 @@ public class TestAgentConsumer {
       Utils.getCurrentTime());
 
     dao.addToQueue(pj);
-    dao.cancelJob(pj);
+    int actual = dao.cancelJob(pj);
+    assertEquals(1, actual);
+    actual = dao.cancelJob(pj);
+    assertEquals(0, actual);
 
     TestAgent.runRunnable(consumer);
 

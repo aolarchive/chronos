@@ -42,5 +42,5 @@ public interface WithBackend extends Closeable {
 
   public PlannedJob removeFromQueue() throws BackendException;
 
-  void deleteFromQueue(PlannedJob pj) throws BackendException;
+  public int deleteFromQueue(PlannedJob pj) throws BackendException;
 }

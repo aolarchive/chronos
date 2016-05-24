@@ -674,8 +674,9 @@ public class WithSql implements WithBackend {
   }
   
   @Override
-  public void deleteFromQueue(PlannedJob pj)
+  public int deleteFromQueue(PlannedJob pj)
     throws BackendException {
+    int toRet = 0;
     Connection conn = null;
     PreparedStatement stat = null;
     try {
@@ -692,8 +693,8 @@ public class WithSql implements WithBackend {
       Timestamp rt =
         new Timestamp(pj.getReplaceTime().getMillis());
       stat.setTimestamp(i++, rt);
-      int rows = stat.executeUpdate();
-      LOG.info(String.format("Rows deleted: %d", rows));
+      toRet = stat.executeUpdate();
+      LOG.info(String.format("Rows deleted: %d", toRet));
     } catch (SQLException ex) {
       throw new BackendException(ex);
     } finally {
@@ -708,6 +709,7 @@ public class WithSql implements WithBackend {
         LOG.error(e);
       }
     }
+    return toRet;
   }
 
   public PlannedJob removeFromQueue() throws BackendException {

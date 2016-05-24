@@ -330,9 +330,13 @@ public class ChronosController {
   }
 
   @RequestMapping(value="/queue", method=RequestMethod.DELETE)
-  public @ResponseBody Response cancelJob(@RequestBody final PlannedJob aJob) {
-    jobDao.cancelJob(aJob);
-    return SUCCESS;
+  public @ResponseBody Response cancelJob(@RequestBody final PlannedJob aJob) throws NotFoundException {
+    int num = jobDao.cancelJob(aJob);
+    if (num == 1) {
+      return SUCCESS;
+    } else {
+      throw new NotFoundException("Job was not found in queue");
+    }
   }
 
 }
