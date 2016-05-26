@@ -225,12 +225,12 @@ public class TestChronosController {
     aJob.setResultQuery("select * FROM BLA limit 10");
     aJob.setResultEmail(Arrays.asList("abc@def.com"));
     MockHttpServletRequestBuilder request = post(String.format("/api/job"))
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(OM.writeValueAsBytes(aJob));
-          mockMvc.perform(request)
-          .andExpect(status().is2xxSuccessful())
-          .andExpect(content().string(
-            OM.writeValueAsString(ChronosController.assembleIdResp(0L))));
+      .contentType(MediaType.APPLICATION_JSON)
+      .content(OM.writeValueAsBytes(aJob));
+    mockMvc.perform(request)
+      .andExpect(status().is2xxSuccessful())
+      .andExpect(content().string(
+        OM.writeValueAsString(ChronosController.assembleIdResp(0L))));
   }
 
   private void performAndExpectFailed(JobSpec aJob, String message) throws
@@ -408,7 +408,7 @@ public class TestChronosController {
       runs.put(new Long(i), cq);
     }
     Mockito.reset(agentConsumer);
-    when(agentConsumer.getJobRuns(AgentConsumer.LIMIT_JOB_RUNS)).thenReturn(runs);
+    when(jobDao.getJobRuns(AgentConsumer.LIMIT_JOB_RUNS)).thenReturn(runs);
     mockMvc.perform(get("/api/queue?running=true"))
       .andExpect(status().isOk())
       .andExpect(content().string(OM.writeValueAsString(twoJobs)));
@@ -605,6 +605,7 @@ public class TestChronosController {
     PlannedJob aJob =
       new PlannedJob(getTestJob("Some Job"), Utils.getCurrentTime());
 
+    when(jobDao.cancelJob(aJob)).thenReturn(1);
     MockHttpServletRequestBuilder request = delete(String.format("/api/queue"))
       .contentType(MediaType.APPLICATION_JSON)
       .content(OM.writeValueAsString(aJob));
@@ -612,6 +613,10 @@ public class TestChronosController {
       .andExpect(status().isOk())
       .andExpect(content().string(success));
 
-    verify(jobDao, times(1)).cancelJob(aJob);
+    when(jobDao.cancelJob(aJob)).thenReturn(0);
+    mockMvc.perform(request)
+      .andExpect(status().isNotFound());
+
+    verify(jobDao, times(2)).cancelJob(aJob);
   }
 }

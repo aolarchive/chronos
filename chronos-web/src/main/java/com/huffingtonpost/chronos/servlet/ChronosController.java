@@ -97,7 +97,7 @@ public class ChronosController {
 
   public Map<Long, CallableJob> getJobHistory(Long id, int limit) {
     Map<Long, CallableJob> runs =
-      agentConsumer.getJobRuns(limit);
+      jobDao.getJobRuns(limit);
     if (id == null) {
       return runs;
     }
@@ -300,7 +300,7 @@ public class ChronosController {
     if (running) {
       List<PlannedJob> toRet = new ArrayList<>();
       for (Entry<Long, CallableJob> entry :
-           agentConsumer.getJobRuns(AgentConsumer.LIMIT_JOB_RUNS).entrySet()){
+           jobDao.getJobRuns(AgentConsumer.LIMIT_JOB_RUNS).entrySet()){
         boolean isDone = entry.getValue().isDone();
         if (!isDone){
           toRet.add(entry.getValue().getPlannedJob());
@@ -314,7 +314,7 @@ public class ChronosController {
   }
 
   private PlannedJob queueJobByRunId(Long id) {
-    CallableJob i = agentConsumer.getJobRuns(AgentConsumer.LIMIT_JOB_RUNS).get(id);
+    CallableJob i = jobDao.getJobRuns(AgentConsumer.LIMIT_JOB_RUNS).get(id);
     PlannedJob pj = i.getPlannedJob();
     if (pj == null){
       throw new RuntimeException(String.format("previous job for id %s not found", id));
@@ -330,9 +330,13 @@ public class ChronosController {
   }
 
   @RequestMapping(value="/queue", method=RequestMethod.DELETE)
-  public @ResponseBody Response cancelJob(@RequestBody final PlannedJob aJob) {
-    jobDao.cancelJob(aJob);
-    return SUCCESS;
+  public @ResponseBody Response cancelJob(@RequestBody final PlannedJob aJob) throws NotFoundException {
+    int num = jobDao.cancelJob(aJob);
+    if (num == 1) {
+      return SUCCESS;
+    } else {
+      throw new NotFoundException("Job was not found in queue");
+    }
   }
 
 }
