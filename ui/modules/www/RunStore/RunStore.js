@@ -3,7 +3,7 @@
 import _ from 'lodash';
 import async from 'async';
 import moment from 'moment';
-import {createRequestAction, createDispatcher} from '../ActionHelper/ActionHelper';
+import {createRequestAction, createDispatcher, createAction} from '../ActionHelper/ActionHelper';
 import {jobToServer} from '../JobsHelper/JobsHelper';
 import {createMessage, createRequestMessage} from '../MessageStore/MessageStore';
 
@@ -12,7 +12,14 @@ import {createMessage, createRequestMessage} from '../MessageStore/MessageStore'
 const jobHistory = {
   last: null,
   next: null,
+  queue: null,
 };
+
+const tabs = [
+  'last',
+  'queue',
+  'next',
+];
 
 // fns
 
@@ -66,15 +73,19 @@ function collectRuns(runs, now) {
 // types
 
 export const types = {
-  queryHistory: 'JOBS_LAST',
-  queryFuture: 'JOBS_NEXT',
-  rerunRun: 'JOBS_RERUN_RUN',
-  cancelRun: 'JOBS_CANCEL_RUN',
-  rerunJob: 'JOBS_RERUN_JOB',
-  rerunJobs: 'JOBS_RERUN_JOBS',
+  queryHistory: 'RUNS_GET_LAST',
+  queryQueue: 'RUNS_GET_QUEUE',
+  queryFuture: 'RUNS_GET_NEXT',
+  rerunRun: 'RUNS_RERUN_RUN',
+  cancelRun: 'RUNS_CANCEL_RUN',
+  rerunJob: 'RUNS_RERUN_JOB',
+  rerunJobs: 'RUNS_RERUN_JOBS',
+  changeTab: 'RUNS_CHANGE_TAB',
 };
 
 // actions
+
+export const changeTab = createAction(types.changeTab, ['tab']);
 
 export const queryHistory = createRequestAction({
   type: types.queryHistory,
@@ -89,6 +100,23 @@ export const queryHistory = createRequestAction({
     createRequestMessage(action.err, action.res, {
       title: 'Last Runs',
       error: 'Unable to load the last runs list.',
+    });
+  },
+});
+
+export const queryQueue = createRequestAction({
+  type: types.queryQueue,
+  endpoint: '/api/queue',
+  method: 'query',
+  requestFn(id, query) {
+    return {
+      query: {id, limit: query || 100},
+    };
+  },
+  failureFn(action) {
+    createRequestMessage(action.err, action.res, {
+      title: 'Queued Runs',
+      error: 'Unable to load the queued runs list.',
     });
   },
 });
@@ -241,6 +269,16 @@ function queryHistoryReducer(state, action) {
   return state;
 }
 
+function queryQueueReducer(state, action) {
+  switch (action.status) {
+  case 'success':
+    getJob(state, action.id).queue = action.res.body;
+    return _.clone(state);
+  }
+
+  return state;
+}
+
 function queryFutureReducer(state, action) {
   switch (action.status) {
   case 'success':
@@ -251,13 +289,33 @@ function queryFutureReducer(state, action) {
   return state;
 }
 
-export function runReducer(state = {last: null, next: null, jobs: {}}, action) {
+function changeTabReducer(state, action) {
+  if (tabs.indexOf(action.tab) > -1) {
+    return _.assign({}, state, {tab: action.tab});
+  }
+
+  return state;
+}
+
+export function runReducer(state = {
+  last: null,
+  next: null,
+  queue: null,
+  tab: 'last',
+  jobs: {},
+}, action) {
   switch (action.type) {
   case types.queryHistory:
     return queryHistoryReducer(state, action);
 
+  case types.queryQueue:
+    return queryQueueReducer(state, action);
+
   case types.queryFuture:
     return queryFutureReducer(state, action);
+
+  case types.changeTab:
+    return changeTabReducer(state, action);
   }
 
   return state;
