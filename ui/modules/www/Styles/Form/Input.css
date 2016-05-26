@@ -16,6 +16,17 @@
   border-color: var(--logo-color);
 }
 
+/* basic */
+
+.group {
+  margin-bottom: 0.5bl;
+}
+
+.label {
+  display: block;
+  font-weight: bold;
+}
+
 /* affix */
 
 .affixGroup {

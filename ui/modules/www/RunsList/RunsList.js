@@ -2,7 +2,7 @@
 
 import React, {Component, PropTypes} from 'react';
 import {connect} from 'react-redux';
-import {queryHistory, queryFuture, rerunRun} from '../RunStore/RunStore';
+import {queryHistory, queryFuture, queryQueue, rerunRun, cancelRun, changeTab} from '../RunStore/RunStore';
 import moment from 'moment';
 import {routeJobUpdate} from '../RouterStore/RouterStore';
 import _ from 'lodash';
@@ -23,36 +23,43 @@ function formatLast(run) {
     id: run.jobId,
     jobId: run.plannedJob.jobSpec.id,
     name: run.plannedJob.jobSpec.name,
-    time: moment(run.start),
+    time: run.start ? moment(run.start) : null,
     err: run.exceptionMessage,
-    success: run.success || !run.finish,
+    error: run.finish !== 0 && run.status !== 0,
+    pending: run.finish === 0,
+  });
+}
+
+function formatQueue(run) {
+  return formatRun({
+    id: null,
+    jobId: run.jobSpec.id,
+    name: run.jobSpec.name,
+    time: run.start ? moment(run.start) : null,
+    err: null,
+    error: false,
+    pending: false,
   });
 }
 
 function formatNext(run) {
   return formatRun({
     name: run.name,
-    time: moment(run.time),
+    time: run.time ? moment(run.time) : null,
   });
 }
 
 // export
 
 @connect((state, props) => {
-  if (!props.id) {
-    return {
-      job: null,
-      last: state.runs.last,
-      next: state.runs.next,
-    };
-  }
-
-  const runs = state.runs.jobs[props.id];
+  const runs = state.runs.jobs[props.id] || state.runs;
 
   return {
-    job: state.jobs.jobs[props.id],
+    job: state.jobs.jobs[props.id] || null,
     last: runs ? runs.last : null,
     next: runs ? runs.next : null,
+    queue: runs ? runs.queue : null,
+    tab: state.runs.tab,
   };
 })
 export default class RunsList extends Component {
@@ -62,19 +69,17 @@ export default class RunsList extends Component {
     job: PropTypes.object,
     last: PropTypes.array,
     next: PropTypes.array,
-  };
-
-  state = {
-    last: true,
+    queue: PropTypes.array,
+    tab: PropTypes.string.isRequired,
   };
 
   componentDidMount() {
-    this.interval = setInterval(::this.tick, 1000 * 60 * 1);
+    this.interval = setInterval(::this.tick, 1000 * 30 * 1);
     this.tick();
   }
 
-  componentDidUpdate(prevProps, prevState) {
-    if (prevProps.id !== this.props.id || prevProps.job !== this.props.job || prevState.last !== this.state.last) {
+  componentDidUpdate(prevProps) {
+    if (prevProps.id !== this.props.id || prevProps.job !== this.props.job || prevProps.tab !== this.props.tab) {
       this.tick();
     }
   }
@@ -85,27 +90,28 @@ export default class RunsList extends Component {
   }
 
   tick() {
-    (this.state.last ? queryHistory : queryFuture)(this.props.id);
+    const fn = this.props.tab === 'last' ? queryHistory :
+      this.props.tab === 'queue' ? queryQueue : queryFuture;
+    fn(this.props.id);
   }
 
-  navLinkClassName(last) {
+  navLinkClassName(tab) {
     return cn(shared.tab, {
-      [shared.activeTab]: this.state.last === last,
+      [shared.activeTab]: this.props.tab === tab,
     });
   }
 
   runClassName(run) {
     return cn(styles.item, {
-      [styles.error]: run.finish && run.status !== 0,
+      [styles.pending]: run.pending,
+      [styles.error]: run.error,
     });
   }
 
-  setPast() {
-    this.setState({last: true});
-  }
-
-  setFuture() {
-    this.setState({last: false});
+  changeTab(tab) {
+    return () => {
+      changeTab(tab);
+    };
   }
 
   view(run) {
@@ -116,12 +122,20 @@ export default class RunsList extends Component {
 
   rerun(run) {
     return () => {
-      rerunRun(run.id);
+      rerunRun(run.id)
+      .then(::this.tick, ::this.tick);
+    };
+  }
+
+  cancel(i) {
+    return () => {
+      cancelRun(this.props.last[i])
+      .then(::this.tick, ::this.tick);
     };
   }
 
   getRunsArray() {
-    const runs = this.state.last ? this.props.last : this.props.next;
+    const runs = this.props[this.props.tab];
     return runs || [];
   }
 
@@ -131,22 +145,25 @@ export default class RunsList extends Component {
     return (
       <aside className={cn(styles.RunsList, className)}>
         <nav className={shared.tabs}>
-          <div className={this.navLinkClassName(true)} onClick={::this.setPast}>last run</div>
-          <div className={this.navLinkClassName(false)} onClick={::this.setFuture}>next run</div>
+          <div className={this.navLinkClassName('last')} onClick={::this.changeTab('last')}>last</div>
+          <div className={this.navLinkClassName('queue')} onClick={::this.changeTab('queue')}>queue</div>
+          <div className={this.navLinkClassName('next')} onClick={::this.changeTab('next')}>next</div>
         </nav>
 
         <div className={styles.items}>
           {this.getRunsArray().map((run, i) => {
-            run = this.state.last ? formatLast(run) : formatNext(run);
+            run = this.props.tab === 'last' ? formatLast(run) : this.props.tab === 'queue' ? formatQueue(run) : formatNext(run);
 
             return (
               <section key={i} className={this.runClassName(run)}>
                 <header className={styles.itemHeader}>
                   <div className={styles.name} dangerouslySetInnerHTML={{__html: run.niceName}}/>
 
-                  <time className={styles.time}>
-                    {moment(run.time).format('M/D/YY')}
-                  </time>
+                  {run.time ? (
+                    <time className={styles.time}>
+                      {moment(run.time).format('M/D/YY')}
+                    </time>
+                  ) : null}
                 </header>
 
                 {run.err &&
@@ -155,13 +172,30 @@ export default class RunsList extends Component {
                 </div>}
 
                 <footer className={cn(styles.itemFooter, shared.clearfix)}>
-                  <time className={styles.time}>
-                    {moment(run.time).format('h:mm A')}
-                  </time>
+                  {run.time ? (
+                    <time className={styles.time}>
+                      {moment(run.time).format('h:mm A')}
+                    </time>
+                  ) : null}
 
                   <div className={styles.actions}>
-                    {!this.props.id && this.state.last ? <span className={styles.action} onClick={this.view(run)}>view</span> : null}
-                    {!this.state.last ? null : <span className={styles.action} onClick={this.rerun(run)}>re-run</span>}
+                    {!this.props.job && this.props.tab !== 'next' ? (
+                      <span className={styles.action} onClick={this.view(run)}>
+                        view
+                      </span>
+                    ) : null}
+
+                    {this.props.tab === 'last' && !run.pending ? (
+                      <span className={styles.action} onClick={this.rerun(run)}>
+                        re-run
+                      </span>
+                    ) : null}
+
+                    {this.props.tab === 'queue' ? (
+                      <span className={styles.action} onClick={this.cancel(i)}>
+                        cancel
+                      </span>
+                    ) : null}
                   </div>
                 </footer>
               </section>

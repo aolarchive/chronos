@@ -97,7 +97,11 @@
   flex: 0 1 75%;
 
   .error & {
-    color: var(--red);
+    color: var(--logo-color);
+  }
+
+  .pending & {
+    color: var(--selected-color);
   }
 }
 

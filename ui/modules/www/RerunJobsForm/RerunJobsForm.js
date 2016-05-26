@@ -5,12 +5,25 @@ import {reduxForm} from 'redux-form';
 import moment from 'moment';
 import formStyles from '../Styles/Form.css';
 import cn from 'classnames';
+import _ from 'lodash';
+
+// vars
+
+const jobIntervals = [
+  'Hourly',
+  'Daily',
+  'Weekly',
+  'Monthly',
+];
 
 // export
 
 @reduxForm({
   form: 'rerun',
-  fields: ['start', 'end', 'jobs'],
+  fields: ['start', 'end', 'jobs', 'intervals'],
+  initialValues: {
+    intervals: [],
+  },
   validate: function validateRerunJobsForm() {
     return {};
   },
@@ -48,8 +61,20 @@ export default class RerunJobsForm extends Component {
     });
   }
 
+  intervalSelect(interval) {
+    const intervals = this.props.fields.intervals;
+
+    return (event) => {
+      if (event.target.checked) {
+        intervals.onChange((intervals.value || intervals.defaultValue).concat(interval));
+      } else {
+        intervals.onChange(intervals.value.splice(intervals.value.indexOf(interval), 1));
+      }
+    };
+  }
+
   render() {
-    const {fields: {start, end}, handleSubmit} = this.props;
+    const {fields: {start, end}, handleSubmit, jobs} = this.props;
 
     return (
       <form onSubmit={handleSubmit}>
@@ -62,6 +87,21 @@ export default class RerunJobsForm extends Component {
           <label className={formStyles.affix}>End</label>
           <input {...end} type="text" className={cn(formStyles.input, formStyles.affixed)}/>
         </div>
+
+        {jobs.length > 1 ? (
+          <div className={formStyles.group}>
+            <label className={formStyles.label}>Job Intervals</label>
+            {jobIntervals.map((interval, i) => {
+              return (
+                <label key={i} className={formStyles.checkboxLabel}>
+                  <input type="checkbox" value={interval}
+                    onChange={::this.intervalSelect(interval)}/>
+                  <span>{_.capitalize(interval)}</span>
+                </label>
+              );
+            })}
+          </div>
+        ) : null}
 
         <button className={cn(formStyles.button, formStyles.buttonPrimary, formStyles.modalButton)} onClick={handleSubmit}>Re-run</button>
       </form>

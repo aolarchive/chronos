@@ -22,7 +22,7 @@ export function messageReducer(state = initialState, action) {
 
   case 'MESSAGE_CREATE_REQUEST':
     const res = _.isArray(action.res) ? _.last(action.res) : action.res;
-    const err = res.body || res.error.message;
+    const err = res.body.response || res.body || res.error.message;
 
     return _.assign({}, state, {queue: state.queue.concat({
       level: action.err ? 'error' : 'success',
