@@ -385,7 +385,7 @@ public class TestChronosController {
       PlannedJob plannedJob = new PlannedJob(j, new DateTime());
       twoJobs.add(plannedJob);
     }
-    when(jobDao.getQueue()).thenReturn(twoJobs);
+    when(jobDao.getQueue(null)).thenReturn(twoJobs);
     mockMvc.perform(get("/api/queue"))
       .andExpect(status().isOk())
       .andExpect(content().string(OM.writeValueAsString(twoJobs)));
@@ -409,7 +409,7 @@ public class TestChronosController {
     }
     Mockito.reset(agentConsumer);
     when(jobDao.getJobRuns(null, AgentConsumer.LIMIT_JOB_RUNS)).thenReturn(runs);
-    mockMvc.perform(get("/api/queue?running=true"))
+    mockMvc.perform(get("/api/running"))
       .andExpect(status().isOk())
       .andExpect(content().string(OM.writeValueAsString(twoJobs)));
   }

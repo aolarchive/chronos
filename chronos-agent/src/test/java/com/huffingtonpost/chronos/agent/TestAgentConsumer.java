@@ -106,7 +106,7 @@ public class TestAgentConsumer {
     assertTrue(true);
   }
 
-  @Test(timeout=10000)
+  @Test(timeout=20000)
   public void testNumOfConcurrentJobsIsHonored() throws BackendException {
     int sleepFor = 1000; // millis
     int totalJobs = 0;
@@ -138,7 +138,7 @@ public class TestAgentConsumer {
       dao.addToQueue(pj);
       totalJobs++;
     }
-    assertEquals(numOfConcurrentJobs, dao.getQueue().size());
+    assertEquals(numOfConcurrentJobs, dao.getQueue(null).size());
     TestAgent.runRunnable(consumer);
     assertEquals(numOfConcurrentJobs, dao.getRunningJobs().size());
     assertEquals(0, consumer.getFinishedJobs(limit).size());
@@ -396,7 +396,7 @@ public class TestAgentConsumer {
           Utils.getCurrentTime());
         dao.addToQueue(pj);
       }
-      assertEquals(numOfConcurrentJobs+1, dao.getQueue().size());
+      assertEquals(numOfConcurrentJobs+1, dao.getQueue(null).size());
       assertEquals(0, consumer.getFinishedJobs(limit).size());
       assertEquals(0, consumer.getSuccesfulQueries(limit).size());
       assertEquals(0, consumer.getFailedQueries(limit).size());
@@ -406,7 +406,7 @@ public class TestAgentConsumer {
       TestAgent.runRunnable(consumer);
 
       // make sure queue is populated with extra
-      assertEquals(numOfConcurrentJobs+1, dao.getQueue().size());
+      assertEquals(numOfConcurrentJobs+1, dao.getQueue(null).size());
       assertEquals(consumer.getFinishedJobs(limit).toString(),
                    0, consumer.getFinishedJobs(limit).size());
       assertEquals(0, consumer.getSuccesfulQueries(limit).size());

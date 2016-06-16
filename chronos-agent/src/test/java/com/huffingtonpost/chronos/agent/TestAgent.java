@@ -199,12 +199,12 @@ public class TestAgent {
 
       List<PlannedJob> expected = new ArrayList<>();
       expected.add(new PlannedJob(aJob, Utils.getCurrentTime()));
-      assertEquals(expected, dao.getQueue());
+      assertEquals(expected, dao.getQueue(aJob.getId()));
 
       expected.clear();
       runRunnable(consumer);
 
-      assertEquals(expected, dao.getQueue());
+      assertEquals(expected, dao.getQueue(null));
       dao.deleteJob(aJob.getId());
     }
   }
@@ -230,12 +230,12 @@ public class TestAgent {
     List<PlannedJob> expected = new ArrayList<PlannedJob>();
     expected.add(new PlannedJob(aJob, Utils.getCurrentTime()));
 
-    assertEquals(expected, dao.getQueue());
+    assertEquals(expected, dao.getQueue(aJob.getId()));
 
     expected.clear();
     runRunnable(consumer);
 
-    assertEquals(expected, dao.getQueue());
+    assertEquals(expected, dao.getQueue(null));
 
     List<String> actual = getResults(aJob);
     assertEquals(new ArrayList<String>(), actual);
@@ -347,12 +347,12 @@ public class TestAgent {
     }
 
     runRunnable(agentDriver);
-    assertEquals(count, dao.getQueue().size());
+    assertEquals(count, dao.getQueue(null).size());
 
     expected.clear();
     waitUntilJobsFinished(consumer, count);
 
-    assertEquals(0, dao.getQueue().size());
+    assertEquals(0, dao.getQueue(null).size());
     assertEquals(count, dao.getJobRuns(null, count).size());
     assertEquals(0, consumer.getFailedQueries(count).size());
     assertEquals(count, consumer.getFinishedJobs(count).size());

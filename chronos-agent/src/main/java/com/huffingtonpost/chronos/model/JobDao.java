@@ -29,7 +29,7 @@ public interface JobDao extends Closeable {
   public List<Map<String, String>> getJobResults(JobSpec jobSpec, int limit)
           throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException;
 
-  public List<PlannedJob> getQueue();
+  public List<PlannedJob> getQueue(Long id);
 
   public void addToQueue(PlannedJob aJob);
 

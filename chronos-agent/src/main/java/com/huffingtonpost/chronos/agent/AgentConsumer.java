@@ -97,7 +97,7 @@ public class AgentConsumer extends Stoppable {
   }
 
   public void doRun() {
-    List<PlannedJob> queue = dao.getQueue();
+    List<PlannedJob> queue = dao.getQueue(null);
     boolean zeroInQueue = queue.size() == 0;
     int running = dao.getRunningJobs().size();
     boolean maxJobsRunning = running >= numOfConcurrentJobs;

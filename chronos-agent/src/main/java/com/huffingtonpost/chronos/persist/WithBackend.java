@@ -36,7 +36,7 @@ public interface WithBackend extends Closeable {
 
   public void setDataSource(DataSource ds);
   
-  public List<PlannedJob> getQueue() throws BackendException;
+  public List<PlannedJob> getQueue(Long id) throws BackendException;
   
   public void addToQueue(PlannedJob aJob) throws BackendException;
 

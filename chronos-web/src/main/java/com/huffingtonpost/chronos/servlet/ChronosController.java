@@ -255,35 +255,26 @@ public class ChronosController {
     }
   }
 
-  @RequestMapping(value="/queue", method=RequestMethod.GET)
-  public @ResponseBody List<PlannedJob> getQueue(
-      @RequestParam(value="running", required=false, defaultValue="false") Boolean running,
+  @RequestMapping(value="/running", method=RequestMethod.GET)
+  public @ResponseBody List<PlannedJob> getRunning(
       @RequestParam(value="id", required=false) Long id)
       throws IOException, KeeperException, InterruptedException {
-    if (running) {
-      List<PlannedJob> toRet = new ArrayList<>();
-      for (Entry<Long, CallableJob> entry :
-           jobDao.getJobRuns(null, AgentConsumer.LIMIT_JOB_RUNS).entrySet()){
-        boolean isDone = entry.getValue().isDone();
-        if (!isDone){
-          toRet.add(entry.getValue().getPlannedJob());
-        }
+    List<PlannedJob> toRet = new ArrayList<>();
+    for (Entry<Long, CallableJob> entry :
+         jobDao.getJobRuns(null, AgentConsumer.LIMIT_JOB_RUNS).entrySet()){
+      boolean isDone = entry.getValue().isDone();
+      if (!isDone){
+        toRet.add(entry.getValue().getPlannedJob());
       }
-      return toRet;
-    } else if (id != null) {
-      queueJobByRunId(id);
     }
-    return jobDao.getQueue();
+    return toRet;
   }
 
-  private PlannedJob queueJobByRunId(Long id) {
-    CallableJob i = jobDao.getJobRuns(id, AgentConsumer.LIMIT_JOB_RUNS).get(id);
-    PlannedJob pj = i.getPlannedJob();
-    if (pj == null){
-      throw new RuntimeException(String.format("previous job for id %s not found", id));
-    }
-    jobDao.addToQueue(pj);
-    return pj;
+  @RequestMapping(value="/queue", method=RequestMethod.GET)
+  public @ResponseBody List<PlannedJob> getQueue(
+      @RequestParam(value="id", required=false) Long id)
+      throws IOException, KeeperException, InterruptedException {
+    return jobDao.getQueue(id);
   }
 
   @RequestMapping(value="/queue", method=RequestMethod.POST)

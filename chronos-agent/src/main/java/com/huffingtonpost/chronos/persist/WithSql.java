@@ -78,7 +78,8 @@ public class WithSql implements WithBackend {
       conn.prepareStatement(String.format("CREATE TABLE IF NOT EXISTS %s "
         + "(id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, dt DATETIME, callable_job TEXT, "
         + "name TEXT, `code` TEXT, status INTEGER, exception TEXT,"
-        + "start DATETIME, finish DATETIME)", jobRunTableName));
+        + "start DATETIME, finish DATETIME,"
+        + "callable_job_id BIGINT NOT NULL)", jobRunTableName));
     jobRuns.execute();
     jobRuns.close();
 
@@ -122,8 +123,8 @@ public class WithSql implements WithBackend {
       conn = newConnection();
       stat =
         conn.prepareStatement(
-          String.format("INSERT INTO %s (dt, callable_job, name, `code`, status, exception, start, finish) "
-            + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)", jobRunTableName),
+          String.format("INSERT INTO %s (dt, callable_job, name, `code`, status, exception, start, finish, callable_job_id) "
+            + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", jobRunTableName),
                         Statement.RETURN_GENERATED_KEYS);
       int i = 1;
       stat.setTimestamp(i++, new Timestamp(dt.getMillis()));
@@ -134,6 +135,7 @@ public class WithSql implements WithBackend {
       stat.setString(i++, cj.getExceptionMessage() != null ? cj.getExceptionMessage().get() : "");
       stat.setTimestamp(i++, new Timestamp(cj.getStart().get()));
       stat.setTimestamp(i++, new Timestamp(cj.getFinish().get()));
+      stat.setLong(i++, cj.getPlannedJob().getJobSpec().getId());
       
       int rows = stat.executeUpdate();
       
@@ -205,7 +207,7 @@ public class WithSql implements WithBackend {
       conn = newConnection();
       String idWhere = "";
       if (id != null) {
-        idWhere = "WHERE id = ? ";
+        idWhere = "WHERE callable_job_id = ? ";
       }
       stat =
         conn.prepareStatement(
@@ -606,19 +608,28 @@ public class WithSql implements WithBackend {
     return new PlannedJob(parseJob(rs), replaceTime);
   }
 
-  public List<PlannedJob> getQueue() throws BackendException {
+  public List<PlannedJob> getQueue(Long id) throws BackendException {
     List<PlannedJob> toRet = new ArrayList<>();
     Connection conn = null;
     PreparedStatement stat = null;
     try {
       conn = newConnection();
+      String idPiece = "";
+      if (id != null) {
+        idPiece = "AND t2.id = ? ";
+      }
       stat =
         conn.prepareStatement(
           String.format("SELECT * FROM %s AS t1 "
             + "JOIN %s t2 ON t1.job_id = t2.id "
             + "AND t1.job_lastModified = t2.lastModified "
+            + idPiece
             + "ORDER BY t1.insertTime ASC",
             queueTableName, jobTableName));
+      int i = 1;
+      if (id != null) {
+        stat.setLong(i++, id);
+      }
       ResultSet rs = stat.executeQuery();
       while (rs != null && rs.next()) {
         PlannedJob pj = parsePlannedJob(rs);
