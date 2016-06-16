@@ -61,7 +61,7 @@ export function getJobNiceInterval(job, useLocalTime) {
 
   switch (job.interval) {
   case 'Hourly':
-    return `Hourly at ${time.format(':mm a')}`;
+    return `Hourly at ${time.format(':mm')}`;
   case 'Daily':
     return `Daily at ${time.format('h:mm a')}`;
   case 'Weekly':
