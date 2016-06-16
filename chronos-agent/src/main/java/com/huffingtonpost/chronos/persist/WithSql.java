@@ -197,23 +197,30 @@ public class WithSql implements WithBackend {
     }
   }
   
-  public Map<Long, CallableJob> getJobRuns(int limit) throws BackendException {
+  public Map<Long, CallableJob> getJobRuns(Long id, int limit) throws BackendException {
     Map<Long, CallableJob> toRet = new LinkedHashMap<>();
     Connection conn = null;
     PreparedStatement stat = null;
     try {
       conn = newConnection();
+      String idWhere = "";
+      if (id != null) {
+        idWhere = "WHERE id = ? ";
+      }
       stat =
         conn.prepareStatement(
-          String.format("SELECT * FROM %s ORDER BY dt DESC limit ?", jobRunTableName));
+          String.format("SELECT * FROM %s "+idWhere+"ORDER BY dt DESC limit ?", jobRunTableName));
       int i = 1;
+      if (id != null) {
+        stat.setLong(i++, id);
+      }
       stat.setInt(i++, limit);
       ResultSet rs = stat.executeQuery();
       while (rs.next()) {
-        long id = rs.getLong("id");
+        long anId = rs.getLong("id");
         CallableJob cj = OBJECT_MAPPER.readValue(
             rs.getString("callable_job").getBytes(), CallableJob.class);
-        toRet.put(id, cj);
+        toRet.put(anId, cj);
       }
       rs.close();
     } catch (UnrecognizedPropertyException ex) {

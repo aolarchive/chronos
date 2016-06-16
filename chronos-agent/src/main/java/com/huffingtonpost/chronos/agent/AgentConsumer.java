@@ -263,7 +263,7 @@ public class AgentConsumer extends Stoppable {
 
   synchronized public Map<Long, CallableJob> getFinishedJobs(int limit) {
     Map<Long, CallableJob> toRet = new TreeMap<>();
-    Map<Long, CallableJob> runs = dao.getJobRuns(limit);
+    Map<Long, CallableJob> runs = dao.getJobRuns(null, limit);
     for (Entry<Long, CallableJob> entry : runs.entrySet()) {
       Long key = entry.getKey();
       CallableJob value = entry.getValue();
@@ -285,7 +285,7 @@ public class AgentConsumer extends Stoppable {
 
   synchronized public Map<Long, CallableJob> getFailedQueries(int limit) {
     Map<Long, CallableJob> toRet = new TreeMap<>();
-    Map<Long, CallableJob> runs = dao.getJobRuns(limit);
+    Map<Long, CallableJob> runs = dao.getJobRuns(null, limit);
     for (Entry<Long, CallableJob> entry : runs.entrySet()) {
       Long key = entry.getKey();
       CallableJob value = entry.getValue();
@@ -298,7 +298,7 @@ public class AgentConsumer extends Stoppable {
 
   synchronized public Map<Long, CallableJob> getSuccesfulQueries(int limit) {
     Map<Long, CallableJob> toRet = new TreeMap<>();
-    Map<Long, CallableJob> runs = dao.getJobRuns(limit);
+    Map<Long, CallableJob> runs = dao.getJobRuns(null, limit);
     for (Entry<Long, CallableJob> entry : runs.entrySet()) {
       Long key = entry.getKey();
       CallableJob value = entry.getValue();
@@ -314,7 +314,7 @@ public class AgentConsumer extends Stoppable {
   
   synchronized public CallableJob getLatestMatching(PlannedJob pj, int limit) {
     Map<Long, CallableJob> toRet = new TreeMap<>();
-    Map<Long, CallableJob> runs = dao.getJobRuns(limit);
+    Map<Long, CallableJob> runs = dao.getJobRuns(null, limit);
     for (Entry<Long, CallableJob> entry : runs.entrySet()) {
       Long key = entry.getKey();
       CallableJob value = entry.getValue();

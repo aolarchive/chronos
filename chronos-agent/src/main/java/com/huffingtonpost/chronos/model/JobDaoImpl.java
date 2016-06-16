@@ -143,9 +143,9 @@ public class JobDaoImpl extends WithSql implements JobDao {
     }
   }
 
-  public Map<Long, CallableJob> getJobRuns(int limit) {
+  public Map<Long, CallableJob> getJobRuns(Long id, int limit) {
     try {
-      return super.getJobRuns(limit);
+      return super.getJobRuns(id, limit);
     } catch (BackendException e) {
       throw new RuntimeException("Exception when getting jobRuns: " + e.getMessage());
     }

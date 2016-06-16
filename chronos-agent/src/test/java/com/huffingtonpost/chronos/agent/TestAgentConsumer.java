@@ -259,7 +259,7 @@ public class TestAgentConsumer {
 
     assertEquals(0, dao.getRunningJobs().size());
     Map<Long, CallableJob> jobRuns =
-      dao.getJobRuns(AgentConsumer.LIMIT_JOB_RUNS);
+      dao.getJobRuns(null, AgentConsumer.LIMIT_JOB_RUNS);
     assertEquals("jobRuns: " + jobRuns, 5, jobRuns.values().size());
     assertEquals(5, consumer.getFinishedJobs(limit).size());
     assertEquals(0, consumer.getSuccesfulQueries(limit).size());
@@ -303,7 +303,7 @@ public class TestAgentConsumer {
     JobDao local = new H2TestJobDaoImpl();
     local.setDataSource(H2TestUtil.getDataSource());
     assertEquals(1,
-      local.getJobRuns(AgentConsumer.LIMIT_JOB_RUNS).values().size());
+      local.getJobRuns(null, AgentConsumer.LIMIT_JOB_RUNS).values().size());
   }
 
   @Test(timeout=2000)
@@ -337,7 +337,7 @@ public class TestAgentConsumer {
 
     assertEquals(0, dao.getRunningJobs().size());
     Map<Long, CallableJob> jobRuns =
-      dao.getJobRuns(AgentConsumer.LIMIT_JOB_RUNS);
+      dao.getJobRuns(null, AgentConsumer.LIMIT_JOB_RUNS);
     assertEquals("jobRuns: " + jobRuns, 1, jobRuns.values().size());
     assertEquals(1, consumer.getFinishedJobs(limit).size());
     assertEquals(0, consumer.getSuccesfulQueries(limit).size());

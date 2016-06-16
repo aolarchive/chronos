@@ -26,7 +26,7 @@ public interface WithBackend extends Closeable {
   
   public JobSpec getJob(long id) throws BackendException;
 
-  public Map<Long, CallableJob> getJobRuns(int limit) throws BackendException;
+  public Map<Long, CallableJob> getJobRuns(Long id, int limit) throws BackendException;
 
   public long createJobRun(DateTime dt, CallableJob cq) throws BackendException;
 

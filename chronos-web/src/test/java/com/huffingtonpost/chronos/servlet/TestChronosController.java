@@ -70,7 +70,7 @@ public class TestChronosController {
   @SuppressWarnings( "rawtypes" )
   @Before
   public void setUp() throws Exception{
-    when(jobDao.getJobRuns(AgentConsumer.LIMIT_JOB_RUNS)).thenReturn(
+    when(jobDao.getJobRuns(null, AgentConsumer.LIMIT_JOB_RUNS)).thenReturn(
       new ConcurrentSkipListMap<Long, CallableJob>());
     agentDriver  = new AgentDriver(jobDao, reporting);
     agentConsumer  =
@@ -408,7 +408,7 @@ public class TestChronosController {
       runs.put(new Long(i), cq);
     }
     Mockito.reset(agentConsumer);
-    when(jobDao.getJobRuns(AgentConsumer.LIMIT_JOB_RUNS)).thenReturn(runs);
+    when(jobDao.getJobRuns(null, AgentConsumer.LIMIT_JOB_RUNS)).thenReturn(runs);
     mockMvc.perform(get("/api/queue?running=true"))
       .andExpect(status().isOk())
       .andExpect(content().string(OM.writeValueAsString(twoJobs)));
@@ -439,7 +439,8 @@ public class TestChronosController {
       new ConcurrentSkipListMap<>();
     runs.put(new Long(1), cq);
 
-    when(jobDao.getJobRuns(AgentConsumer.LIMIT_JOB_RUNS)).thenReturn(runs);
+    when(jobDao.getJobRuns(aJob.getId(), AgentConsumer.LIMIT_JOB_RUNS)).thenReturn(runs);
+    when(jobDao.getJobRuns(null, AgentConsumer.LIMIT_JOB_RUNS)).thenReturn(runs);
 
     List<CallableQuery> expected = new ArrayList<>();
     expected.add(cq);
@@ -455,14 +456,15 @@ public class TestChronosController {
       .andExpect(content().string(OM.writeValueAsString(expected)))
       .andExpect(status().isOk());
 
+    Long anId = 4815162342L;
     expected.clear();
     request =
-      get(String.format("/api/jobs/history?id=4815162342"));
+      get(String.format("/api/jobs/history?id="+anId));
     mockMvc.perform(request)
       .andExpect(content().string(OM.writeValueAsString(expected)))
       .andExpect(status().isOk());
 
-    when(jobDao.getJobRuns(1)).thenReturn(runs);
+    when(jobDao.getJobRuns(aJob.getId(), 1)).thenReturn(runs);
     expected.add(cq);
     request =
       get(String.format("/api/jobs/history?id=%s&limit=1", aJob.getId()));
@@ -470,8 +472,10 @@ public class TestChronosController {
       .andExpect(content().string(OM.writeValueAsString(expected)))
       .andExpect(status().isOk());
 
-    verify(jobDao, times(3)).getJobRuns(AgentConsumer.LIMIT_JOB_RUNS);
-    verify(jobDao, times(1)).getJobRuns(1);
+    verify(jobDao, times(1)).getJobRuns(aJob.getId(), AgentConsumer.LIMIT_JOB_RUNS);
+    verify(jobDao, times(1)).getJobRuns(anId, AgentConsumer.LIMIT_JOB_RUNS);
+    verify(jobDao, times(1)).getJobRuns(null, AgentConsumer.LIMIT_JOB_RUNS);
+    verify(jobDao, times(1)).getJobRuns(aJob.getId(), 1);
   }
 
   @Test
