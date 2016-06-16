@@ -43,6 +43,8 @@ function createRun(job, time) {
 }
 
 function collectRuns(runs, now) {
+  now.utc();
+  
   return function collectRun(job) {
     switch (job.interval) {
     case 'Hourly':
