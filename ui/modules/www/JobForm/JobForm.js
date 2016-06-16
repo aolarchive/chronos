@@ -18,6 +18,7 @@ import styles from './JobForm.css';
 import formStyles from '../Styles/Form.css';
 import sharedStyles from '../Styles/Shared.css';
 import cn from 'classnames';
+import {getJobNiceInterval} from '../JobsHelper/JobsHelper.js';
 
 // vars
 
@@ -54,6 +55,7 @@ const requiredFields = ['interval', 'driver', 'startMinute', 'name'];
     sources: state.sources.query,
     deletedJobs: state.jobs.deleted,
     hideSidebar: state.localStorage.hideSidebar === 'true',
+    useLocalTime: state.localStorage.useLocalTime === 'true',
   };
 })
 export default class JobForm extends Component {
@@ -71,6 +73,7 @@ export default class JobForm extends Component {
     resetForm: PropTypes.func.isRequired,
     sources: PropTypes.array,
     submitFailed: PropTypes.bool.isRequired,
+    useLocalTime: PropTypes.bool.isRequired,
   };
 
   state = {
@@ -198,7 +201,7 @@ export default class JobForm extends Component {
   }
 
   render() {
-    const {fields: {enabled, shouldRerun, type, name, description, driver, user, password, interval, startDay, startHour, startMinute, resultEmail, statusEmail, id, lastModified, code, resultQuery}, handleSubmit, hideSidebar} = this.props;
+    const {fields: {enabled, shouldRerun, type, name, description, driver, user, password, interval, startDay, startHour, startMinute, resultEmail, statusEmail, id, lastModified, code, resultQuery}, handleSubmit, hideSidebar, useLocalTime} = this.props;
 
     const thisQuery = this.state.thisQuery === 'code' ? code : resultQuery;
 
@@ -298,6 +301,17 @@ export default class JobForm extends Component {
                 {this.getTimeDOM(60, true)}
               </select>
             </div>
+
+            {useLocalTime ? (
+              <div className={styles.fullWidth}>
+                <span className={styles.localTime}>{`This job will run ${getJobNiceInterval({
+                  interval: interval.value,
+                  startMinute: startMinute.value || 0,
+                  startHour: startHour.value || 0,
+                  startDay: startDay.value || 0,
+                }, useLocalTime).toLowerCase()} locally.`}</span>
+              </div>
+            ) : null}
 
             <hr/>
 
