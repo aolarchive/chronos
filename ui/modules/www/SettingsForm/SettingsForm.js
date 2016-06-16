@@ -44,8 +44,8 @@ export default class SettingsForm extends Component {
 
   updateForm() {
     this.props.initializeForm({
-      hideSidebar: this.props.settings.hideSidebar,
-      useLocalTime: this.props.settings.useLocalTime,
+      hideSidebar: this.props.settings.hideSidebar || 'false',
+      useLocalTime: this.props.settings.useLocalTime || 'false',
     });
   }
 
