@@ -5,16 +5,6 @@ import moment from 'moment';
 
 // vars
 
-const daysOfWeek = [
-  'Sundays',
-  'Mondays',
-  'Tuesdays',
-  'Wednesdays',
-  'Thursdays',
-  'Fridays',
-  'Saturdays',
-];
-
 const intervals = [
   'Hourly',
   'Daily',
@@ -57,7 +47,16 @@ export function getJobType(job) {
 }
 
 export function getJobNiceInterval(job, useLocalTime) {
-  const time = moment.utc().hour(job.startHour).minute(job.startMinute)[useLocalTime ? 'local' : 'utc']();
+  const time = moment.utc()
+  .hour(job.startHour)
+  .minute(job.startMinute)
+  .day(job.startDay % 7);
+
+  if (useLocalTime) {
+    time.local();
+  }
+
+  const diffDate = useLocalTime && time.clone().utc().date() !== time.date();
 
   switch (job.interval) {
   case 'Hourly':
@@ -65,9 +64,9 @@ export function getJobNiceInterval(job, useLocalTime) {
   case 'Daily':
     return `Daily at ${time.format('h:mm a')}`;
   case 'Weekly':
-    return `${daysOfWeek[job.startDay % 7]} at ${time.format('h:mm a')}`;
+    return `${time.format('dddd')} at ${time.format('h:mm a')}`;
   case 'Monthly':
-    return `Monthly at ${time.format('h:mm a')}`;
+    return `${diffDate ? 'Last' : 'First'} of Month at ${time.format('h:mm a')}`;
   }
 
   return 'N/A';
