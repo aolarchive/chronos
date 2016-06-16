@@ -6,6 +6,7 @@ import moment from 'moment';
 import formStyles from '../Styles/Form.css';
 import cn from 'classnames';
 import _ from 'lodash';
+import {connect} from 'react-redux';
 
 // vars
 
@@ -28,6 +29,11 @@ const jobIntervals = [
     return {};
   },
 })
+@connect((state) => {
+  return {
+    useLocalTime: state.localStorage.useLocalTime === 'true',
+  };
+})
 export default class RerunJobsForm extends Component {
   static propTypes = {
     end: PropTypes.string,
@@ -37,6 +43,7 @@ export default class RerunJobsForm extends Component {
     jobs: PropTypes.array.isRequired,
     resetForm: PropTypes.func.isRequired,
     start: PropTypes.string,
+    useLocalTime: PropTypes.bool.isRequired,
   };
 
   componentDidMount() {
@@ -54,10 +61,12 @@ export default class RerunJobsForm extends Component {
   }
 
   updateForm() {
-    this.props.initializeForm({
-      jobs: this.props.jobs,
-      start: moment(this.props.start).utcOffset(0).minute(0).second(0).format('YYYY-MM-DDTHH:mm:ss[Z]'),
-      end: moment(this.props.end).utcOffset(0).minute(59).second(0).format('YYYY-MM-DDTHH:mm:ss[Z]'),
+    const {start, end, jobs, initializeForm, useLocalTime} = this.props;
+
+    initializeForm({
+      jobs,
+      start: moment(start)[useLocalTime ? 'local' : 'utc']().minute(0).second(0).format(),
+      end: moment(end)[useLocalTime ? 'local' : 'utc']().minute(59).second(0).format(),
     });
   }
 

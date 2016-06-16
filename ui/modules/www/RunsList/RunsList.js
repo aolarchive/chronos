@@ -60,6 +60,7 @@ function formatNext(run) {
     next: runs ? runs.next : null,
     queue: runs ? runs.queue : null,
     tab: state.runs.tab,
+    useLocalTime: state.localStorage.useLocalTime === 'true',
   };
 })
 export default class RunsList extends Component {
@@ -71,6 +72,7 @@ export default class RunsList extends Component {
     next: PropTypes.array,
     queue: PropTypes.array,
     tab: PropTypes.string.isRequired,
+    useLocalTime: PropTypes.bool.isRequired,
   };
 
   componentDidMount() {
@@ -140,7 +142,7 @@ export default class RunsList extends Component {
   }
 
   render() {
-    const {className, ...props} = this.props;
+    const {className, useLocalTime, ...props} = this.props;
 
     return (
       <aside className={cn(styles.RunsList, className)}>
@@ -161,7 +163,7 @@ export default class RunsList extends Component {
 
                   {run.time ? (
                     <time className={styles.time}>
-                      {moment(run.time).format('M/D/YY')}
+                      {run.time[useLocalTime ? 'local' : 'utc']().format('M/D/YY')}
                     </time>
                   ) : null}
                 </header>
@@ -174,7 +176,7 @@ export default class RunsList extends Component {
                 <footer className={cn(styles.itemFooter, shared.clearfix)}>
                   {run.time ? (
                     <time className={styles.time}>
-                      {moment(run.time).format('h:mm A')}
+                      {run.time[useLocalTime ? 'local' : 'utc']().format('h:mm A')}
                     </time>
                   ) : null}
 

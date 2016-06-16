@@ -63,10 +63,12 @@ a.link {
 }
 
 .actions {
-  flex: 0 0 32px;
+  flex: 0 0 120px;
+  display: flex;
 }
 
 .action {
+  flex: 1 1 60px;
   color: var(--dark);
   cursor: pointer;
   font-size: 24px;

@@ -218,10 +218,20 @@ export const rerunJobs = createDispatcher((jobs, start, end, intervals) => {
           next(null, promise);
         }, next);
       }, (err, res) => {
+        if (!jobs.length) {
+          createMessage({
+            title: 'Re-run',
+            message: 'That time range contains no enabled jobs.',
+            level: 'info',
+          });
+
+          return;
+        }
+
         if (!res.length) {
           createMessage({
             title: 'Re-run',
-            message: 'The range you selected is too narrow to contain any jobs.',
+            message: 'That time range is too narrow for the jobs selected.',
             level: 'info',
           });
 
