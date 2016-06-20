@@ -77,45 +77,8 @@ public class ChronosController {
   public @ResponseBody List<CallableJob>
   history(@RequestParam(value="id", required=false) Long id,
           @RequestParam(value="limit", required=true, defaultValue="100") Integer limit) {
-    List<CallableJob> toRet = new ArrayList<>();
-    Map<Long, CallableJob> history = getJobHistory(id, limit);
-    boolean useFullMap = limit == null || history.size() <= limit;
-    if (useFullMap) {
-      return new ArrayList<CallableJob>(history.values());
-    } else {
-      Map<Long, CallableJob> limitedHistory = new LinkedHashMap<>();
-      for (Entry<Long, CallableJob> entry : history.entrySet()) {
-        if (limitedHistory.size() < limit) {
-          limitedHistory.put(entry.getKey(), entry.getValue());
-        } else {
-          return new ArrayList<CallableJob>(limitedHistory.values());
-        }
-      }
-    }
-    return toRet;
-  }
-
-  public Map<Long, CallableJob> getJobHistory(Long id, int limit) {
-    Map<Long, CallableJob> runs =
-      jobDao.getJobRuns(limit);
-    if (id == null) {
-      return runs;
-    }
-
-    Map<Long, CallableJob> toRet = new LinkedHashMap<>();
-    for (Entry<Long, CallableJob> entry :
-         runs.entrySet()){
-      Long key = entry.getKey();
-      CallableJob query = entry.getValue();
-      long jobId =
-        entry.getValue().getPlannedJob()
-          .getJobSpec().getId();
-      if (id.longValue() == jobId) {
-        toRet.put(key, query);
-      }
-    }
-
-    return toRet;
+    Map<Long, CallableJob> toRet = jobDao.getJobRuns(id, limit);
+    return new ArrayList<>(toRet.values());
   }
 
   @RequestMapping(value="/jobs/future", method=RequestMethod.GET)
@@ -292,35 +255,26 @@ public class ChronosController {
     }
   }
 
-  @RequestMapping(value="/queue", method=RequestMethod.GET)
-  public @ResponseBody List<PlannedJob> getQueue(
-      @RequestParam(value="running", required=false, defaultValue="false") Boolean running,
+  @RequestMapping(value="/running", method=RequestMethod.GET)
+  public @ResponseBody List<PlannedJob> getRunning(
       @RequestParam(value="id", required=false) Long id)
       throws IOException, KeeperException, InterruptedException {
-    if (running) {
-      List<PlannedJob> toRet = new ArrayList<>();
-      for (Entry<Long, CallableJob> entry :
-           jobDao.getJobRuns(AgentConsumer.LIMIT_JOB_RUNS).entrySet()){
-        boolean isDone = entry.getValue().isDone();
-        if (!isDone){
-          toRet.add(entry.getValue().getPlannedJob());
-        }
+    List<PlannedJob> toRet = new ArrayList<>();
+    for (Entry<Long, CallableJob> entry :
+         jobDao.getJobRuns(null, AgentConsumer.LIMIT_JOB_RUNS).entrySet()){
+      boolean isDone = entry.getValue().isDone();
+      if (!isDone){
+        toRet.add(entry.getValue().getPlannedJob());
       }
-      return toRet;
-    } else if (id != null) {
-      queueJobByRunId(id);
     }
-    return jobDao.getQueue();
+    return toRet;
   }
 
-  private PlannedJob queueJobByRunId(Long id) {
-    CallableJob i = jobDao.getJobRuns(AgentConsumer.LIMIT_JOB_RUNS).get(id);
-    PlannedJob pj = i.getPlannedJob();
-    if (pj == null){
-      throw new RuntimeException(String.format("previous job for id %s not found", id));
-    }
-    jobDao.addToQueue(pj);
-    return pj;
+  @RequestMapping(value="/queue", method=RequestMethod.GET)
+  public @ResponseBody List<PlannedJob> getQueue(
+      @RequestParam(value="id", required=false) Long id)
+      throws IOException, KeeperException, InterruptedException {
+    return jobDao.getQueue(id);
   }
 
   @RequestMapping(value="/queue", method=RequestMethod.POST)

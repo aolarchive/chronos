@@ -104,7 +104,7 @@ public class TestJobDao {
       dao.addToQueue(aJob);
     } catch (Exception ex) { ex.printStackTrace(); }
 
-    List<PlannedJob> actual = dao.getQueue();
+    List<PlannedJob> actual = dao.getQueue(aJob.getJobSpec().getId());
     assertEquals(expected, actual);
 
     PlannedJob actualPJ = null;
@@ -114,7 +114,7 @@ public class TestJobDao {
     assertEquals(aJob, actualPJ);
 
     expected = new ArrayList<PlannedJob>();
-    actual = dao.getQueue();
+    actual = dao.getQueue(null);
     assertEquals(expected, actual);
   }
 
@@ -145,7 +145,7 @@ public class TestJobDao {
 
     List<PlannedJob> sorted = new ArrayList<>(expected); // so we can sort
     Collections.sort(sorted);
-    List<PlannedJob> actual = dao.getQueue();
+    List<PlannedJob> actual = dao.getQueue(null);
     Collections.sort(actual);
     assertEquals(size*2, actual.size());
     assertEquals(sorted, actual);
@@ -177,6 +177,6 @@ public class TestJobDao {
       PlannedJob pj = new PlannedJob(aJob, Utils.getCurrentTime());
       dao.addToQueue(pj);
     }
-    assertEquals(count, dao.getQueue().size());
+    assertEquals(count, dao.getQueue(null).size());
   }
 }

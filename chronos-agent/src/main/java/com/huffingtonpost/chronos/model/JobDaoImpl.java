@@ -117,9 +117,9 @@ public class JobDaoImpl extends WithSql implements JobDao {
     return toRet;
   }
 
-  public List<PlannedJob> getQueue() {
+  public List<PlannedJob> getQueue(Long id) {
     try {
-      List<PlannedJob> toRet = super.getQueue();
+      List<PlannedJob> toRet = super.getQueue(id);
       return toRet;
     } catch (BackendException e) {
       throw new RuntimeException("Exception when getting queue:" + e.getMessage());
@@ -143,9 +143,9 @@ public class JobDaoImpl extends WithSql implements JobDao {
     }
   }
 
-  public Map<Long, CallableJob> getJobRuns(int limit) {
+  public Map<Long, CallableJob> getJobRuns(Long id, int limit) {
     try {
-      return super.getJobRuns(limit);
+      return super.getJobRuns(id, limit);
     } catch (BackendException e) {
       throw new RuntimeException("Exception when getting jobRuns: " + e.getMessage());
     }

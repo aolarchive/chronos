@@ -10,3 +10,5 @@ ui/public
 !ui/public/ico
 !ui/public/index.html
 .env
+chronos-agent/bin
+chronos-web/bin

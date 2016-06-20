@@ -199,12 +199,12 @@ public class TestAgent {
 
       List<PlannedJob> expected = new ArrayList<>();
       expected.add(new PlannedJob(aJob, Utils.getCurrentTime()));
-      assertEquals(expected, dao.getQueue());
+      assertEquals(expected, dao.getQueue(aJob.getId()));
 
       expected.clear();
       runRunnable(consumer);
 
-      assertEquals(expected, dao.getQueue());
+      assertEquals(expected, dao.getQueue(null));
       dao.deleteJob(aJob.getId());
     }
   }
@@ -230,12 +230,12 @@ public class TestAgent {
     List<PlannedJob> expected = new ArrayList<PlannedJob>();
     expected.add(new PlannedJob(aJob, Utils.getCurrentTime()));
 
-    assertEquals(expected, dao.getQueue());
+    assertEquals(expected, dao.getQueue(aJob.getId()));
 
     expected.clear();
     runRunnable(consumer);
 
-    assertEquals(expected, dao.getQueue());
+    assertEquals(expected, dao.getQueue(null));
 
     List<String> actual = getResults(aJob);
     assertEquals(new ArrayList<String>(), actual);
@@ -274,7 +274,7 @@ public class TestAgent {
   private boolean areAllFuturesDone(AgentConsumer consumer){
     boolean result = true;
     for (Entry<Long, CallableJob> i :
-         dao.getJobRuns(AgentConsumer.LIMIT_JOB_RUNS).entrySet()){
+         dao.getJobRuns(null, AgentConsumer.LIMIT_JOB_RUNS).entrySet()){
       if (!i.getValue().isDone()){
         result = false;
       }
@@ -296,13 +296,13 @@ public class TestAgent {
       allFuturesDone = areAllFuturesDone(consumer);
     }
     CallableJob value =
-      dao.getJobRuns(AgentConsumer.LIMIT_JOB_RUNS).get(new Long(1));
+      dao.getJobRuns(null, AgentConsumer.LIMIT_JOB_RUNS).get(new Long(1));
     String name = value.getPlannedJob().getJobSpec().getName();
     CallableJob cj = consumer.assembleCallableJob(value.getPlannedJob(), 1);
     consumer.submitJob(cj);
 
     CallableJob rerun =
-      dao.getJobRuns(AgentConsumer.LIMIT_JOB_RUNS).get(new Long(2));
+      dao.getJobRuns(null, AgentConsumer.LIMIT_JOB_RUNS).get(new Long(2));
     Assert.assertEquals(name, rerun.getPlannedJob().getJobSpec().getName());
 
     List<String> actual = getResults(aJob);
@@ -347,13 +347,13 @@ public class TestAgent {
     }
 
     runRunnable(agentDriver);
-    assertEquals(count, dao.getQueue().size());
+    assertEquals(count, dao.getQueue(null).size());
 
     expected.clear();
     waitUntilJobsFinished(consumer, count);
 
-    assertEquals(0, dao.getQueue().size());
-    assertEquals(count, dao.getJobRuns(count).size());
+    assertEquals(0, dao.getQueue(null).size());
+    assertEquals(count, dao.getJobRuns(null, count).size());
     assertEquals(0, consumer.getFailedQueries(count).size());
     assertEquals(count, consumer.getFinishedJobs(count).size());
     assertEquals(count, consumer.getSuccesfulQueries(count).size());
@@ -367,7 +367,7 @@ public class TestAgent {
     runRunnable(agentDriver);
     waitUntilJobsFinished(consumer, 1);
     CallableJob actual =
-      dao.getJobRuns(AgentConsumer.LIMIT_JOB_RUNS).get(new Long(1));
+      dao.getJobRuns(null, AgentConsumer.LIMIT_JOB_RUNS).get(new Long(1));
     assertEquals("", actual.getExceptionMessage().get());
     assertEquals(true, actual.isSuccess());
   }
@@ -382,7 +382,7 @@ public class TestAgent {
     runRunnable(consumer);
     waitUntilJobsFinished(consumer, 1);
     CallableJob actual =
-      dao.getJobRuns(AgentConsumer.LIMIT_JOB_RUNS).get(new Long(1));
+      dao.getJobRuns(null, AgentConsumer.LIMIT_JOB_RUNS).get(new Long(1));
     assertEquals(false, actual.isSuccess());
     assertEquals(true, actual.isFailed());
     String expected = CallableScript.genErrorMessage(aJob, error+"\n");
@@ -406,7 +406,7 @@ public class TestAgent {
     runRunnable(agentDriver);
     waitUntilJobsFinished(consumer, 1);
     CallableJob actual =
-      dao.getJobRuns(AgentConsumer.LIMIT_JOB_RUNS).get(new Long(1));
+      dao.getJobRuns(null, AgentConsumer.LIMIT_JOB_RUNS).get(new Long(1));
     assertEquals(false, actual.isSuccess());
     assertEquals(true, actual.isFailed());
     String expected = CallableScript.genErrorMessage(aJob, error+"\n");
