@@ -119,6 +119,11 @@
   }
 }
 
+.localTime {
+  font-style: italic;
+  font-size: 0.75bf;
+}
+
 /* code region */
 
 .editCodeRegion {

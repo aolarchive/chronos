@@ -6,13 +6,20 @@ import cn from 'classnames';
 import _ from 'lodash';
 import {orderJobsBy, getJobType, getJobNiceInterval} from '../JobsHelper/JobsHelper.js';
 import {routeJobUpdate} from '../RouterStore/RouterStore.js';
+import {connect} from 'react-redux';
 
 // export
 
+@connect((state) => {
+  return {
+    useLocalTime: state.localStorage.useLocalTime === 'true',
+  };
+})
 export default class JobsList extends Component {
   static propTypes = {
     className: PropTypes.string,
     jobs: PropTypes.array,
+    useLocalTime: PropTypes.bool.isRequired,
   };
 
   state = {
@@ -50,7 +57,7 @@ export default class JobsList extends Component {
   }
 
   render() {
-    const {className, jobs, ...props} = this.props;
+    const {className, jobs, useLocalTime, ...props} = this.props;
     const {orderBy, orderDir} = this.state;
 
     return (
@@ -97,7 +104,7 @@ export default class JobsList extends Component {
                 </td>
 
                 <td className={this.cellClassName('interval')}>
-                  {getJobNiceInterval(job).toLowerCase()}
+                  {getJobNiceInterval(job, useLocalTime).toLowerCase()}
                 </td>
               </tr>
             );

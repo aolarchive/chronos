@@ -1,18 +1,9 @@
 // import
 
 import _ from 'lodash';
+import moment from 'moment';
 
 // vars
-
-const daysOfWeek = [
-  'Sundays',
-  'Mondays',
-  'Tuesdays',
-  'Wednesdays',
-  'Thursdays',
-  'Fridays',
-  'Saturdays',
-];
 
 const intervals = [
   'Hourly',
@@ -55,16 +46,27 @@ export function getJobType(job) {
   return job.resultQuery && job.resultQuery.trim() ? 'report' : job.type === 'Script' ? 'script' : 'query';
 }
 
-export function getJobNiceInterval(job) {
+export function getJobNiceInterval(job, useLocalTime) {
+  const time = moment.utc()
+  .hour(job.startHour)
+  .minute(job.startMinute)
+  .day(job.startDay % 7);
+
+  if (useLocalTime) {
+    time.local();
+  }
+
+  const diffDate = useLocalTime && time.clone().utc().date() !== time.date();
+
   switch (job.interval) {
   case 'Hourly':
-    return `Hourly at :${_.padStart(job.startMinute, 2, '0')}`;
+    return `Hourly at ${time.format(':mm')}`;
   case 'Daily':
-    return `Daily at ${job.startHour}:${_.padStart(job.startMinute, 2, '0')}`;
+    return `Daily at ${time.format('h:mm a')}`;
   case 'Weekly':
-    return `${daysOfWeek[job.startDay % 7]} at ${job.startHour}:${_.padStart(job.startMinute, 2, '0')}`;
+    return `${time.format('dddd')} at ${time.format('h:mm a')}`;
   case 'Monthly':
-    return `Monthly at ${job.startHour}:${_.padStart(job.startMinute, 2, '0')}`;
+    return `${diffDate ? 'Last' : 'First'} of Month at ${time.format('h:mm a')}`;
   }
 
   return 'N/A';

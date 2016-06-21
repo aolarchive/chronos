@@ -13,7 +13,7 @@ export default class RerunJobsModal extends Component {
   };
 
   handleSubmit(data) {
-    rerunJobs(data.jobs, data.start, data.end);
+    rerunJobs(data.jobs, data.start, data.end, data.intervals);
     deleteModal();
   }
 

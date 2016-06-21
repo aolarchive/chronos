@@ -90,7 +90,7 @@
     "superagent": "1.8.1",
     "superagent-mock": "1.10.0",
     "superagent-promise": "1.1.0",
-    "webpack": "1.12.14",
+    "webpack": "1.13.0",
     "webpack-dev-server": "1.14.1"
   }
 }
