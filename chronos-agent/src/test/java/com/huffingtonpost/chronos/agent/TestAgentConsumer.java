@@ -215,6 +215,40 @@ public class TestAgentConsumer {
   }
 
   @Test(timeout=20000)
+  public void testJobResubmitSuccessUpdateQuery() throws BackendException {
+    JobSpec aJob = TestAgent.getTestJob("Robert Frank", dao);
+    String tableName = "table_dne_yet";
+    aJob.setCode(String.format("select * from %s", tableName));
+    dao.createJob(aJob);
+    PlannedJob pj = new PlannedJob(aJob, Utils.getCurrentTime());
+
+    CallableJob cj = new CallableQuery(pj, dao, reporting,
+      "example.com", mailInfo, null, drivers.get(0), 1);
+    consumer.submitJob(cj);
+
+    TestAgent.waitForFail(consumer, 1);
+    boolean isSuccess = cj.isSuccess();
+    assertEquals(false, isSuccess);
+    Map<Long, CallableJob> expected = new HashMap<>();
+    expected.put(cj.getJobId(), cj);
+    assertEquals(expected, consumer.getFailedQueries(limit));
+
+    Long nextId = new Long(cj.getJobId()+1);
+    aJob = dao.getJob(aJob.getId());
+    aJob.setCode("show tables;");
+    dao.updateJob(aJob);
+
+    TestAgent.runRunnable(consumer);
+    doSleep();
+
+    assertEquals(0, dao.getRunningJobs().size());
+    assertEquals(2, consumer.getFinishedJobs(limit).size());
+    assertEquals(1, consumer.getSuccesfulQueries(limit).size());
+    assertEquals(0,
+      consumer.getFinishedJobs(limit).get(nextId).getStatus().get());
+  }
+
+  @Test(timeout=20000)
   public void testJobResubmitMaxFailAttempts() throws BackendException {
     consumer = new AgentConsumer(dao, reporting, "testing.huffpo.com",
       new MailInfo("", "", "", ""),
