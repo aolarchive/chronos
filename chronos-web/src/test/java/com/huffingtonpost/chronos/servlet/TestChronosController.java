@@ -396,18 +396,19 @@ public class TestChronosController {
     List<PlannedJob> twoJobs = new ArrayList<>();
     Map<Long, CallableJob> runs =
       new ConcurrentSkipListMap<>();
+    Mockito.reset(agentConsumer);
     for (int i = 0; i < 2; i++) {
       JobSpec aJob = getTestJob("bleep bloop");
       aJob.setName("job" + i);
       PlannedJob plannedJob = new PlannedJob(aJob, new DateTime());
       twoJobs.add(plannedJob);
+      when(jobDao.getJob(i)).thenReturn(aJob);
 
       CallableQuery cq =
         new CallableQuery(plannedJob, jobDao, reporting,
                           null, null, null, null, 1);
       runs.put(new Long(i), cq);
     }
-    Mockito.reset(agentConsumer);
     when(jobDao.getJobRuns(null, AgentConsumer.LIMIT_JOB_RUNS)).thenReturn(runs);
     mockMvc.perform(get("/api/running"))
       .andExpect(status().isOk())
@@ -432,6 +433,7 @@ public class TestChronosController {
   @Test
   public void testJobHistory() throws Exception {
     JobSpec aJob = getTestJob("4 8 15 16 23 42");
+    when(jobDao.getJob(aJob.getId())).thenReturn(aJob);
     PlannedJob plannedJob = new PlannedJob(aJob, new DateTime());
     CallableQuery cq =
       new CallableQuery(plannedJob, jobDao, reporting, null, null, null, null, 1);

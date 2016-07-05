@@ -1,7 +1,6 @@
 package com.huffingtonpost.chronos.agent;
 
 import java.util.concurrent.Callable;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
@@ -119,8 +118,10 @@ public abstract class CallableJob implements Callable<Void> {
   }
 
   public void setReplacedCode() {
+    Long id = plannedJob.getJobSpec().getId();
+    JobSpec currJob = dao.getJob(id);
     this.replacedCode = QueryReplaceUtil.replaceDateValues(
-      plannedJob.getJobSpec().getCode(), plannedJob.getReplaceTime());
+      currJob.getCode(), plannedJob.getReplaceTime());
   }
 
   public AtomicLong getStart() {
