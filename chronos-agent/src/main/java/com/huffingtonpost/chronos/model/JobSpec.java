@@ -11,17 +11,6 @@ public class JobSpec {
   static final long serialVersionUID = 2L;
   public static Logger LOG = Logger.getLogger(JobSpec.class);
 
-  public enum Interval {
-    Hourly("hourly"),
-    Daily("daily"),
-    Weekly("weekly"),
-    Monthly("monthly");
-    public final String name;
-    Interval(String name) {
-      this.name = name;
-    }
-  }
-
   public enum JobType {
     Query("query"),
     Script("script");
@@ -39,10 +28,7 @@ public class JobSpec {
   private String description;
   private String code;
   private String resultTable;
-  private Interval interval;
-  private int startMinute;
-  private int startHour;
-  private int startDay;
+  private String cronString;
   private String driver;
   private boolean enabled;
   private boolean shouldRerun = true;
@@ -75,9 +61,7 @@ public class JobSpec {
       ", name:" + name + ", description:" + description +
       ", code:" + c + ", jobType:" + jobType +
       ", resultQuery:" + rq +
-      ", resultTable:" + resultTable + ", interval:" + interval +
-      ", startDay:" + startDay + ", startHour:" + startHour +
-      ", startMinute:" +  startMinute + ", driver:" + driver +
+      ", resultTable:" + resultTable + ", driver:" + driver +
       ", enabled:" + enabled + ", shouldRerun:" + shouldRerun +
       ", statusEmail:" + statusEmail + ", lastModified:" + lastModified + ">");
   }
@@ -85,8 +69,8 @@ public class JobSpec {
   @Override
   public int hashCode() {
     return Objects.hash(name, description, code,
-                        resultTable, interval, startMinute,
-                        startHour, startDay, driver, enabled, shouldRerun,
+                        resultTable, cronString,
+                        driver, enabled, shouldRerun,
                         resultQuery, resultEmail, statusEmail, jobType);
   }
   
@@ -102,10 +86,7 @@ public class JobSpec {
              Objects.equals(description, other.description) &&
              Objects.equals(code, other.code) &&
              Objects.equals(resultTable, other.resultTable) &&
-             Objects.equals(interval, other.interval) &&
-             Objects.equals(startMinute, other.startMinute) &&
-             Objects.equals(startHour, other.startHour) &&
-             Objects.equals(startDay, other.startDay) &&
+             Objects.equals(cronString, other.cronString) &&
              Objects.equals(driver, other.driver) &&
              Objects.equals(enabled, other.enabled) &&
              Objects.equals(shouldRerun, other.shouldRerun) &&
@@ -158,36 +139,12 @@ public class JobSpec {
     this.resultTable = resultTable;
   }
 
-  public Interval getInterval() {
-    return interval;
+  public String getCronString() {
+    return cronString;
   }
 
-  public void setInterval(Interval interval) {
-    this.interval = interval;
-  }
-
-  public int getStartMinute() {
-    return startMinute;
-  }
-
-  public void setStartMinute(int startMinute) {
-    this.startMinute = startMinute;
-  }
-
-  public int getStartHour() {
-    return startHour;
-  }
-
-  public void setStartHour(int startHour) {
-    this.startHour = startHour;
-  }
-
-  public int getStartDay() {
-    return startDay;
-  }
-
-  public void setStartDay(int startDay) {
-    this.startDay = startDay;
+  public void setCronString(String cronString) {
+    this.cronString = cronString;
   }
 
   public String getDriver() {

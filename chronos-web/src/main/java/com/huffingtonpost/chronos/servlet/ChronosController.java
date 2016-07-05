@@ -12,7 +12,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeConstants;
 import org.joda.time.DateTimeZone;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -27,14 +26,11 @@ import org.apache.log4j.Logger;
 
 import com.huffingtonpost.chronos.agent.*;
 import com.huffingtonpost.chronos.model.*;
+import com.huffingtonpost.chronos.util.CronExpression;
 
 @Controller
 @RequestMapping("/api")
 public class ChronosController {
-
-  enum ExMessages {
-    NOT_FOUND
-  }
 
   public static Logger LOG = Logger.getLogger(ChronosController.class);
   private final JobDao jobDao;
@@ -91,37 +87,8 @@ public class ChronosController {
   }
 
   public static DateTime calcNextRunTime(final DateTime from, JobSpec job) {
-    DateTime toRet = from;
-    switch (job.getInterval()) {
-      case Hourly:
-        toRet = toRet.withMinuteOfHour(job.getStartMinute());
-        if (toRet.getMillis() <= from.getMillis()) {
-          toRet = toRet.plusHours(1);
-        }
-        break;
-      case Daily:
-        toRet = toRet.withHourOfDay(job.getStartHour());
-        toRet = toRet.withMinuteOfHour(job.getStartMinute());
-        if (toRet.getMillis() <= from.getMillis()) {
-          toRet = toRet.plusDays(1);
-        }
-        break;
-      case Weekly:
-        toRet = toRet.withHourOfDay(job.getStartHour());
-        toRet = toRet.withMinuteOfHour(job.getStartMinute());
-        toRet = toRet.withDayOfWeek(job.getStartDay());
-        if (toRet.getMillis() <= from.getMillis()) {
-          toRet = toRet.plusDays(7);
-        }
-        break;
-      case Monthly:
-        toRet = toRet.withHourOfDay(job.getStartHour());
-        toRet = toRet.withMinuteOfHour(job.getStartMinute());
-        if (toRet.getMillis() <= from.getMillis()) {
-          toRet = toRet.plusMonths(1).withDayOfMonth(1);
-        }
-        break;
-    }
+    DateTime toRet = CronExpression.createWithoutSeconds(job.getCronString())
+            .nextTimeAfter(from);
     return toRet.withMillisOfSecond(0).withSecondOfMinute(0);
   }
 
@@ -196,15 +163,10 @@ public class ChronosController {
     if (aJob.getName() == null || aJob.getName().isEmpty()) {
       throw new RuntimeException(Messages.JOB_NAME);
     }
-    if (aJob.getStartMinute() < 0 || aJob.getStartMinute() > 59) {
-      throw new RuntimeException(Messages.START_MINUTE);
-    }
-    if (aJob.getStartHour() < 0 || aJob.getStartHour() > 23) {
-      throw new RuntimeException(Messages.START_HOUR);
-    }
-    if (aJob.getStartDay() < DateTimeConstants.MONDAY ||
-        aJob.getStartDay() > DateTimeConstants.SUNDAY) {
-      throw new RuntimeException(Messages.START_DAY);
+    try {
+      CronExpression ce = CronExpression.createWithoutSeconds(aJob.getCronString());
+    } catch (Exception ex) {
+      throw new RuntimeException(ex.getMessage());
     }
   }
 

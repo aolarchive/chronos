@@ -29,7 +29,7 @@ public class TestCallableQuery {
       assertArrayEquals(expected, actual);
     }
   }
-  
+
   @Test
   public void testResultEmail(){
     PersistentResultSet rs = new PersistentResultSet();

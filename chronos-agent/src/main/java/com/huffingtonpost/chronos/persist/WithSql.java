@@ -28,7 +28,6 @@ import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.huffingtonpost.chronos.agent.CallableJob;
 import com.huffingtonpost.chronos.agent.PolymorphicCallableJobMixin;
 import com.huffingtonpost.chronos.model.JobSpec;
-import com.huffingtonpost.chronos.model.JobSpec.Interval;
 import com.huffingtonpost.chronos.model.JobSpec.JobType;
 import com.huffingtonpost.chronos.model.PlannedJob;
 import com.mysql.jdbc.jdbc2.optional.MysqlConnectionPoolDataSource;
@@ -88,8 +87,8 @@ public class WithSql implements WithBackend {
         + "(id BIGINT NOT NULL AUTO_INCREMENT, user VARCHAR(100), password VARCHAR(100),"
         + "name VARCHAR(100), description VARCHAR(250), jobType VARCHAR(100), "
         + "`code` TEXT, resultQuery TEXT, resultTable VARCHAR(100), "
-        + "`interval` VARCHAR(100), startMinute INTEGER, "
-        + "startHour INTEGER, startDay INTEGER, driver VARCHAR(100), enabled BIT, "
+        + "cronString VARCHAR(250), "
+        + "driver VARCHAR(100), enabled BIT, "
         + "shouldRerun BIT, resultEmail TEXT, statusEmail TEXT, lastModified DATETIME,"
         + "PRIMARY KEY (id, lastModified))",
         jobTableName));
@@ -301,10 +300,10 @@ public class WithSql implements WithBackend {
       stat =
         conn.prepareStatement(
           String.format("INSERT INTO %s (user, password, name, "
-            + "description, jobType, `code`, resultQuery, resultTable, `interval`, "
-            + "startMinute, startHour, startDay, driver, "
+            + "description, jobType, `code`, resultQuery, resultTable, "
+            + "cronString, driver, "
             + "enabled, shouldRerun, resultEmail, statusEmail, lastModified) "
-            + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", jobTableName),
+            + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", jobTableName),
             Statement.RETURN_GENERATED_KEYS);
       int i = 1;
       stat.setString(i++, job.getUser());
@@ -315,10 +314,7 @@ public class WithSql implements WithBackend {
       stat.setString(i++, job.getCode());
       stat.setString(i++, job.getResultQuery());
       stat.setString(i++, job.getResultTable());
-      stat.setString(i++, job.getInterval().toString());
-      stat.setInt(i++, job.getStartMinute());
-      stat.setInt(i++, job.getStartHour());
-      stat.setInt(i++, job.getStartDay());
+      stat.setString(i++, job.getCronString());
       stat.setString(i++, job.getDriver());
       stat.setBoolean(i++, job.isEnabled());
       stat.setBoolean(i++, job.getShouldRerun());
@@ -366,10 +362,10 @@ public class WithSql implements WithBackend {
       stat =
         conn.prepareStatement(
           String.format("INSERT INTO %s (id, user, password, name, "
-            + "description, jobType, `code`, resultQuery, resultTable, `interval`, "
-            + "startMinute, startHour, startDay, driver, "
+            + "description, jobType, `code`, resultQuery, resultTable, "
+            + "cronString, driver, "
             + "enabled, shouldRerun, resultEmail, statusEmail, lastModified) "
-            + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ", jobTableName),
+            + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ", jobTableName),
           Statement.RETURN_GENERATED_KEYS);
       int i = 1;
       stat.setLong(i++, job.getId());
@@ -381,10 +377,7 @@ public class WithSql implements WithBackend {
       stat.setString(i++, job.getCode());
       stat.setString(i++, job.getResultQuery());
       stat.setString(i++, job.getResultTable());
-      stat.setString(i++, job.getInterval().toString());
-      stat.setInt(i++, job.getStartMinute());
-      stat.setInt(i++, job.getStartHour());
-      stat.setInt(i++, job.getStartDay());
+      stat.setString(i++, job.getCronString());
       stat.setString(i++, job.getDriver());
       stat.setBoolean(i++, job.isEnabled());
       stat.setBoolean(i++, job.getShouldRerun());
@@ -455,10 +448,7 @@ public class WithSql implements WithBackend {
     job.setCode(rs.getString("code"));
     job.setResultQuery(rs.getString("resultQuery"));
     job.setResultTable(rs.getString("resultTable"));
-    job.setInterval(Interval.valueOf(rs.getString("interval")));
-    job.setStartMinute(rs.getInt("startMinute"));
-    job.setStartHour(rs.getInt("startHour"));
-    job.setStartDay(rs.getInt("startDay"));
+    job.setCronString(rs.getString("cronString"));
     job.setDriver(rs.getString("driver"));
     job.setEnabled(rs.getBoolean("enabled"));
     job.setShouldRerun(rs.getBoolean("shouldRerun"));
