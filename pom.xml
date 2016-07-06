@@ -4,7 +4,7 @@
 	<groupId>com.huffingtonpost</groupId>
 	<artifactId>chronos-parent</artifactId>
 	<name>chronos-parent</name>
-	<version>1.0.1-SNAPSHOT</version>
+	<version>1.0.1</version>
 	<description>Big Data scheduling server</description>
 	<packaging>pom</packaging>
 	<modules>
