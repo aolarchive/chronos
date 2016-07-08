@@ -3,7 +3,6 @@ package com.huffingtonpost.chronos.model;
 import com.huffingtonpost.chronos.agent.H2TestJobDaoImpl;
 import com.huffingtonpost.chronos.agent.TestAgent;
 import com.huffingtonpost.chronos.agent.Utils;
-import com.huffingtonpost.chronos.persist.BackendException;
 
 import org.junit.After;
 import org.junit.Before;
@@ -77,7 +76,7 @@ public class TestJobDao {
 
   @Test
   public void testGetJobs() {
-    List<JobSpec> expected = new ArrayList<JobSpec>();
+    List<JobSpec> expected = new ArrayList<>();
     for (String aName : new String[]{ "Allen Ginsberg", "Louis Gluck"}) {
       JobSpec aJob = TestAgent.getTestJob(aName, dao);
       try {
@@ -97,7 +96,7 @@ public class TestJobDao {
     job = dao.getJob(id);
     PlannedJob aJob =
       new PlannedJob(job, Utils.getCurrentTime());
-    List<PlannedJob> expected = new ArrayList<PlannedJob>();
+    List<PlannedJob> expected = new ArrayList<>();
     expected.add(aJob);
 
     try {
@@ -113,7 +112,7 @@ public class TestJobDao {
     } catch (Exception ex) { ex.printStackTrace(); }
     assertEquals(aJob, actualPJ);
 
-    expected = new ArrayList<PlannedJob>();
+    expected = new ArrayList<>();
     actual = dao.getQueue(null);
     assertEquals(expected, actual);
   }

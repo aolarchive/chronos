@@ -41,7 +41,7 @@ public class SleepyCallableQuery extends CallableQuery {
       try {
         Thread.sleep(sleepFor);
       } catch (InterruptedException ex) {
-        super.LOG.debug("interrupted");
+        CallableQuery.LOG.debug("interrupted");
       } catch (Exception ex) { ex.printStackTrace(); }
       finish.set(System.currentTimeMillis());
       sleepyFinish.set(System.currentTimeMillis());

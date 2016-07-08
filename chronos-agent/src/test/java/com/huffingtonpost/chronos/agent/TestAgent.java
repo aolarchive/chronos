@@ -58,7 +58,7 @@ public class TestAgent {
     consumer = new AgentConsumer(dao, reporting, "testing.huffpo.com",
         new MailInfo("", "", "", ""),
         Session.getDefaultInstance(new Properties()), drivers,
-        numOfConcurrentJobs, numOfConcurrentReruns, maxReruns, 60);
+        numOfConcurrentJobs, numOfConcurrentReruns, maxReruns, 60, 1);
     AgentConsumer.setShouldSendErrorReports(false);
     consumer.SLEEP_FOR = 1;
   }
@@ -80,7 +80,7 @@ public class TestAgent {
   public static void waitUntilJobsFinished(AgentConsumer c, int count) {
     while (c.getFinishedJobs(AgentConsumer.LIMIT_JOB_RUNS).size() != count) {
       runRunnable(c);
-      try { Thread.sleep(100); } catch (Exception ex) { }
+      try { Thread.sleep(100); } catch (Exception ignore) { }
     }
   }
 
@@ -227,7 +227,7 @@ public class TestAgent {
     } catch (Exception ex) { ex.printStackTrace(); }
     runRunnable(agentDriver);
 
-    List<PlannedJob> expected = new ArrayList<PlannedJob>();
+    List<PlannedJob> expected = new ArrayList<>();
     expected.add(new PlannedJob(aJob, Utils.getCurrentTime()));
 
     assertEquals(expected, dao.getQueue(aJob.getId()));
@@ -252,7 +252,7 @@ public class TestAgent {
   }
 
   private List<String> getResults(JobSpec aJob) {
-    List<String> actual = new ArrayList<String>();
+    List<String> actual = new ArrayList<>();
     try {
       Connection conn = dao.newConnection();
       Statement stat = conn.createStatement();
@@ -296,13 +296,13 @@ public class TestAgent {
       allFuturesDone = areAllFuturesDone(consumer);
     }
     CallableJob value =
-      dao.getJobRuns(null, AgentConsumer.LIMIT_JOB_RUNS).get(new Long(1));
+      dao.getJobRuns(null, AgentConsumer.LIMIT_JOB_RUNS).get(1L);
     String name = value.getPlannedJob().getJobSpec().getName();
     CallableJob cj = consumer.assembleCallableJob(value.getPlannedJob(), 1);
     consumer.submitJob(cj);
 
     CallableJob rerun =
-      dao.getJobRuns(null, AgentConsumer.LIMIT_JOB_RUNS).get(new Long(2));
+      dao.getJobRuns(null, AgentConsumer.LIMIT_JOB_RUNS).get(2L);
     Assert.assertEquals(name, rerun.getPlannedJob().getJobSpec().getName());
 
     List<String> actual = getResults(aJob);
@@ -312,9 +312,9 @@ public class TestAgent {
     assertEquals(expected, actual);
     Collections.reverse(expected);
     List<Map<String,String>> expectedResults =
-      new ArrayList<Map<String,String>>();
+      new ArrayList<>();
     for (String aRow : expected) {
-      Map<String,String> aMap = new HashMap<String,String>();
+      Map<String,String> aMap = new HashMap<>();
       String[] values = aRow.split("\t");
       aMap.put("time".toUpperCase(), values[0]);
       aMap.put("url".toUpperCase(), values[1]);
@@ -337,19 +337,16 @@ public class TestAgent {
   @Test(timeout=10000)
   public void testBasicLarge() throws Exception {
     int count = 100;
-    List<PlannedJob> expected = new ArrayList<>();
     for (int i = 1; i <= count; i++) {
       JobSpec aJob = getTestJob(String.valueOf(i), dao);
       try {
         dao.createJob(aJob);
-        expected.add(new PlannedJob(aJob, Utils.getCurrentTime()));
       } catch (Exception ex) { ex.printStackTrace(); }
     }
 
     runRunnable(agentDriver);
     assertEquals(count, dao.getQueue(null).size());
 
-    expected.clear();
     waitUntilJobsFinished(consumer, count);
 
     assertEquals(0, dao.getQueue(null).size());
@@ -367,7 +364,7 @@ public class TestAgent {
     runRunnable(agentDriver);
     waitUntilJobsFinished(consumer, 1);
     CallableJob actual =
-      dao.getJobRuns(null, AgentConsumer.LIMIT_JOB_RUNS).get(new Long(1));
+      dao.getJobRuns(null, AgentConsumer.LIMIT_JOB_RUNS).get(1L);
     assertEquals("", actual.getExceptionMessage().get());
     assertEquals(true, actual.isSuccess());
   }
@@ -382,7 +379,7 @@ public class TestAgent {
     runRunnable(consumer);
     waitUntilJobsFinished(consumer, 1);
     CallableJob actual =
-      dao.getJobRuns(null, AgentConsumer.LIMIT_JOB_RUNS).get(new Long(1));
+      dao.getJobRuns(null, AgentConsumer.LIMIT_JOB_RUNS).get(1L);
     assertEquals(false, actual.isSuccess());
     assertEquals(true, actual.isFailed());
     String expected = CallableScript.genErrorMessage(aJob, error+"\n");
@@ -406,7 +403,7 @@ public class TestAgent {
     runRunnable(agentDriver);
     waitUntilJobsFinished(consumer, 1);
     CallableJob actual =
-      dao.getJobRuns(null, AgentConsumer.LIMIT_JOB_RUNS).get(new Long(1));
+      dao.getJobRuns(null, AgentConsumer.LIMIT_JOB_RUNS).get(1L);
     assertEquals(false, actual.isSuccess());
     assertEquals(true, actual.isFailed());
     String expected = CallableScript.genErrorMessage(aJob, error+"\n");

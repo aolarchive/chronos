@@ -42,10 +42,10 @@ public class TestCallableQuery {
     l.add("c");l.add("d");
     a.add(k);
     a.add(l);
-    rs.setData((List<List<Object>>) a);
+    rs.setData(a);
     JobSpec js = new JobSpec();
     StringBuilder s = CallableQuery.createInlineResults(rs, js);
-    Assert.assertFalse(s.equals(""));
+    Assert.assertFalse(s.toString().equals(""));
   }
 
 }

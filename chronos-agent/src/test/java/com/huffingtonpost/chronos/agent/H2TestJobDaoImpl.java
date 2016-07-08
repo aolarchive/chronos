@@ -72,7 +72,7 @@ public class H2TestJobDaoImpl extends JobDaoImpl {
   }
   
   public List<String> showTables() {
-    List<String> tables = new ArrayList<String>();
+    List<String> tables = new ArrayList<>();
     try {
       Connection conn = newConnection();
       Statement stat = conn.createStatement();

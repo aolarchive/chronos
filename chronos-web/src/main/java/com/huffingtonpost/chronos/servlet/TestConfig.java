@@ -42,7 +42,7 @@ import com.huffingtonpost.chronos.spring.ChronosMapper;
 @Configuration
 @EnableWebMvc
 public class TestConfig extends WebMvcConfigurerAdapter {
-  
+
   private static String LOCALHOST = "localhost";
 
   @Bean(name="drivers")
@@ -124,21 +124,6 @@ public class TestConfig extends WebMvcConfigurerAdapter {
   }
 
   @Bean
-  public int numOfConcurrentJobs() {
-    return 4;
-  }
-  
-  @Bean
-  public int numOfConcurrentReruns() {
-    return 10;
-  }
-  
-  @Bean
-  public int maxReruns() {
-    return 5;
-  }
-
-  @Bean
   public Session authSession() {
     final String username = "spluh";
     final String password = "abracaduh";
@@ -182,16 +167,21 @@ public class TestConfig extends WebMvcConfigurerAdapter {
     String hostname = LOCALHOST;
     try {
       hostname = InetAddress.getLocalHost().getHostName();
-    } catch (Exception e) {}
+    } catch (Exception ignore) {}
     return hostname;
   }
 
   @DependsOn(value="jobDao")
   @Bean(initMethod="init", destroyMethod="close", name="agentConsumer")
   public AgentConsumer consumer() {
+    int numOfConcurrentJobs = 4;
+    int numOfConcurrentReruns = 10;
+    int maxReruns = 5;
+    int waitBeforeRetrySeconds = 1200;
+    int minAttemptsForNotification = 1;
     return new AgentConsumer(jobDao(), reporting(), hostname(), mailInfo(),
-        relaySession(), drivers(), numOfConcurrentJobs(), numOfConcurrentReruns(),
-        maxReruns(), 1200);
+        relaySession(), drivers(), numOfConcurrentJobs, numOfConcurrentReruns,
+        maxReruns, waitBeforeRetrySeconds, minAttemptsForNotification);
   }
 
   @DependsOn(value="jobDao")

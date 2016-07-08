@@ -20,8 +20,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * This component pulls elements from the work queue and launches a
@@ -39,11 +37,12 @@ public class AgentConsumer extends Stoppable {
   public final ThreadPoolExecutor executor;
 
   /**
-   * rerunPool - this pool is used for handling the timeout (waitBeforeRetrySeconds)
-   *             before jobs are enqueued
+   * rerunPool - this pool is used for handling the timeout
+   *             (waitBeforeRetrySeconds) before jobs are enqueued
    */
   private final ExecutorService rerunPool;
   private final long waitBeforeRetrySeconds;
+  private static int minAttemptsForNotification = 1;
   public static int maxReruns;
   private static final List<PlannedJob> pendingReruns =
     Collections.synchronizedList(new ArrayList<PlannedJob>());
@@ -57,11 +56,13 @@ public class AgentConsumer extends Stoppable {
   private final int numOfConcurrentReruns;
   private static boolean shouldSendErrorReports = true;
   public final static int LIMIT_JOB_RUNS = 100;
-  
+  public final static int START_ATTEMPT_NUM = 1;
+
   public AgentConsumer(JobDao dao, Reporting reporter,
       String hostname, MailInfo mailInfo, Session session,
       List<SupportedDriver> drivers, int numOfConcurrentJobs,
-      int numOfConcurrentReruns, int maxReruns, long waitBeforeRetrySeconds) {
+      int numOfConcurrentReruns, int maxReruns, long waitBeforeRetrySeconds,
+      int minAttemptsForNotification) {
     this.dao = dao;
     this.reporter = reporter;
     this.hostname = hostname;
@@ -72,6 +73,7 @@ public class AgentConsumer extends Stoppable {
     AgentConsumer.maxReruns = maxReruns;
     this.drivers = drivers;
     this.waitBeforeRetrySeconds = waitBeforeRetrySeconds;
+    AgentConsumer.minAttemptsForNotification = minAttemptsForNotification;
     me = new Thread(this);
     rerunPool = Executors.newFixedThreadPool(this.numOfConcurrentReruns);
     executor = new ThreadPoolExecutor(this.numOfConcurrentJobs,
@@ -117,13 +119,13 @@ public class AgentConsumer extends Stoppable {
       PlannedJob toRun;
       while (executor.getActiveCount() < numOfConcurrentJobs &&
              (toRun = dao.removeFromQueue()) != null) {
-        CallableJob cj = assembleCallableJob(toRun, 1);
+        CallableJob cj = assembleCallableJob(toRun, START_ATTEMPT_NUM);
         submitJob(cj);
       }
     }
     synchronized (pendingReruns) {
       handleReruns(
-        new ArrayList<CallableJob>(getFailedQueries(LIMIT_JOB_RUNS).values()),
+        new ArrayList<>(getFailedQueries(LIMIT_JOB_RUNS).values()),
               AgentConsumer.maxReruns, this.waitBeforeRetrySeconds);
     }
   }
@@ -134,7 +136,7 @@ public class AgentConsumer extends Stoppable {
     for (final CallableJob cj : failed) {
       final PlannedJob pj = cj.getPlannedJob();
       final String jobName = pj.getJobSpec().getName();
-      if (pj.getJobSpec().getShouldRerun() == false) {
+      if (!pj.getJobSpec().getShouldRerun()) {
         continue;
       }
 
@@ -149,35 +151,37 @@ public class AgentConsumer extends Stoppable {
         continue;
       }
       CallableJob latest = getLatestMatching(pj, LIMIT_JOB_RUNS);
-      final int attempt = latest.getAttemptNumber();
-      boolean notMaxed = attempt < maxReruns;
-      boolean latestFailed = latest.isDone() && !latest.isRunning() &&
-        latest.isFailed();
-      if (latest != null && latestFailed && notMaxed) {
-        synchronized (pendingReruns) {
-          pendingReruns.add(pj);
-        }
-        Thread aRerun = new Thread() {
-          @Override
-          public void run() {
-            try {
-              LOG.info(
-                String.format("Sleeping for %d seconds before retrying %s",
-                  waitBeforeRerun, jobName));
-              Thread.sleep(1000L * waitBeforeRerun);
-            } catch (InterruptedException e) {
-              LOG.info("rerunning job was interrupted...");
-            } finally {
-              final CallableJob toResubmit =
-                assembleCallableJob(pj, attempt + 1);
-              submitJob(toResubmit);
-              synchronized (pendingReruns) {
-                pendingReruns.remove(pj);
+      if (latest != null) {
+        final int attempt = latest.getAttemptNumber();
+        boolean notMaxed = attempt < maxReruns;
+        boolean latestFailed = latest.isDone() && !latest.isRunning() &&
+          latest.isFailed();
+        if (latestFailed && notMaxed) {
+          synchronized (pendingReruns) {
+            pendingReruns.add(pj);
+          }
+          Thread aRerun = new Thread() {
+            @Override
+            public void run() {
+              try {
+                LOG.info(
+                  String.format("Sleeping for %d seconds before retrying %s",
+                    waitBeforeRerun, jobName));
+                Thread.sleep(1000L * waitBeforeRerun);
+              } catch (InterruptedException e) {
+                LOG.info("rerunning job was interrupted...");
+              } finally {
+                final CallableJob toResubmit =
+                  assembleCallableJob(pj, attempt + 1);
+                submitJob(toResubmit);
+                synchronized (pendingReruns) {
+                  pendingReruns.remove(pj);
+                }
               }
             }
-          }
-        };
-        rerunPool.submit(aRerun);
+          };
+          rerunPool.submit(aRerun);
+        }
       }
     }
   }
@@ -197,7 +201,8 @@ public class AgentConsumer extends Stoppable {
           hostname, mailInfo, session, attemptNumber);
       default:
         throw new UnsupportedOperationException(
-          String.format("Unknown jobtype...%s", plannedJob.getJobSpec().getType()));
+          String.format("Unknown jobtype...%s",
+            plannedJob.getJobSpec().getType()));
     }
   }
 
@@ -206,7 +211,7 @@ public class AgentConsumer extends Stoppable {
     final Future<Void> future = executor.submit(cj);
     reporter.mark("chronos.agentconsumer.submitted");
   }
-  
+
   @Override
   public void run() {
     while (isAlive) {
@@ -239,25 +244,35 @@ public class AgentConsumer extends Stoppable {
   }
 
   public static void sendErrorReport(JobSpec jobSpec, String query,
-                                     Exception ex, Long myId, String hostname, MailInfo mailInfo,
-                                     Session session, int attemptNumber) {
+                                     Exception ex, Long myId, String hostname,
+                                     MailInfo mailInfo, Session session,
+                                     int attemptNumber) {
     if (!shouldSendErrorReports) {
       LOG.debug(String.format(
         "Not sending email for: %s since shouldSendErrorReports is false",
         ex.getMessage()));
       return;
     }
-    String subject = String.format("Chronos job failed - rerun was scheduled - %s", jobSpec.getName());
-    if (attemptNumber >= maxReruns){
-      subject = String.format("Chronos - LAST ATTEMPT FAILED - %s", jobSpec.getName());
+    if (attemptNumber < minAttemptsForNotification) {
+      LOG.debug(String.format(
+              "Not sending email for: %s since minAttemptsForNotification has not been reached",
+              ex.getMessage()));
+      return;
+    }
+    String subject =
+      String.format("Chronos job failed - rerun was scheduled - %s",
+        jobSpec.getName());
+    if (attemptNumber >= maxReruns) {
+      subject =
+        String.format("Chronos - LAST ATTEMPT FAILED - %s", jobSpec.getName());
     }
     String messageFormat = "<h3>Attempt %s of %s</h3><br/>"
             + "<h3>Attempted query was:</h3><br/>"
             + "<pre>%s</pre>"
             + "<br/><h3>Error was:</h3><br/><pre>%s</pre><br/>"
             + "<br/><a href='http://%s:8080/api/queue?id=%s'>Rerun job</a><br/>";
-    String messageBody = String.format(messageFormat, attemptNumber, maxReruns, query, ex.getMessage(),
-        hostname, myId);
+    String messageBody = String.format(messageFormat, attemptNumber, maxReruns,
+      query, ex.getMessage(), hostname, myId);
     SendMail.doSend(subject, messageBody, mailInfo, session);
   }
 
@@ -311,7 +326,7 @@ public class AgentConsumer extends Stoppable {
     }
     return toRet;
   }
-  
+
   synchronized public CallableJob getLatestMatching(PlannedJob pj, int limit) {
     Map<Long, CallableJob> toRet = new TreeMap<>();
     Map<Long, CallableJob> runs = dao.getJobRuns(null, limit);

@@ -58,7 +58,7 @@ public class TestAgentConsumer {
     consumer = new AgentConsumer(dao, reporting, "testing.huffpo.com",
         new MailInfo("", "", "", ""),
         Session.getDefaultInstance(new Properties()), drivers, numOfConcurrentJobs,
-        numOfConcurrentReruns, maxReruns, 0);
+        numOfConcurrentReruns, maxReruns, 0, 1);
     consumer.SLEEP_FOR = 20;
 
     AgentConsumer.setShouldSendErrorReports(false);
@@ -72,7 +72,7 @@ public class TestAgentConsumer {
   public void doSleep() {
     try {
       Thread.sleep(100);
-    } catch (InterruptedException e) { }
+    } catch (InterruptedException ignore) { }
   }
 
   @Test
@@ -172,7 +172,7 @@ public class TestAgentConsumer {
     assertEquals(1, consumer.getFinishedJobs(limit).size());
   }
 
-  @Test(timeout=20000)
+  @Test(timeout=60000)
   public void testJobResubmitSuccessSecondTime() throws BackendException {
     JobSpec aJob = TestAgent.getTestJob("DFW", dao);
     String tableName = "table_dne_yet";
@@ -192,7 +192,7 @@ public class TestAgentConsumer {
     assertEquals(expected, consumer.getFailedQueries(limit));
 
     // wait for resubmit
-    Long nextId = new Long(cj.getJobId()+1);
+    Long nextId = cj.getJobId()+1;
     dao.execute(
       String.format("CREATE TABLE %s (blah TEXT)", tableName));
 
@@ -233,7 +233,7 @@ public class TestAgentConsumer {
     expected.put(cj.getJobId(), cj);
     assertEquals(expected, consumer.getFailedQueries(limit));
 
-    Long nextId = new Long(cj.getJobId()+1);
+    Long nextId = cj.getJobId()+1;
     aJob = dao.getJob(aJob.getId());
     aJob.setCode("show tables;");
     dao.updateJob(aJob);
@@ -248,12 +248,12 @@ public class TestAgentConsumer {
       consumer.getFinishedJobs(limit).get(nextId).getStatus().get());
   }
 
-  @Test(timeout=20000)
+  @Test(timeout=60000) // timesout on travis-ci if set to 20s
   public void testJobResubmitMaxFailAttempts() throws BackendException {
     consumer = new AgentConsumer(dao, reporting, "testing.huffpo.com",
       new MailInfo("", "", "", ""),
       Session.getDefaultInstance(new Properties()), drivers, numOfConcurrentJobs,
-      numOfConcurrentReruns, maxReruns, 1);
+      numOfConcurrentReruns, maxReruns, 1, 1);
     consumer.SLEEP_FOR = 1;
     JobSpec aJob = TestAgent.getTestJob("Simone de Beauvoir", dao);
     aJob.setCode("not a valid query...");
@@ -273,7 +273,7 @@ public class TestAgentConsumer {
     expected.put(cj.getJobId(), cj);
     assertEquals(expected, consumer.getFailedQueries(limit));
 
-    Long nextId = new Long(id+1);
+    Long nextId = id+1;
     ExecutorService executor =
       Executors.newFixedThreadPool(10);
     // Create a bunch of threads that are contending to
@@ -288,7 +288,7 @@ public class TestAgentConsumer {
         }
       });
      }
-    try { Thread.sleep(10000); } catch (Exception ex) {}
+    try { Thread.sleep(10000); } catch (Exception ignore) {}
     executor.shutdownNow();
 
     assertEquals(0, dao.getRunningJobs().size());
@@ -345,7 +345,7 @@ public class TestAgentConsumer {
     consumer = new AgentConsumer(dao, reporting, "testing.huffpo.com",
       new MailInfo("", "", "", ""),
       Session.getDefaultInstance(new Properties()), drivers,numOfConcurrentJobs,
-      numOfConcurrentReruns, maxReruns, 1);
+      numOfConcurrentReruns, maxReruns, 1, 1);
     consumer.SLEEP_FOR = 1;
     JobSpec aJob = TestAgent.getTestJob("Hannah Arendt", dao);
     aJob.setCode("not a valid query...");
