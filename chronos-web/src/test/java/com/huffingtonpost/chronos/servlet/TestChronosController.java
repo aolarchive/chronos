@@ -5,7 +5,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.junit.Assert.*;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -16,8 +15,6 @@ import java.util.concurrent.ConcurrentSkipListMap;
 
 import javax.mail.Session;
 
-import com.fasterxml.jackson.core.JsonGenerationException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
@@ -77,15 +74,13 @@ public class TestChronosController {
       spy(new AgentConsumer(jobDao, reporting, "testing.hostname.com",
         new MailInfo("", "", "", ""),
         Session.getDefaultInstance(new Properties()),
-        drivers, 10, numOfConcurrentReruns, maxReruns, 60));
+        drivers, 10, numOfConcurrentReruns, maxReruns, 60, 1));
     controller = new ChronosController(jobDao, agentDriver, agentConsumer, drivers);
 
     MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter();
     converter.setObjectMapper(new ChronosMapper());
     HttpMessageConverter[] messageConverters =
             new HttpMessageConverter[] {converter};
-    List<HttpMessageConverter<?>> mCs = new ArrayList<>();
-    mCs.add(messageConverters[0]);
 
     this.mockMvc = MockMvcBuilders.standaloneSetup(controller)
       .setMessageConverters(messageConverters).build();
@@ -124,7 +119,7 @@ public class TestChronosController {
 
     JobSpec aJob = getTestJob(name);
     aJob.setLastModified(new DateTime());
-    List<JobSpec> expected = new ArrayList<JobSpec>();
+    List<JobSpec> expected = new ArrayList<>();
     expected.add(aJob);
     when(jobDao.getJobs()).thenReturn(expected);
 
@@ -179,7 +174,7 @@ public class TestChronosController {
     JobSpec aJob = getTestJob("Some job");
     long id = 1L;
     when(jobDao.createJob(aJob)).thenReturn(id);
-    MockHttpServletRequestBuilder request = post(String.format("/api/job"))
+    MockHttpServletRequestBuilder request = post("/api/job")
       .contentType(MediaType.APPLICATION_JSON)
       .content(OM.writeValueAsBytes(aJob));
     mockMvc.perform(request)
@@ -224,7 +219,7 @@ public class TestChronosController {
     JobSpec aJob = getTestJob("bla");
     aJob.setResultQuery("select * FROM BLA limit 10");
     aJob.setResultEmail(Arrays.asList("abc@def.com"));
-    MockHttpServletRequestBuilder request = post(String.format("/api/job"))
+    MockHttpServletRequestBuilder request = post("/api/job")
       .contentType(MediaType.APPLICATION_JSON)
       .content(OM.writeValueAsBytes(aJob));
     mockMvc.perform(request)
@@ -234,8 +229,8 @@ public class TestChronosController {
   }
 
   private void performAndExpectFailed(JobSpec aJob, String message) throws
-    JsonGenerationException, JsonMappingException, IOException, Exception {
-    MockHttpServletRequestBuilder request = post(String.format("/api/job"))
+    Exception {
+    MockHttpServletRequestBuilder request = post("/api/job")
             .contentType(MediaType.APPLICATION_JSON)
             .content(OM.writeValueAsBytes(aJob));
     mockMvc.perform(request)
@@ -248,7 +243,7 @@ public class TestChronosController {
     JobSpec aJob = new JobSpec();
 
     {
-      MockHttpServletRequestBuilder request = post(String.format("/api/job"))
+      MockHttpServletRequestBuilder request = post("/api/job")
         .contentType(MediaType.APPLICATION_JSON)
         .content(OM.writeValueAsBytes(aJob));
       mockMvc.perform(request)
@@ -257,7 +252,7 @@ public class TestChronosController {
 
     aJob.setName("a name");
     {
-      MockHttpServletRequestBuilder request = post(String.format("/api/job"))
+      MockHttpServletRequestBuilder request = post("/api/job")
         .contentType(MediaType.APPLICATION_JSON)
         .content(OM.writeValueAsBytes(aJob));
       mockMvc.perform(request)
@@ -266,7 +261,7 @@ public class TestChronosController {
 
     aJob.setUser(null);
     {
-      MockHttpServletRequestBuilder request = post(String.format("/api/job"))
+      MockHttpServletRequestBuilder request = post("/api/job")
         .contentType(MediaType.APPLICATION_JSON)
         .content(OM.writeValueAsBytes(aJob));
       mockMvc.perform(request)
@@ -275,7 +270,7 @@ public class TestChronosController {
 
     aJob.setPassword(null);
     {
-      MockHttpServletRequestBuilder request = post(String.format("/api/job"))
+      MockHttpServletRequestBuilder request = post("/api/job")
         .contentType(MediaType.APPLICATION_JSON)
         .content(OM.writeValueAsBytes(aJob));
       mockMvc.perform(request)
@@ -284,7 +279,7 @@ public class TestChronosController {
 
     aJob.setResultTable("someTable");
     {
-      MockHttpServletRequestBuilder request = post(String.format("/api/job"))
+      MockHttpServletRequestBuilder request = post("/api/job")
         .contentType(MediaType.APPLICATION_JSON)
         .content(OM.writeValueAsBytes(aJob));
       mockMvc.perform(request)
@@ -293,7 +288,7 @@ public class TestChronosController {
 
     aJob.setStartMinute(0);
     {
-      MockHttpServletRequestBuilder request = post(String.format("/api/job"))
+      MockHttpServletRequestBuilder request = post("/api/job")
         .contentType(MediaType.APPLICATION_JSON)
         .content(OM.writeValueAsBytes(aJob));
       mockMvc.perform(request)
@@ -302,7 +297,7 @@ public class TestChronosController {
 
     aJob.setStartHour(0);
     {
-      MockHttpServletRequestBuilder request = post(String.format("/api/job"))
+      MockHttpServletRequestBuilder request = post("/api/job")
               .contentType(MediaType.APPLICATION_JSON)
               .content(OM.writeValueAsBytes(aJob));
       mockMvc.perform(request)
@@ -312,7 +307,7 @@ public class TestChronosController {
     // finally this one should pass
     aJob.setStartDay(1);
     {
-      MockHttpServletRequestBuilder request = post(String.format("/api/job"))
+      MockHttpServletRequestBuilder request = post("/api/job")
         .contentType(MediaType.APPLICATION_JSON)
         .content(OM.writeValueAsBytes(aJob));
       mockMvc.perform(request)
@@ -420,7 +415,7 @@ public class TestChronosController {
     PlannedJob aJob =
       new PlannedJob(getTestJob("Some Job"), Utils.getCurrentTime());
 
-    MockHttpServletRequestBuilder request = post(String.format("/api/queue"))
+    MockHttpServletRequestBuilder request = post("/api/queue")
       .contentType(MediaType.APPLICATION_JSON)
       .content(OM.writeValueAsString(aJob));
     mockMvc.perform(request)
@@ -453,7 +448,7 @@ public class TestChronosController {
       .andExpect(status().isOk());
 
     request =
-      get(String.format("/api/jobs/history"));
+      get("/api/jobs/history");
     mockMvc.perform(request)
       .andExpect(content().string(OM.writeValueAsString(expected)))
       .andExpect(status().isOk());
@@ -461,7 +456,7 @@ public class TestChronosController {
     Long anId = 4815162342L;
     expected.clear();
     request =
-      get(String.format("/api/jobs/history?id="+anId));
+      get(String.format("/api/jobs/history?id=%s", anId));
     mockMvc.perform(request)
       .andExpect(content().string(OM.writeValueAsString(expected)))
       .andExpect(status().isOk());
@@ -612,7 +607,7 @@ public class TestChronosController {
       new PlannedJob(getTestJob("Some Job"), Utils.getCurrentTime());
 
     when(jobDao.cancelJob(aJob)).thenReturn(1);
-    MockHttpServletRequestBuilder request = delete(String.format("/api/queue"))
+    MockHttpServletRequestBuilder request = delete("/api/queue")
       .contentType(MediaType.APPLICATION_JSON)
       .content(OM.writeValueAsString(aJob));
     mockMvc.perform(request)
