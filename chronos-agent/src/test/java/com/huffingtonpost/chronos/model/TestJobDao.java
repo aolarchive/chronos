@@ -85,6 +85,22 @@ public class TestJobDao {
   }
 
   @Test
+  public void testBasicDependent() {
+    JobSpec expected = TestAgent.getTestJob("Mrs Dalloway", dao);
+    JobSpec childJob = TestAgent.getTestJob("A child", dao);
+    try {
+      dao.createJob(expected);
+      dao.createJob(childJob);
+      childJob = dao.getJob(expected.getId());
+      expected.addChild(childJob.getId());
+      dao.updateJob(expected);
+    } catch (Exception ex) { ex.printStackTrace(); }
+
+    JobSpec actual = dao.getJob(expected.getId());
+    assertEquals(expected, actual);
+  }
+
+  @Test
   public void testQueueJob() throws Exception {
     JobSpec job = TestAgent.getTestJob("blah", dao);
     long id = dao.createJob(job);
