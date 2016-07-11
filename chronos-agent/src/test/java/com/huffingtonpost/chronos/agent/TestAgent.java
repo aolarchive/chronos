@@ -406,4 +406,30 @@ public class TestAgent {
     assertEquals(expected, actual.getExceptionMessage().get());
   }
 
+  @Test
+  public void testBasicDependent() throws Exception {
+    String jobName = "TE Lawrence";
+    JobSpec parent = getTestJob(jobName, dao);
+    JobSpec child = getTestJob(jobName + " arabia", dao);
+    child.setCronString(null);
+    try {
+      dao.createJob(parent);
+      long id = dao.createJob(child);
+      parent.addChild(id);
+      dao.updateJob(parent);
+    } catch (Exception ex) {
+      ex.printStackTrace();
+    }
+    TestAgent.runRunnable(agentDriver);
+
+    assertEquals(1, dao.getQueue(null).size());
+    runRunnable(consumer);
+    Thread.sleep(100);
+    // child job should have been queued
+    assertEquals(1, dao.getQueue(null).size());
+    runRunnable(consumer);
+    waitUntilJobsFinished(consumer, 2);
+    assertEquals(2, consumer.getSuccesfulQueries(AgentConsumer.LIMIT_JOB_RUNS)
+      .values().size());
+  }
 }
