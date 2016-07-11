@@ -97,8 +97,8 @@ public class WithSql implements WithBackend {
         + "`code` TEXT, resultQuery TEXT, resultTable VARCHAR(100), "
         + "cronString VARCHAR(250), "
         + "driver VARCHAR(100), enabled BIT, "
-        + "shouldRerun BIT, resultEmail TEXT, statusEmail TEXT, lastModified DATETIME,"
-        + "PRIMARY KEY (id, lastModified))",
+        + "shouldRerun BIT, resultEmail TEXT, statusEmail TEXT, lastModified DATETIME, "
+        + "children TEXT, PRIMARY KEY (id, lastModified))",
         jobTableName));
     jobs.execute();
     jobs.close();
@@ -276,8 +276,9 @@ public class WithSql implements WithBackend {
           String.format("INSERT INTO %s (user, password, name, "
             + "description, jobType, `code`, resultQuery, resultTable, "
             + "cronString, driver, "
-            + "enabled, shouldRerun, resultEmail, statusEmail, lastModified) "
-            + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", jobTableName),
+            + "enabled, shouldRerun, resultEmail, statusEmail, lastModified, "
+            + "children) "
+            + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", jobTableName),
             Statement.RETURN_GENERATED_KEYS);
       int i = 1;
       stat.setString(i++, job.getUser());
@@ -301,7 +302,8 @@ public class WithSql implements WithBackend {
           new Timestamp(new DateTime().getMillis()) :
           new Timestamp(job.getLastModified().getMillis());
       stat.setTimestamp(i++, ts);
-      
+      stat.setString(i++, objToString(job.getChildren()));
+
       int rows = stat.executeUpdate();
       ResultSet rs = stat.getGeneratedKeys();
       if (rs != null && rs.next()) {
@@ -329,8 +331,9 @@ public class WithSql implements WithBackend {
           String.format("INSERT INTO %s (id, user, password, name, "
             + "description, jobType, `code`, resultQuery, resultTable, "
             + "cronString, driver, "
-            + "enabled, shouldRerun, resultEmail, statusEmail, lastModified) "
-            + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ", jobTableName),
+            + "enabled, shouldRerun, resultEmail, statusEmail, lastModified, "
+            + "children) "
+            + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ", jobTableName),
           Statement.RETURN_GENERATED_KEYS);
       int i = 1;
       stat.setLong(i++, job.getId());
@@ -352,6 +355,7 @@ public class WithSql implements WithBackend {
        objToString(job.getStatusEmail()));
       Timestamp ts = new Timestamp(new DateTime().getMillis());
       stat.setTimestamp(i++, ts);
+      stat.setString(i++, objToString(job.getChildren()));
 
       int rows = stat.executeUpdate();
       LOG.info(String.format("Rows updated: %d", rows));
@@ -418,6 +422,20 @@ public class WithSql implements WithBackend {
     DateTime lm =
       new DateTime(rs.getTimestamp("lastModified")).withZone(DateTimeZone.UTC);
     job.setLastModified(lm);
+    String children = rs.getString("children");
+    try {
+      List<Long> toSet;
+      if (children == null) {
+        toSet = new ArrayList<>();
+      } else {
+        toSet = (List<Long>)
+          OBJECT_MAPPER.readValue(children,
+            new TypeReference<List<Long>>(){});
+      }
+      job.setChildren(toSet);
+    } catch (IOException e) {
+      LOG.error("Failed to parse children:", e);
+    }
     return job;
   }
 

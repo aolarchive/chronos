@@ -30,7 +30,8 @@ public class AgentDriver extends Stoppable {
   }
   
   public static boolean shouldJobRun(JobSpec aJob, DateTime now) {
-    if (aJob.isEnabled() == false) {
+    if (aJob.isEnabled() == false || aJob.getCronString() == ""
+        || aJob.getCronString() == null) {
       return false;
     }
     CronExpression ce = CronExpression.createWithoutSeconds(aJob.getCronString());
