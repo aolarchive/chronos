@@ -1,8 +1,4 @@
 {
-  "ignoreFiles": [
-    "node_modules/**/*"
-  ],
-
   "rules": {
     "at-rule-empty-line-before": ["always", {
       "except": ["blockless-group", "all-nested"]
@@ -59,7 +55,7 @@
     "function-linear-gradient-no-nonstandard-direction": true,
     "function-parentheses-newline-inside": "never-multi-line",
     "function-parentheses-space-inside": "never",
-    "function-url-quotes": "single",
+    "function-url-quotes": "always",
     "function-whitelist": null,
     "function-whitespace-after": "always",
 
@@ -87,7 +83,7 @@
     "number-leading-zero": "always",
     "number-max-precision": 4,
     "number-no-trailing-zeros": true,
-    "number-zero-length-no-unit": true,
+    "length-zero-no-unit": true,
 
     "property-blacklist": null,
     "property-no-vendor-prefix": true,
