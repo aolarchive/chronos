@@ -46,6 +46,7 @@ public class AgentConsumer extends Stoppable {
   public static int maxReruns;
   private static final List<PlannedJob> pendingReruns =
     Collections.synchronizedList(new ArrayList<PlannedJob>());
+  private String reportRootPath = null;
 
   private final String hostname;
   private final Reporting reporter;
@@ -80,6 +81,13 @@ public class AgentConsumer extends Stoppable {
                                       this.numOfConcurrentJobs,
                                       0L, TimeUnit.MILLISECONDS,
                                       new LinkedBlockingQueue<Runnable>());
+  }
+
+  /***
+   * Call this method to enable save report to local
+   */
+  public void writeReportToLocal(String reportRootPath) {
+    this.reportRootPath = reportRootPath;
   }
 
   public void init() {
@@ -194,7 +202,7 @@ public class AgentConsumer extends Stoppable {
           SupportedDriver.getSupportedDriverFromString(
             plannedJob.getJobSpec().getDriver(), drivers);
         return new CallableQuery(plannedJob, dao, reporter,
-          hostname, mailInfo, session, driver, attemptNumber);
+          hostname, mailInfo, session, driver, reportRootPath, attemptNumber);
       }
       case Script:
         return new CallableScript(plannedJob, dao, reporter, -1L,

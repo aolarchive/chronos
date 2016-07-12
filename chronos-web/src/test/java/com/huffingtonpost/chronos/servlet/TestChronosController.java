@@ -5,6 +5,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.junit.Assert.*;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -21,9 +22,8 @@ import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.*;
+import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -58,6 +58,9 @@ public class TestChronosController {
   final int maxReruns = 5;
   ArrayList<SupportedDriver> drivers = H2TestUtil.createDriverForTesting();
 
+  @Rule
+  public static TemporaryFolder folder= new TemporaryFolder();
+
   @Mock
   private JobDao jobDao;
 
@@ -75,15 +78,24 @@ public class TestChronosController {
         new MailInfo("", "", "", ""),
         Session.getDefaultInstance(new Properties()),
         drivers, 10, numOfConcurrentReruns, maxReruns, 60, 1));
-    controller = new ChronosController(jobDao, agentDriver, agentConsumer, drivers);
+    controller = new ChronosController(jobDao, agentDriver, agentConsumer, drivers, folder.getRoot().getPath());
 
     MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter();
     converter.setObjectMapper(new ChronosMapper());
     HttpMessageConverter[] messageConverters =
             new HttpMessageConverter[] {converter};
+    setupTestReports();
 
     this.mockMvc = MockMvcBuilders.standaloneSetup(controller)
       .setMessageConverters(messageConverters).build();
+  }
+
+  public static void setupTestReports() throws IOException {
+    for (int i = 1; i < 11; i++) {
+      folder.newFolder(String.valueOf(i));
+      folder.newFile(String.valueOf(i) + "/20160101");
+      folder.newFile(String.valueOf(i) + "/20160102");
+    }
   }
 
   public static JobSpec getTestJob(String aName) {
@@ -401,7 +413,7 @@ public class TestChronosController {
 
       CallableQuery cq =
         new CallableQuery(plannedJob, jobDao, reporting,
-                          null, null, null, null, 1);
+                          null, null, null, null, null, 1);
       runs.put(new Long(i), cq);
     }
     when(jobDao.getJobRuns(null, AgentConsumer.LIMIT_JOB_RUNS)).thenReturn(runs);
@@ -431,7 +443,7 @@ public class TestChronosController {
     when(jobDao.getJob(aJob.getId())).thenReturn(aJob);
     PlannedJob plannedJob = new PlannedJob(aJob, new DateTime());
     CallableQuery cq =
-      new CallableQuery(plannedJob, jobDao, reporting, null, null, null, null, 1);
+      new CallableQuery(plannedJob, jobDao, reporting, null, null, null, null, null, 1);
     Map<Long, CallableJob> runs =
       new ConcurrentSkipListMap<>();
     runs.put(new Long(1), cq);
@@ -619,5 +631,17 @@ public class TestChronosController {
       .andExpect(status().isNotFound());
 
     verify(jobDao, times(2)).cancelJob(aJob);
+  }
+
+  @Test
+  public void testGetReportsMeta() throws Exception {
+    MockHttpServletRequestBuilder request = get(String.format("/api/report-list"));
+    Map<String, List<String>> expectResult = new HashMap<>();
+    for (int i = 1; i < 11; i++) {
+      expectResult.put(String.valueOf(i), Arrays.asList("20160101", "20160102"));
+    }
+    mockMvc.perform(request)
+      .andExpect(status().isOk())
+      .andExpect(content().string(OM.writeValueAsString(expectResult)));
   }
 }
