@@ -69,10 +69,8 @@ export default class SiteMessages extends Component {
   }
 
   render() {
-    const {className, message, ...props} = this.props;
-
     return (
-      <section id="site-messages" {...props} className={this.className()}>
+      <section className={this.className()}>
         <NotificationSystem ref="system" style={style}/>
       </section>
     );

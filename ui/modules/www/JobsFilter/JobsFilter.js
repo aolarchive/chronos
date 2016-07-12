@@ -57,7 +57,7 @@ export default class JobsFilter extends Component {
     this.props.onFilter((this.props.jobs || []).filter((job) => {
       if (textFilter.length) {
         return textFilter.every((text) => {
-          if (_.includes(getJobNiceInterval(job, useLocalTime).toLowerCase(), text)) {
+          if (_.includes(getJobNiceInterval(job.cronString, useLocalTime).toLowerCase(), text)) {
             return true;
           }
 
@@ -80,10 +80,8 @@ export default class JobsFilter extends Component {
   }
 
   render() {
-    const {className, jobs, onFilter, ...props} = this.props;
-
     return (
-      <input {...props} className={this.className()} type="text" placeholder="Search" onChange={::this.onChange}/>
+      <input className={this.className()} type="text" placeholder="Search" onChange={::this.onChange}/>
     );
   }
 }
