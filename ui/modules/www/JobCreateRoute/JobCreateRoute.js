@@ -52,8 +52,8 @@ export default class JobCreateRoute extends Component {
   }
 
   render() {
-    const {className, job, ...props} = this.props;
-
+    const {...props} = this.props;
+    
     return (
       <SiteMain {...props} title="Create Job" className={this.className()}>
         <JobForm formKey="create" onSubmit={::this.handleSubmit} initialValues={initialValues}/>

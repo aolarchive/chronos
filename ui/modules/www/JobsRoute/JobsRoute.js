@@ -64,7 +64,7 @@ export default class JobsRoute extends Component {
   }
 
   render() {
-    const {className, jobs, ...props} = this.props;
+    const {jobs, ...props} = this.props;
 
     return (
       <SiteMain {...props} title="Jobs List" className={this.className()}>

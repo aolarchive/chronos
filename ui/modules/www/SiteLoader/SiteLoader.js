@@ -37,11 +37,11 @@ export default class SiteLoader extends Component {
   }
 
   render() {
-    const {className, size, ...props} = this.props;
+    const {size} = this.props;
 
     return (
-      <section {...props} className={this.className()}>
-        <div className={cn(styles.loader, styles[this.props.size])}>
+      <section className={this.className()}>
+        <div className={cn(styles.loader, styles[size])}>
           <div className={styles.loaderBar}></div>
           <div className={styles.loaderBar}></div>
           <div className={styles.loaderBar}></div>

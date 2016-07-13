@@ -142,7 +142,7 @@ export default class RunsList extends Component {
   }
 
   render() {
-    const {className, useLocalTime, ...props} = this.props;
+    const {className, useLocalTime} = this.props;
 
     return (
       <aside className={cn(styles.RunsList, className)}>

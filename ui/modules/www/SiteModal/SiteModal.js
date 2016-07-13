@@ -37,10 +37,10 @@ export default class SiteModal extends Component {
   }
 
   render() {
-    const {className, modal, ...props} = this.props;
+    const {modal} = this.props;
 
     return (
-      <section {...props} className={this.className()}>
+      <section className={this.className()}>
         <div className={styles.background} onClick={this::this.handleClick}/>
 
         {modal.component ? (

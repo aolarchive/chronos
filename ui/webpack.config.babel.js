@@ -23,7 +23,7 @@ const __PRODUCTION__ = process.env.NODE_ENV === 'production';
 const __CLIENT__ = !process.env.NODE_TEST;
 
 const entry = [
-  './modules/www/app',
+  './modules/www/app.js',
 ];
 
 const include = path.join(__dirname, 'modules');
