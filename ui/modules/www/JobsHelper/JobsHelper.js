@@ -2,15 +2,9 @@
 
 import _ from 'lodash';
 import prettyCron from 'prettycron';
+import parseCron from 'cron-parser';
 
 // vars
-
-const intervals = [
-  'Hourly',
-  'Daily',
-  'Weekly',
-  'Monthly',
-];
 
 const types = [
   'script',
@@ -79,13 +73,6 @@ export const orderJobsBy = {
   },
 
   interval(job) {
-    return [
-      intervals.indexOf(job.interval),
-      job.interval === 'Weekly' ? _.padStart(job.startDay, 2, '0') : '00',
-      job.interval !== 'Hourly' ? _.padStart(job.startHour, 2, '0') : '00',
-      _.padStart(job.startMinute, 2, '0'),
-      (job.enabled ? 0 : 1),
-      job.name.toLowerCase().trim(),
-    ].join(' ');
+    return parseCron.parseExpression(job.cronString || '').next().toDate();
   },
 };

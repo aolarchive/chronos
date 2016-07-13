@@ -6,6 +6,7 @@ import moment from 'moment';
 import {createRequestAction, createDispatcher, createAction} from '../ActionHelper/ActionHelper';
 import {jobToServer} from '../JobsHelper/JobsHelper';
 import {createMessage, createRequestMessage} from '../MessageStore/MessageStore';
+import later from 'later';
 
 // vars
 
@@ -46,29 +47,9 @@ function collectRuns(runs, now) {
   now.utc();
 
   return function collectRun(job) {
-    switch (job.interval) {
-    case 'Hourly':
-      if (job.startMinute === now.minute()) {
-        return runs.push(createRun(job, now));
-      }
-
-    case 'Daily':
-      if (job.startMinute === now.minute() && job.startHour === now.hour()) {
-        return runs.push(createRun(job, now));
-      }
-
-    case 'Weekly':
-      if (job.startMinute === now.minute() && job.startHour === now.hour() && job.startDay % 7 === now.day()) {
-        return runs.push(createRun(job, now));
-      }
-
-    case 'Monthly':
-      if (job.startMinute === now.minute() && job.startHour === now.hour() && now.date() === 1) {
-        return runs.push(createRun(job, now));
-      }
+    if (later.parse.cron(job.cronString).isValid(now.toDate())) {
+      runs.push(createRun(job, now));
     }
-
-    return null;
   };
 }
 
