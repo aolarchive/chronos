@@ -34,10 +34,10 @@ export default class SiteMain extends Component {
   };
 
   render() {
-    const {className, title, children, hideSidebar, routeParams, ...props} = this.props;
+    const {className, title, children, hideSidebar, routeParams} = this.props;
 
     return (
-      <main {...props} className={cn(styles.SiteMain, className, {[styles.hideSidebar]: hideSidebar})}>
+      <main className={cn(styles.SiteMain, className, {[styles.hideSidebar]: hideSidebar})}>
         <Helmet title={formatTitle(title)}/>
 
         {children}

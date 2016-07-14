@@ -1,16 +1,10 @@
 // import
 
 import _ from 'lodash';
-import moment from 'moment';
+import prettyCron from 'prettycron';
+import parseCron from 'cron-parser';
 
 // vars
-
-const intervals = [
-  'Hourly',
-  'Daily',
-  'Weekly',
-  'Monthly',
-];
 
 const types = [
   'script',
@@ -46,30 +40,15 @@ export function getJobType(job) {
   return job.resultQuery && job.resultQuery.trim() ? 'report' : job.type === 'Script' ? 'script' : 'query';
 }
 
-export function getJobNiceInterval(job, useLocalTime) {
-  const time = moment.utc()
-  .hour(job.startHour)
-  .minute(job.startMinute)
-  .day(job.startDay % 7);
-
-  if (useLocalTime) {
-    time.local();
+export function getJobNiceInterval(cronString, useLocalTime) {
+  if (!cronString || !_.isString(cronString)) {
+    return 'N/A';
   }
 
-  const diffDate = useLocalTime && time.clone().utc().date() !== time.date();
+  const pretty = prettyCron.toString(cronString);
+  console.log('TEST: ', pretty, useLocalTime);
 
-  switch (job.interval) {
-  case 'Hourly':
-    return `Hourly at ${time.format(':mm')}`;
-  case 'Daily':
-    return `Daily at ${time.format('h:mm a')}`;
-  case 'Weekly':
-    return `${time.format('dddd')} at ${time.format('h:mm a')}`;
-  case 'Monthly':
-    return `${diffDate ? 'Last' : 'First'} of Month at ${time.format('h:mm a')}`;
-  }
-
-  return 'N/A';
+  return pretty;
 }
 
 // sort
@@ -94,13 +73,6 @@ export const orderJobsBy = {
   },
 
   interval(job) {
-    return [
-      intervals.indexOf(job.interval),
-      job.interval === 'Weekly' ? _.padStart(job.startDay, 2, '0') : '00',
-      job.interval !== 'Hourly' ? _.padStart(job.startHour, 2, '0') : '00',
-      _.padStart(job.startMinute, 2, '0'),
-      (job.enabled ? 0 : 1),
-      job.name.toLowerCase().trim(),
-    ].join(' ');
+    return parseCron.parseExpression(job.cronString || '').next().toDate();
   },
 };

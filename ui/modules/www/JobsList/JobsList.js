@@ -57,11 +57,11 @@ export default class JobsList extends Component {
   }
 
   render() {
-    const {className, jobs, useLocalTime, ...props} = this.props;
+    const {jobs, useLocalTime} = this.props;
     const {orderBy, orderDir} = this.state;
 
     return (
-      <table {...props} className={this.className()}>
+      <table className={this.className()}>
         <thead className={styles.head}>
           <tr className={styles.row}>
             <th className={this.cellClassName('enabled', true)}
@@ -88,27 +88,27 @@ export default class JobsList extends Component {
 
         <tbody className={styles.body}>
           {_.orderBy(jobs || [], orderJobsBy[orderBy], orderDir)
-          .map((job, i) => {
-            return (
-              <tr key={i} className={styles.row} onClick={this.viewJobs(job)}>
-                <td className={this.cellClassName('enabled')}>
-                  {job.enabled && <div className={styles.enabled}/>}
-                </td>
+            .map((job, i) => {
+              return (
+                <tr key={i} className={styles.row} onClick={this.viewJobs(job)}>
+                  <td className={this.cellClassName('enabled')}>
+                    {job.enabled && <div className={styles.enabled}/>}
+                  </td>
 
-                <td className={this.cellClassName('type')}>
-                  <div className={cn(styles.icon, 'icon icon-' + getJobType(job))}/>
-                </td>
+                  <td className={this.cellClassName('type')}>
+                    <div className={cn(styles.icon, 'icon icon-' + getJobType(job))}/>
+                  </td>
 
-                <td className={this.cellClassName('name')}>
-                  {job.name}
-                </td>
+                  <td className={this.cellClassName('name')}>
+                    {job.name}
+                  </td>
 
-                <td className={this.cellClassName('interval')}>
-                  {getJobNiceInterval(job, useLocalTime).toLowerCase()}
+                  <td className={this.cellClassName('interval')}>
+                    {getJobNiceInterval(job.cronString, useLocalTime).toLowerCase()}
                 </td>
               </tr>
             );
-          })}
+            })}
         </tbody>
       </table>
     );

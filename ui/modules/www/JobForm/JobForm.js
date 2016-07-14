@@ -22,22 +22,18 @@ import {getJobNiceInterval} from '../JobsHelper/JobsHelper.js';
 
 // vars
 
-const requiredFields = ['interval', 'driver', 'startMinute', 'name'];
+const requiredFields = ['driver', 'name'];
 
 // export
 
 @reduxForm({
   form: 'job',
-  fields: ['enabled', 'shouldRerun', 'name', 'type', 'description', 'driver', 'user', 'password', 'interval', 'startDay', 'startHour', 'startMinute', 'resultEmail', 'statusEmail', 'id', 'lastModified', 'code', 'resultQuery'],
+  fields: ['enabled', 'shouldRerun', 'name', 'type', 'description', 'driver', 'user', 'password', 'resultEmail', 'statusEmail', 'id', 'lastModified', 'code', 'resultQuery', 'cronString'],
   validate(vals) {
     const errors = {};
 
     _.forEach(vals, (val, key) => {
       if (_.includes(requiredFields, key) && _.isUndefined(val)) {
-        errors[key] = 'This field is required.';
-      } else if (key === 'startHour' && vals.interval !== 'Hourly' && _.isUndefined(val)) {
-        errors[key] = 'This field is required.';
-      } else if (key === 'startDay' && vals.interval === 'Weekly' && _.isUndefined(val)) {
         errors[key] = 'This field is required.';
       }
     });
@@ -201,7 +197,7 @@ export default class JobForm extends Component {
   }
 
   render() {
-    const {fields: {enabled, shouldRerun, type, name, description, driver, user, password, interval, startDay, startHour, startMinute, resultEmail, statusEmail, id, lastModified, code, resultQuery}, handleSubmit, hideSidebar, useLocalTime} = this.props;
+    const {fields: {enabled, shouldRerun, type, name, description, driver, user, password, cronString, resultEmail, statusEmail, id, lastModified, code, resultQuery}, handleSubmit, hideSidebar, useLocalTime} = this.props;
 
     const thisQuery = this.state.thisQuery === 'code' ? code : resultQuery;
 
@@ -264,52 +260,12 @@ export default class JobForm extends Component {
 
             <hr/>
 
-            <label className={formStyles.label}>Interval</label>
-            <div className={formStyles.selectOverlay}/>
-            <select {...interval} className={this.fieldClass(interval)} defaultValue="" style={this.selectStyle(interval.value)}>
-              <option disabled value=""></option>
-              {this.getIntervalDOM()}
-            </select>
-
-            {interval.value === 'Weekly' ? (
-              <div className={styles.fullWidth}>
-                <label className={formStyles.label}>Day of Week</label>
-                <div className={formStyles.selectOverlay}/>
-                <select {...startDay} className={this.fieldClass(startDay)} defaultValue="" style={this.selectStyle(startDay.value)}>
-                  <option disabled value=""></option>
-                  {this.getWeekDOM()}
-                </select>
-              </div>
-            ) : null}
-
-            {interval.value !== 'Hourly' ? (
-              <div className={styles.halfWidth}>
-                <label className={formStyles.label}>Hour</label>
-                <div className={formStyles.selectOverlay}/>
-                <select {...startHour} className={this.fieldClass(startHour)} defaultValue="" style={this.selectStyle(startHour.value)}>
-                  <option disabled value=""></option>
-                  {this.getTimeDOM(24)}
-                </select>
-              </div>
-            ) : null}
-
-            <div className={interval.value === 'Hourly' ? styles.fullWidth : styles.halfWidth}>
-              <label className={formStyles.label}>Minute</label>
-              <div className={formStyles.selectOverlay}/>
-              <select {...startMinute} className={this.fieldClass(startMinute)} defaultValue="" style={this.selectStyle(startMinute.value)}>
-                <option disabled value=""></option>
-                {this.getTimeDOM(60, true)}
-              </select>
-            </div>
+            <label className={formStyles.label}>CRON String</label>
+            <input {...cronString} type="text" className={this.fieldClass(cronString)}/>
 
             {useLocalTime ? (
               <div className={styles.fullWidth}>
-                <span className={styles.localTime}>{`This job will run ${getJobNiceInterval({
-                  interval: interval.value,
-                  startMinute: startMinute.value || 0,
-                  startHour: startHour.value || 0,
-                  startDay: startDay.value || 0,
-                }, useLocalTime).toLowerCase()} locally.`}</span>
+                <span className={styles.localTime}>{`This job will run ${getJobNiceInterval(cronString.value, useLocalTime).toLowerCase()} locally.`}</span>
               </div>
             ) : null}
 

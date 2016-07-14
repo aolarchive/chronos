@@ -17,8 +17,8 @@ export default class AppRoute extends Component {
   };
 
   render() {
-    const {children, ...props} = this.props;
-
+    const {children} = this.props;
+    
     return (
       <div className={cn(styles.AppRoute, shared.clearfix)}>
         <SiteHeader/>

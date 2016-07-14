@@ -1,5 +1,4 @@
 package com.huffingtonpost.chronos.agent;
-
 import com.huffingtonpost.chronos.model.*;
 import com.huffingtonpost.chronos.model.JobSpec.JobType;
 import com.huffingtonpost.chronos.util.H2TestUtil;
@@ -94,16 +93,13 @@ public class TestAgent {
   public static JobSpec getTestJob(String aName, JobDao dao) {
     JobSpec aJob = new JobSpec();
     aJob.setName(aName);
-    aJob.setInterval(JobSpec.Interval.Hourly);
     DateTime now = Utils.getCurrentTime();
-    aJob.setStartMinute(now.getMinuteOfHour());
-    aJob.setStartHour(now.getHourOfDay());
-    aJob.setStartDay(now.getDayOfWeek());
+    aJob.setCronString(String.format("%d * * * *", now.getHourOfDay()));
     aJob.setDriver(H2TestUtil.H2_NAME);
     aJob.setCode("show tables;");
     aJob.setResultTable("ARESULTTABLE");
     aJob.setEnabled(true);
-    aJob.setStatusEmail(Arrays.asList(new String[]{ "blah@example.com" }));
+    aJob.setStatusEmail(Collections.singletonList("blah@example.com"));
     aJob.setType(JobType.Query);
     return aJob;
   }
@@ -134,7 +130,7 @@ public class TestAgent {
 
     // verify Monthly
     {
-      aJob.setInterval(JobSpec.Interval.Monthly);
+      aJob.setCronString("0 0 1 * *");
       boolean actual = AgentDriver.shouldJobRun(aJob,
           Utils.getCurrentTime().withDayOfMonth(1));
       assertEquals(true, actual);
@@ -145,18 +141,18 @@ public class TestAgent {
 
     // verify Weekly
     {
-      aJob.setInterval(JobSpec.Interval.Weekly);
+      aJob.setCronString("0 0 * * 4");
       boolean actual = AgentDriver.shouldJobRun(aJob,
-          Utils.getCurrentTime().withDayOfWeek(aJob.getStartDay()));
+          Utils.getCurrentTime());
       assertEquals(true, actual);
       actual = AgentDriver.shouldJobRun(aJob,
-          Utils.getCurrentTime().withDayOfWeek(aJob.getStartDay()+1));
+          Utils.getCurrentTime().plusDays(1));
       assertEquals(false, actual);
     }
 
     // verify Daily
     {
-      aJob.setInterval(JobSpec.Interval.Daily);
+      aJob.setCronString("0 0 * * *");
       boolean actual = AgentDriver.shouldJobRun(aJob,
           Utils.getCurrentTime());
       assertEquals(true, actual);
@@ -167,7 +163,7 @@ public class TestAgent {
 
     // verify Hourly
     {
-      aJob.setInterval(JobSpec.Interval.Hourly);
+      aJob.setCronString("0 * * * *");
       boolean actual = AgentDriver.shouldJobRun(aJob,
           Utils.getCurrentTime());
       assertEquals(true, actual);

@@ -43,8 +43,8 @@ export default class JobUpdateRoute extends Component {
   }
 
   render() {
-    const {className, job, ...props} = this.props;
-    const title = this.props.job ? 'Job: ' + this.props.job.name : 'Loading...';
+    const {job, ...props} = this.props;
+    const title = job ? 'Job: ' + job.name : 'Loading...';
 
     return (
       <SiteMain {...props} title={title} className={this.className()}>

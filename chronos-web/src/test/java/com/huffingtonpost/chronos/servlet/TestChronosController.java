@@ -46,7 +46,7 @@ public class TestChronosController {
 
   private String success = new Response("success").toString();
 
-  ObjectMapper OM = new ObjectMapper()
+  private ObjectMapper OM = new ObjectMapper()
     .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
     .registerModule(new JodaModule())
     .setDateFormat(new ISO8601DateFormat());
@@ -54,8 +54,8 @@ public class TestChronosController {
   private MockMvc mockMvc;
   private ChronosController controller;
   private Reporting reporting = new NoReporting();
-  final int numOfConcurrentReruns = 10;
-  final int maxReruns = 5;
+  private final int numOfConcurrentReruns = 10;
+  private final int maxReruns = 5;
   ArrayList<SupportedDriver> drivers = H2TestUtil.createDriverForTesting();
 
   @Mock
@@ -92,9 +92,7 @@ public class TestChronosController {
     aJob.setUser("aUser");
     aJob.setPassword("");
     DateTime now = Utils.getCurrentTime();
-    aJob.setStartMinute(now.getMinuteOfHour());
-    aJob.setStartHour(now.getHourOfDay());
-    aJob.setStartDay(now.getDayOfWeek());
+    aJob.setCronString("* * * * *");
     aJob.setResultTable("ARESULTTABLE");
     aJob.setCode("");
     aJob.setType(JobType.Query);
@@ -203,15 +201,15 @@ public class TestChronosController {
   @Test
   public void testStartMinute() throws Exception{
     JobSpec aJob = getTestJob("bla");
-    aJob.setStartMinute(61);
-    performAndExpectFailed(aJob, Messages.START_MINUTE);
+    aJob.setCronString("61 * * * *");
+    performAndExpectFailed(aJob, "Invalid interval [61-61], must be 0<=_<=59");
   }
 
   @Test
   public void testStartHour() throws Exception {
     JobSpec aJob = getTestJob("bla");
-    aJob.setStartHour(99);
-    performAndExpectFailed(aJob, Messages.START_HOUR);
+    aJob.setCronString("* 99 * * *");
+    performAndExpectFailed(aJob, "Invalid interval [99-99], must be 0<=_<=23");
   }
 
   @Test
@@ -286,26 +284,7 @@ public class TestChronosController {
         .andExpect(status().is5xxServerError());
     }
 
-    aJob.setStartMinute(0);
-    {
-      MockHttpServletRequestBuilder request = post("/api/job")
-        .contentType(MediaType.APPLICATION_JSON)
-        .content(OM.writeValueAsBytes(aJob));
-      mockMvc.perform(request)
-        .andExpect(status().is5xxServerError());
-    }
-
-    aJob.setStartHour(0);
-    {
-      MockHttpServletRequestBuilder request = post("/api/job")
-              .contentType(MediaType.APPLICATION_JSON)
-              .content(OM.writeValueAsBytes(aJob));
-      mockMvc.perform(request)
-        .andExpect(status().is5xxServerError());
-    }
-
-    // finally this one should pass
-    aJob.setStartDay(1);
+    aJob.setCronString("0 * * * *");
     {
       MockHttpServletRequestBuilder request = post("/api/job")
         .contentType(MediaType.APPLICATION_JSON)
@@ -480,12 +459,9 @@ public class TestChronosController {
     JobSpec aJob = getTestJob("Toussaint Louverture");
 
     {
-      aJob.setInterval(JobSpec.Interval.Hourly);
-      DateTime now = new DateTime().withMillisOfSecond(0)
+      DateTime now = new DateTime().withMinuteOfHour(0).withMillisOfSecond(0)
         .withSecondOfMinute(0);
-      aJob.setStartMinute(now.getMinuteOfHour());
-      aJob.setStartHour(now.getHourOfDay());
-      aJob.setStartDay(now.getDayOfWeek());
+      aJob.setCronString("0 * * * *");
 
       DateTime actual = ChronosController.calcNextRunTime(now, aJob);
       DateTime expected = now.plusHours(1);
@@ -494,12 +470,10 @@ public class TestChronosController {
     }
 
     {
-      aJob.setInterval(JobSpec.Interval.Daily);
-      DateTime now = new DateTime().withMillisOfSecond(0)
+      DateTime now = new DateTime().withHourOfDay(0)
+              .withMinuteOfHour(0).withMillisOfSecond(0)
               .withSecondOfMinute(0);
-      aJob.setStartMinute(now.getMinuteOfHour());
-      aJob.setStartHour(now.getHourOfDay());
-      aJob.setStartDay(now.getDayOfWeek());
+      aJob.setCronString("0 0 * * *");
 
       DateTime actual = ChronosController.calcNextRunTime(now, aJob);
       DateTime expected = now.plusDays(1);
@@ -508,12 +482,11 @@ public class TestChronosController {
     }
 
     {
-      aJob.setInterval(JobSpec.Interval.Weekly);
-      DateTime now = new DateTime().withMillisOfSecond(0)
+      DateTime now = new DateTime().withHourOfDay(0)
+              .withDayOfWeek(1)
+              .withMinuteOfHour(0).withMillisOfSecond(0)
               .withSecondOfMinute(0);
-      aJob.setStartMinute(now.getMinuteOfHour());
-      aJob.setStartHour(now.getHourOfDay());
-      aJob.setStartDay(now.getDayOfWeek());
+      aJob.setCronString("0 0 * * 1");
 
       DateTime actual = ChronosController.calcNextRunTime(now, aJob);
       DateTime expected = now.plusDays(7);
@@ -522,12 +495,10 @@ public class TestChronosController {
     }
 
     {
-      aJob.setInterval(JobSpec.Interval.Monthly);
-      DateTime now = new DateTime().withMillisOfSecond(0)
+      DateTime now = new DateTime().withDayOfMonth(1).withHourOfDay(0)
+              .withMinuteOfHour(0).withMillisOfSecond(0)
               .withSecondOfMinute(0);
-      aJob.setStartMinute(now.getMinuteOfHour());
-      aJob.setStartHour(now.getHourOfDay());
-      aJob.setStartDay(now.getDayOfWeek());
+      aJob.setCronString("0 0 1 * *");
 
       DateTime actual = ChronosController.calcNextRunTime(now, aJob);
       DateTime expected = now.plusMonths(1)
@@ -544,18 +515,16 @@ public class TestChronosController {
     
     DateTime t1 = now.plusHours(1);
     JobSpec job1 = getTestJob("should be first");
-    job1.setStartMinute(t1.getMinuteOfHour());
-    job1.setStartHour(t1.getHourOfDay());
-    job1.setStartDay(1);
-    job1.setInterval(JobSpec.Interval.Daily);
+    job1.setCronString(String.format("%d %d * * *",
+                                     t1.getMinuteOfHour(),
+                                     t1.getHourOfDay()));
     job1.setId(1L);
 
     JobSpec job2 = getTestJob("should be second");
     DateTime t2 = t1.plusMinutes(59);
-    job2.setStartMinute(t2.getMinuteOfHour());
-    job2.setStartHour(t2.getHourOfDay());
-    job2.setStartDay(1);
-    job2.setInterval(JobSpec.Interval.Daily);
+    job2.setCronString(String.format("%d %d * * *",
+                                     t2.getMinuteOfHour(),
+                                     t2.getHourOfDay()));
     job2.setId(2L);
 
     List<JobSpec> jobs = new ArrayList<>();
