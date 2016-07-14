@@ -4,11 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 
-@JsonIgnoreProperties
 public class JobSpec {
   static final long serialVersionUID = 3L;
   public static Logger LOG = Logger.getLogger(JobSpec.class);

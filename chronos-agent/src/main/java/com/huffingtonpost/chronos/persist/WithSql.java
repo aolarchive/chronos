@@ -14,6 +14,7 @@ import java.util.Map;
 
 import javax.sql.DataSource;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import org.apache.log4j.Logger;
 import org.h2.jdbcx.JdbcDataSource;
 import org.joda.time.DateTime;
@@ -36,6 +37,7 @@ public class WithSql implements WithBackend {
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
     .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
+    .configure(DeserializationFeature.FAIL_ON_IGNORED_PROPERTIES, false)
     .registerModule(new JodaModule())
     .setDateFormat(new ISO8601DateFormat())
     .addMixIn(CallableJob.class, PolymorphicCallableJobMixin.class);
