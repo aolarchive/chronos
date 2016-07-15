@@ -12,6 +12,8 @@ import org.apache.log4j.Logger;
 import javax.mail.Session;
 
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.ExecutorService;
@@ -243,6 +245,13 @@ public class AgentConsumer extends Stoppable {
     shouldSendErrorReports = shouldSend;
   }
 
+  private static String getStackTrace(Exception ex) {
+    StringWriter sw = new StringWriter();
+    PrintWriter pw = new PrintWriter(sw);
+    ex.printStackTrace(pw);
+    return sw.toString();
+  }
+
   public static void sendErrorReport(JobSpec jobSpec, String query,
                                      Exception ex, Long myId, String hostname,
                                      MailInfo mailInfo, Session session,
@@ -272,7 +281,7 @@ public class AgentConsumer extends Stoppable {
             + "<br/><h3>Error was:</h3><br/><pre>%s</pre><br/>"
             + "<br/><a href='http://%s:8080/api/queue?id=%s'>Rerun job</a><br/>";
     String messageBody = String.format(messageFormat, attemptNumber, maxReruns,
-      query, ex.getMessage(), hostname, myId);
+      query, getStackTrace(ex), hostname, myId);
     SendMail.doSend(subject, messageBody, mailInfo, session);
   }
 
