@@ -34,10 +34,8 @@ public class AgentDriver extends Stoppable {
       return false;
     }
     CronExpression ce = CronExpression.createWithoutSeconds(aJob.getCronString());
-    if (ce.nextTimeAfter(now.minusMinutes(1)).equals(now)) {
-      return true;
-    }
-    return false;
+    DateTime next = ce.nextTimeAfter(now.minusMinutes(1));
+    return next.equals(now);
   }
 
   public void doRun() {

@@ -6,6 +6,8 @@ import org.joda.time.DateTimeZone;
 public class Utils {
 
   public static DateTime getCurrentTime() {
-    return new DateTime().withZone(DateTimeZone.UTC);
+    return new DateTime().withZone(DateTimeZone.UTC)
+      .withSecondOfMinute(0)
+      .withMillisOfSecond(0);
   }
 }
