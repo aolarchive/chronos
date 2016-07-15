@@ -260,7 +260,7 @@ export default class JobForm extends Component {
 
             <hr/>
 
-            <label className={formStyles.label}>CRON String</label>
+            <label className={formStyles.label}><a className={styles.link} href="https://en.wikipedia.org/wiki/Cron#Format" target="_blank">CRON String</a></label>
             <input {...cronString} type="text" className={this.fieldClass(cronString)}/>
 
             {useLocalTime ? (

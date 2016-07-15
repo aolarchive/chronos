@@ -25,6 +25,10 @@
 
 /* edit fields */
 
+.link {
+  color: var(--blue);
+}
+
 .editFieldsRegion {
   flex: 0 0 14bl;
   padding: 1bl;
