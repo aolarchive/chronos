@@ -47,7 +47,7 @@ function collectRuns(runs, now) {
   now.utc();
 
   return function collectRun(job) {
-    if (later.parse.cron(job.cronString).isValid(now.toDate())) {
+    if (later.schedule(later.parse.cron(job.cronString)).isValid(now.toDate())) {
       runs.push(createRun(job, now));
     }
   };
