@@ -106,7 +106,7 @@ public class TestAgentConsumer {
     assertTrue(true);
   }
 
-  @Test(timeout=20000)
+  @Test
   public void testNumOfConcurrentJobsIsHonored() throws BackendException {
     int sleepFor = 1000; // millis
     int totalJobs = 0;
@@ -149,7 +149,7 @@ public class TestAgentConsumer {
     assertEquals(totalJobs, consumer.getFinishedJobs(limit).size());
   }
 
-  @Test(timeout=2000)
+  @Test
   public void testGetFailedQueries() {
     JobSpec aJob = TestAgent.getTestJob("David Foster Wallace", dao);
     aJob.setCode("not a valid query...");
@@ -172,7 +172,7 @@ public class TestAgentConsumer {
     assertEquals(1, consumer.getFinishedJobs(limit).size());
   }
 
-  @Test(timeout=60000)
+  @Test
   public void testJobResubmitSuccessSecondTime() throws BackendException {
     JobSpec aJob = TestAgent.getTestJob("DFW", dao);
     String tableName = "table_dne_yet";
@@ -214,7 +214,7 @@ public class TestAgentConsumer {
       String.format("DROP TABLE IF EXISTS %s", tableName));
   }
 
-  @Test(timeout=20000)
+  @Test
   public void testJobResubmitSuccessUpdateQuery() throws BackendException {
     JobSpec aJob = TestAgent.getTestJob("Robert Frank", dao);
     String tableName = "table_dne_yet";
@@ -248,7 +248,7 @@ public class TestAgentConsumer {
       consumer.getFinishedJobs(limit).get(nextId).getStatus().get());
   }
 
-  @Test(timeout=60000) // timesout on travis-ci if set to 20s
+  @Test
   public void testJobResubmitMaxFailAttempts() throws BackendException {
     consumer = new AgentConsumer(dao, reporting, "testing.huffpo.com",
       new MailInfo("", "", "", ""),
@@ -340,7 +340,7 @@ public class TestAgentConsumer {
       local.getJobRuns(null, AgentConsumer.LIMIT_JOB_RUNS).values().size());
   }
 
-  @Test(timeout=2000)
+  @Test
   public void testJobNoResubmit() throws BackendException {
     consumer = new AgentConsumer(dao, reporting, "testing.huffpo.com",
       new MailInfo("", "", "", ""),
