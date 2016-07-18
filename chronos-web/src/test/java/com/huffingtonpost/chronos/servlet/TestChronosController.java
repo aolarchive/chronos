@@ -79,7 +79,6 @@ public class TestChronosController {
     converter.setObjectMapper(new ChronosMapper());
     HttpMessageConverter[] messageConverters =
             new HttpMessageConverter[] {converter};
-    setupTestReports();
 
     this.mockMvc = MockMvcBuilders.standaloneSetup(controller)
       .setMessageConverters(messageConverters).build();
@@ -630,8 +629,10 @@ public class TestChronosController {
 
   @Test
   public void testGetReportsList() throws Exception {
+    setupTestReports();
+
     MockHttpServletRequestBuilder request = get(String.format("/api/report-list"));
-    Map<String, List<String>> expectResult = new LinkedHashMap<>();
+    Map<String, List<String>> expectResult = new TreeMap<>();
     for (int i = 1; i < 10; i++) {
       expectResult.put(String.valueOf(i), Arrays.asList("20160101", "20160102"));
 

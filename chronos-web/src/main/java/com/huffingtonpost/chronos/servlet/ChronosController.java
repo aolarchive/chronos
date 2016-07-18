@@ -306,7 +306,7 @@ public class ChronosController {
    */
   @RequestMapping(value="/report-list", method=RequestMethod.GET)
   public @ResponseBody Map<String, List<String>> getReportsList() {
-    Map<String, List<String>> toRet = new LinkedHashMap<>();
+    Map<String, List<String>> toRet = new TreeMap<>();
     File reportsRoot = new File(reportRootPath);
     for (File allReportsOfaJob : reportsRoot.listFiles()) {
       toRet.put(allReportsOfaJob.getName(), Arrays.asList(allReportsOfaJob.list()));
