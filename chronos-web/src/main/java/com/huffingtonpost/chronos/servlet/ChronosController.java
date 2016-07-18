@@ -304,22 +304,21 @@ public class ChronosController {
    *
    * @return
    */
-  @RequestMapping(value="/reports-list", method=RequestMethod.GET)
+  @RequestMapping(value="/report-list", method=RequestMethod.GET)
   public @ResponseBody List<String> getReportsList(@RequestParam(value="id", required=false) Long id)
           throws NotFoundException {
     if (reportRootPath == null) {
       throw new NotFoundException("Report Root Path is not set, check your Chronos configuration.");
     }
 
-    File reportsRoot = new File(reportRootPath);
+    File file;
     if (id == null) {
-      return Arrays.asList(reportsRoot.list());
+      file = new File(reportRootPath);
     } else {
-      for (File allReportsOfaJob : reportsRoot.listFiles()) {
-        if (String.valueOf(id).equals(allReportsOfaJob.getName())) {
-          return Arrays.asList(allReportsOfaJob.list());
-        }
-      }
+      file = new File(reportRootPath + File.separator + String.valueOf(id));
+    }
+    if (file.exists()) {
+      return Arrays.asList(file.list());
     }
     throw new NotFoundException("Job " + id + " was not found in report file system");
   }

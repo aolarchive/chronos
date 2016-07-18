@@ -631,7 +631,7 @@ public class TestChronosController {
   public void testGetReportsList() throws Exception {
     setupTestReports();
 
-    MockHttpServletRequestBuilder request = get(String.format("/api/reports-list"));
+    MockHttpServletRequestBuilder request = get(String.format("/api/report-list"));
     List<String> expectResult = new ArrayList<>();
     for (int i = 1; i < 10; i++) {
       expectResult.add(String.valueOf(i));
@@ -640,7 +640,7 @@ public class TestChronosController {
       .andExpect(status().isOk())
       .andExpect(content().string(OM.writeValueAsString(expectResult)));
 
-    MockHttpServletRequestBuilder request1 = get(String.format("/api/reports-list?id=1"));
+    MockHttpServletRequestBuilder request1 = get(String.format("/api/report-list?id=1"));
     List<String> expectResult1 = Arrays.asList("20160101", "20160102");
     mockMvc.perform(request1)
            .andExpect(status().isOk())
