@@ -17,6 +17,9 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import javax.mail.util.ByteArrayDataSource;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
@@ -28,13 +31,18 @@ public class CallableQuery extends CallableJob implements Callable<Void>  {
   public static Logger LOG = Logger.getLogger(CallableQuery.class);
   private static DateTimeFormatter DT_FMT =
     DateTimeFormat.forPattern("yyMMddHH").withZoneUTC();
-
+  private static DateTimeFormatter COMPLETED_DT_FMT =
+          DateTimeFormat.forPattern("yyyyMMddHH").withZoneUTC();
   private String [] parts;
   private String replacedReportQuery;
   private SupportedDriver driver;
 
+  public static final String tab = "\t";
+  public static final String enter = "\n";
   public static final String QUERY_SPLITTER = ";";
   private static final long MAX_RESULTS_IN_BODY = 500;
+
+  private String reportRootPath = null;
   
   public CallableQuery() {
   }
@@ -42,7 +50,8 @@ public class CallableQuery extends CallableJob implements Callable<Void>  {
   public CallableQuery(PlannedJob plannedJob, JobDao dao,
                        Reporting reporting, String hostname,
                        MailInfo mailInfo, Session session,
-                       SupportedDriver driver, int attemptNumber) {
+                       SupportedDriver driver, String reportRootPath,
+                       int attemptNumber) {
     this.plannedJob = plannedJob;
     this.dao = dao;
     this.reporting = reporting;
@@ -50,6 +59,7 @@ public class CallableQuery extends CallableJob implements Callable<Void>  {
     this.mailInfo = mailInfo;
     this.session = session;
     this.driver = driver;
+    this.reportRootPath = reportRootPath;
     this.attemptNumber = attemptNumber;
     setReplacedCode();
     if (plannedJob.getJobSpec().getResultQuery() != null) {
@@ -92,6 +102,9 @@ public class CallableQuery extends CallableJob implements Callable<Void>  {
         PersistentResultSet results = doReportStep(conn, currJob, replacedReportQuery);
         String content = createMessageContent (results, currJob);
         DataSource attachment = createAttachment(results, currJob);
+        if (reportRootPath != null) {
+          writeReportToLocal(results, reportRootPath, plannedJob);
+        }
         sendEmail(mailInfo, attachment, content, currJob);
       }
     } catch (Exception ex) {
@@ -99,6 +112,62 @@ public class CallableQuery extends CallableJob implements Callable<Void>  {
     }
     reporting.mark("chronos.query." + jobName + "." + "passed");
     setStatus(0);
+  }
+
+  /***
+   *  save a copy of report to local file system in /[rootPath]/[jobId]/[jobDt in yyyyMMddHH]
+   * @param result
+   * @param rootPath
+   * @param plannedJob
+   */
+  @VisibleForTesting
+  public static void writeReportToLocal(PersistentResultSet result, String rootPath, PlannedJob plannedJob) {
+
+    String job = String.valueOf(plannedJob.getJobSpec().getId());
+    String dt =  COMPLETED_DT_FMT.print(plannedJob.getReplaceTime());
+    String reportJobPath = rootPath + "/" + job;
+    String reportPath = reportJobPath + "/" + dt + ".tsv";
+
+    //ensure dir exists
+    boolean dirCreated = new File(reportJobPath).mkdirs();
+
+    FileWriter fw = null;
+    BufferedWriter bw = null;
+    try {
+      fw = new FileWriter(new File(reportPath));
+      bw = new BufferedWriter(fw);
+      for (String columnName : result.getColumnNames()) {
+        bw.write(columnName);
+        bw.write(tab);
+      }
+      bw.write(enter);
+
+      for (List<Object> line : result.getData()) {
+        for (Object element : line) {
+          bw.write(element.toString());
+          bw.write(tab);
+        }
+        bw.write(enter);
+      }
+
+    } catch (IOException e) {
+      LOG.error("Cannot write file in " + reportPath + ". Dirs created: " + dirCreated);
+    } finally {
+      if (bw != null) {
+        try {
+          bw.close();
+        } catch (IOException e) {
+          LOG.error(e);
+        }
+      }
+      if (fw != null) {
+        try {
+          fw.close();
+        } catch (IOException e) {
+          LOG.error(e);
+        }
+      }
+    }
   }
 
   private void sendEmail(MailInfo info, DataSource attachment, String body, JobSpec currJob) {

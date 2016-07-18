@@ -118,7 +118,7 @@ public class TestAgentConsumer {
       PlannedJob pj = new PlannedJob(aJob, Utils.getCurrentTime());
 
       CallableJob cj = new SleepyCallableQuery(pj, dao, reporting,
-        "example.com", null, null, drivers.get(0), 1, sleepFor * 3);
+        "example.com", null, null, null, drivers.get(0), 1, sleepFor * 3);
       consumer.submitJob(cj);
       totalJobs++;
     }
@@ -157,7 +157,7 @@ public class TestAgentConsumer {
     PlannedJob pj = new PlannedJob(aJob, Utils.getCurrentTime());
 
     CallableJob cj = new CallableQuery(pj, dao, reporting,
-      "example.com", mailInfo, null, drivers.get(0), 1);
+      "example.com", mailInfo, null, drivers.get(0), null, 1);
     consumer.submitJob(cj);
 
     TestAgent.waitForFail(consumer, 1);
@@ -181,7 +181,7 @@ public class TestAgentConsumer {
     PlannedJob pj = new PlannedJob(aJob, Utils.getCurrentTime());
 
     CallableJob cj = new CallableQuery(pj, dao, reporting,
-      "example.com", mailInfo, null, drivers.get(0), 1);
+      "example.com", mailInfo, null, drivers.get(0), null, 1);
     consumer.submitJob(cj);
 
     TestAgent.waitForFail(consumer, 1);
@@ -223,7 +223,7 @@ public class TestAgentConsumer {
     PlannedJob pj = new PlannedJob(aJob, Utils.getCurrentTime());
 
     CallableJob cj = new CallableQuery(pj, dao, reporting,
-      "example.com", mailInfo, null, drivers.get(0), 1);
+      "example.com", mailInfo, null, drivers.get(0), null, 1);
     consumer.submitJob(cj);
 
     TestAgent.waitForFail(consumer, 1);
@@ -261,7 +261,7 @@ public class TestAgentConsumer {
     PlannedJob pj = new PlannedJob(aJob, Utils.getCurrentTime());
 
     CallableJob cj = new CallableQuery(pj, dao, reporting,
-      "example.com", mailInfo, null, drivers.get(0), 1);
+      "example.com", mailInfo, null, drivers.get(0), null, 1);
     consumer.submitJob(cj);
     Long id = cj.getJobId();
 
@@ -307,7 +307,7 @@ public class TestAgentConsumer {
     long id = dao.createJob(aJob);
     PlannedJob pj = new PlannedJob(dao.getJob(id), Utils.getCurrentTime());
     SleepyCallableQuery cj = new SleepyCallableQuery(
-      pj, dao, reporting, "example.com", mailInfo, null, drivers.get(0), 1,
+      pj, dao, reporting, "example.com", mailInfo, null, null, drivers.get(0), 1,
       10000);
     consumer.submitJob(cj);
     doSleep();
@@ -327,7 +327,7 @@ public class TestAgentConsumer {
     PlannedJob pj = new PlannedJob(aJob, Utils.getCurrentTime());
 
     CallableJob cj = new CallableQuery(pj, dao, reporting,
-      "example.com", mailInfo, null, drivers.get(0), 1);
+      "example.com", mailInfo, null, drivers.get(0), null, 1);
     consumer.submitJob(cj);
     TestAgent.waitUntilJobsFinished(consumer, 1);
     assertEquals(1, consumer.getSuccesfulQueries(limit).size());
@@ -354,7 +354,7 @@ public class TestAgentConsumer {
     PlannedJob pj = new PlannedJob(aJob, Utils.getCurrentTime());
 
     CallableJob cj = new CallableQuery(pj, dao, reporting,
-      "example.com", mailInfo, null, drivers.get(0), 1);
+      "example.com", mailInfo, null, drivers.get(0), null, 1);
     consumer.submitJob(cj);
 
     // let the job run and fail
@@ -416,7 +416,7 @@ public class TestAgentConsumer {
         PlannedJob pj = new PlannedJob(dao.getJob(id),
           Utils.getCurrentTime());
         CallableJob cj = new SleepyCallableQuery(pj, dao, reporting,
-          "example.com", null, null, drivers.get(0), 1, 10000);
+          "example.com", null, null, null, drivers.get(0), 1, 10000);
         consumer.submitJob(cj);
       }
 

@@ -1,5 +1,6 @@
 package com.huffingtonpost.chronos.servlet;
 
+import java.io.File;
 import java.io.IOException;
 
 import org.apache.zookeeper.KeeperException;
@@ -37,17 +38,18 @@ public class ChronosController {
   private final AgentDriver agentDriver;
   private final AgentConsumer agentConsumer;
   private final ArrayList<SupportedDriver> drivers;
+  private final String reportRootPath;
 
   private static final Response SUCCESS = new Response("success");
 
   @Autowired
-  public ChronosController(JobDao jobDao, AgentDriver agentDriver,
-      AgentConsumer agentConsumer,
-      ArrayList<SupportedDriver> drivers) {
-      this.jobDao = jobDao;
-      this.agentDriver = agentDriver;
-      this.agentConsumer = agentConsumer;
-      this.drivers = drivers;
+  public ChronosController(JobDao jobDao, AgentDriver agentDriver, AgentConsumer agentConsumer,
+                           ArrayList<SupportedDriver> drivers, String reportRootPath) {
+    this.jobDao = jobDao;
+    this.agentDriver = agentDriver;
+    this.agentConsumer = agentConsumer;
+    this.drivers = drivers;
+    this.reportRootPath = reportRootPath;
   }
 
   @ExceptionHandler(Exception.class)
@@ -255,4 +257,22 @@ public class ChronosController {
     }
   }
 
+  /***
+   * Assume all reports are under reportRootPath with the structure of [jobId][reportTimeStamp] :
+   *
+   *  /[reportRootPath]/1/20160101, /[reportRootPath]/1/20160102...
+   *  /[reportRootPath]/2/20160301, /[reportRootPath]/2/20160308...
+   *  ...
+   *
+   * @return all available reports
+   */
+  @RequestMapping(value="/report-list", method=RequestMethod.GET)
+  public @ResponseBody Map<String, List<String>> getReportsMeta() {
+    Map<String, List<String>> toRet = new HashMap<>();
+    File reportsRoot = new File(reportRootPath);
+    for (File allReportsOfaJob : reportsRoot.listFiles()) {
+      toRet.put(allReportsOfaJob.getName(), Arrays.asList(allReportsOfaJob.list()));
+    }
+    return toRet;
+  }
 }

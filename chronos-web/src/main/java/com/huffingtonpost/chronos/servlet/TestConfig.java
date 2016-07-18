@@ -45,6 +45,11 @@ public class TestConfig extends WebMvcConfigurerAdapter {
 
   private static String LOCALHOST = "localhost";
 
+  @Bean(name="reportRootPath")
+  public String reportRootPath() {
+    return System.getProperty("user.dir") + "/tmp/reports/";
+  }
+
   @Bean(name="drivers")
   public ArrayList<SupportedDriver> drivers() {
     SupportedDriver h2 = new SupportedDriver(H2TestUtil.H2_NAME,
@@ -67,8 +72,8 @@ public class TestConfig extends WebMvcConfigurerAdapter {
 
   @Override
   public void addResourceHandlers(ResourceHandlerRegistry registry) {
-    registry.addResourceHandler("/*.*", "/ico/**")
-      .addResourceLocations("/site/", "/site/ico/")
+    registry.addResourceHandler("/*.*", "/ico/**", "/reports/**")
+      .addResourceLocations("/site/", "/site/ico/", "file:" + reportRootPath())
       .resourceChain(true)
       .addResolver(new GzipResourceResolver())
       .addResolver(new PathResourceResolver());
@@ -171,7 +176,7 @@ public class TestConfig extends WebMvcConfigurerAdapter {
     return hostname;
   }
 
-  @DependsOn(value="jobDao")
+  @DependsOn(value={"jobDao","reportRootPath"})
   @Bean(initMethod="init", destroyMethod="close", name="agentConsumer")
   public AgentConsumer consumer() {
     int numOfConcurrentJobs = 4;
@@ -179,9 +184,11 @@ public class TestConfig extends WebMvcConfigurerAdapter {
     int maxReruns = 5;
     int waitBeforeRetrySeconds = 1200;
     int minAttemptsForNotification = 1;
-    return new AgentConsumer(jobDao(), reporting(), hostname(), mailInfo(),
-        relaySession(), drivers(), numOfConcurrentJobs, numOfConcurrentReruns,
-        maxReruns, waitBeforeRetrySeconds, minAttemptsForNotification);
+    AgentConsumer agentConsumer = new AgentConsumer(jobDao(), reporting(), hostname(), mailInfo(),
+        relaySession(), drivers(), numOfConcurrentJobs,
+        numOfConcurrentReruns, maxReruns, waitBeforeRetrySeconds, minAttemptsForNotification);
+    //agentConsumer.writeReportToLocal(reportRootPath()); //uncomment this line to write report to localhost
+    return agentConsumer;
   }
 
   @DependsOn(value="jobDao")

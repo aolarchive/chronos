@@ -25,9 +25,9 @@ public class SleepyCallableQuery extends CallableQuery {
 
   public SleepyCallableQuery(PlannedJob plannedJob, JobDao dao,
       Reporting reporting, String hostname, MailInfo mailInfo,
-      Session session, SupportedDriver driver, int attemptNumber, int sleepFor) {
+      Session session, String reportRootPath, SupportedDriver driver, int attemptNumber, int sleepFor) {
       super(plannedJob, dao, reporting,
-          hostname, mailInfo, session, driver, attemptNumber);
+          hostname, mailInfo, session, driver, reportRootPath, attemptNumber);
       this.sleepFor = sleepFor;
   }
 
