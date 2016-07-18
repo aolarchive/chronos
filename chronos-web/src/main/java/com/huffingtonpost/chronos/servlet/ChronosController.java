@@ -302,15 +302,25 @@ public class ChronosController {
    *  /[reportRootPath]/2/20160301, /[reportRootPath]/2/20160308...
    *  ...
    *
-   * @return all available reports
+   * @return
    */
-  @RequestMapping(value="/report-list", method=RequestMethod.GET)
-  public @ResponseBody Map<String, List<String>> getReportsList() {
-    Map<String, List<String>> toRet = new TreeMap<>();
-    File reportsRoot = new File(reportRootPath);
-    for (File allReportsOfaJob : reportsRoot.listFiles()) {
-      toRet.put(allReportsOfaJob.getName(), Arrays.asList(allReportsOfaJob.list()));
+  @RequestMapping(value="/reports-list", method=RequestMethod.GET)
+  public @ResponseBody List<String> getReportsList(@RequestParam(value="id", required=false) Long id)
+          throws NotFoundException {
+    if (reportRootPath == null) {
+      throw new NotFoundException("Report Root Path is not set, check your Chronos configuration.");
     }
-    return toRet;
+
+    File reportsRoot = new File(reportRootPath);
+    if (id == null) {
+      return Arrays.asList(reportsRoot.list());
+    } else {
+      for (File allReportsOfaJob : reportsRoot.listFiles()) {
+        if (String.valueOf(id).equals(allReportsOfaJob.getName())) {
+          return Arrays.asList(allReportsOfaJob.list());
+        }
+      }
+    }
+    throw new NotFoundException("Job " + id + " was not found in report file system");
   }
 }

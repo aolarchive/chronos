@@ -631,14 +631,19 @@ public class TestChronosController {
   public void testGetReportsList() throws Exception {
     setupTestReports();
 
-    MockHttpServletRequestBuilder request = get(String.format("/api/report-list"));
-    Map<String, List<String>> expectResult = new TreeMap<>();
+    MockHttpServletRequestBuilder request = get(String.format("/api/reports-list"));
+    List<String> expectResult = new ArrayList<>();
     for (int i = 1; i < 10; i++) {
-      expectResult.put(String.valueOf(i), Arrays.asList("20160101", "20160102"));
-
+      expectResult.add(String.valueOf(i));
     }
     mockMvc.perform(request)
       .andExpect(status().isOk())
       .andExpect(content().string(OM.writeValueAsString(expectResult)));
+
+    MockHttpServletRequestBuilder request1 = get(String.format("/api/reports-list?id=1"));
+    List<String> expectResult1 = Arrays.asList("20160101", "20160102");
+    mockMvc.perform(request1)
+           .andExpect(status().isOk())
+           .andExpect(content().string(OM.writeValueAsString(expectResult1)));
   }
 }
