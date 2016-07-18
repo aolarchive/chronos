@@ -6,12 +6,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.junit.Assert.*;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 import java.util.concurrent.ConcurrentSkipListMap;
 
 import javax.mail.Session;
@@ -91,7 +86,7 @@ public class TestChronosController {
   }
 
   public static void setupTestReports() throws IOException {
-    for (int i = 1; i < 11; i++) {
+    for (int i = 1; i < 10; i++) {
       folder.newFolder(String.valueOf(i));
       folder.newFile(String.valueOf(i) + "/20160101");
       folder.newFile(String.valueOf(i) + "/20160102");
@@ -603,11 +598,12 @@ public class TestChronosController {
   }
 
   @Test
-  public void testGetReportsMeta() throws Exception {
+  public void testGetReportsList() throws Exception {
     MockHttpServletRequestBuilder request = get(String.format("/api/report-list"));
-    Map<String, List<String>> expectResult = new HashMap<>();
-    for (int i = 1; i < 11; i++) {
+    Map<String, List<String>> expectResult = new LinkedHashMap<>();
+    for (int i = 1; i < 10; i++) {
       expectResult.put(String.valueOf(i), Arrays.asList("20160101", "20160102"));
+
     }
     mockMvc.perform(request)
       .andExpect(status().isOk())
