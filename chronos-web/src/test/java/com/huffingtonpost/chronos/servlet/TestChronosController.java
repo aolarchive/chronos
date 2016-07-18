@@ -596,7 +596,7 @@ public class TestChronosController {
     verify(jobDao, times(2)).cancelJob(aJob);
   }
 
-  @Test
+  @Ignore
   public void testGetReportsList() throws Exception {
     setupTestReports();
 
