@@ -1,7 +1,5 @@
 package com.huffingtonpost.chronos.servlet;
 
-import org.joda.time.DateTimeConstants;
-
 public class Messages {
 
   public static final String RESULTQUERY_MUST_HAVELIMIT =

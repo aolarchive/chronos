@@ -61,6 +61,7 @@ _chronos_ uses a Java-based [spring config][sc].
 
 ## Test
 [![Build Status](https://travis-ci.org/aol/chronos.svg?branch=master)](https://travis-ci.org/aol/chronos)
+[![Coverage Status](https://coveralls.io/repos/github/aol/chronos/badge.svg?branch=master)](https://coveralls.io/github/aol/chronos?branch=master)
 
     mvn clean test
 
