@@ -24,8 +24,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -69,7 +67,7 @@ public class TestAgentConsumer {
     consumer.close();
   }
 
-  public void doSleep() {
+  public static void doSleep() {
     try {
       Thread.sleep(100);
     } catch (InterruptedException ignore) { }
@@ -247,60 +245,6 @@ public class TestAgentConsumer {
     assertEquals(0,
       consumer.getFinishedJobs(limit).get(nextId).getStatus().get());
   }
-
-  @Test
-  public void testJobResubmitMaxFailAttempts() throws BackendException {
-    consumer = new AgentConsumer(dao, reporting, "testing.huffpo.com",
-      new MailInfo("", "", "", ""),
-      Session.getDefaultInstance(new Properties()), drivers, numOfConcurrentJobs,
-      numOfConcurrentReruns, maxReruns, 1, 1);
-    consumer.SLEEP_FOR = 1;
-    JobSpec aJob = TestAgent.getTestJob("Simone de Beauvoir", dao);
-    aJob.setCode("not a valid query...");
-    dao.createJob(aJob);
-    PlannedJob pj = new PlannedJob(aJob, Utils.getCurrentTime());
-
-    CallableJob cj = new CallableQuery(pj, dao, reporting,
-      "example.com", mailInfo, null, drivers.get(0), null, 1);
-    consumer.submitJob(cj);
-    Long id = cj.getJobId();
-
-    // let the job run and fail
-    TestAgent.waitUntilJobsFinished(consumer, 1);
-    boolean isSuccess = cj.isSuccess();
-    assertEquals(false, isSuccess);
-    Map<Long, CallableJob> expected = new HashMap<>();
-    expected.put(cj.getJobId(), cj);
-    assertEquals(expected, consumer.getFailedQueries(limit));
-
-    Long nextId = id+1;
-    ExecutorService executor =
-      Executors.newFixedThreadPool(10);
-    // Create a bunch of threads that are contending to
-    // retry jobs
-    for (int i = 0 ; i < 10; i++) {
-      executor.submit(new Thread() {
-        public void run() {
-          for (int i = 0 ; i < 1000; i++) {
-            TestAgent.runRunnable(consumer);
-            doSleep();
-          }
-        }
-      });
-     }
-    try { Thread.sleep(10000); } catch (Exception ignore) {}
-    executor.shutdownNow();
-
-    assertEquals(0, dao.getRunningJobs().size());
-    Map<Long, CallableJob> jobRuns =
-      dao.getJobRuns(null, AgentConsumer.LIMIT_JOB_RUNS);
-    assertEquals("jobRuns: " + jobRuns, 5, jobRuns.values().size());
-    assertEquals(5, consumer.getFinishedJobs(limit).size());
-    assertEquals(0, consumer.getSuccesfulQueries(limit).size());
-    assertEquals(false,
-      consumer.getFinishedJobs(limit).get(nextId).isSuccess());
-  }
-
   @Test
   public void testCleanupPreviouslyRunningJobs() {
     JobSpec aJob = TestAgent.getTestJob("Mary Wollstonecraft", dao);
@@ -338,43 +282,6 @@ public class TestAgentConsumer {
     local.setDataSource(H2TestUtil.getDataSource());
     assertEquals(1,
       local.getJobRuns(null, AgentConsumer.LIMIT_JOB_RUNS).values().size());
-  }
-
-  @Test
-  public void testJobNoResubmit() throws BackendException {
-    consumer = new AgentConsumer(dao, reporting, "testing.huffpo.com",
-      new MailInfo("", "", "", ""),
-      Session.getDefaultInstance(new Properties()), drivers,numOfConcurrentJobs,
-      numOfConcurrentReruns, maxReruns, 1, 1);
-    consumer.SLEEP_FOR = 1;
-    JobSpec aJob = TestAgent.getTestJob("Hannah Arendt", dao);
-    aJob.setCode("not a valid query...");
-    aJob.setShouldRerun(false);
-    dao.createJob(aJob);
-    PlannedJob pj = new PlannedJob(aJob, Utils.getCurrentTime());
-
-    CallableJob cj = new CallableQuery(pj, dao, reporting,
-      "example.com", mailInfo, null, drivers.get(0), null, 1);
-    consumer.submitJob(cj);
-
-    // let the job run and fail
-    TestAgent.waitUntilJobsFinished(consumer, 1);
-    boolean isSuccess = cj.isSuccess();
-    assertEquals(false, isSuccess);
-    Map<Long, CallableJob> expected = new HashMap<>();
-    expected.put(cj.getJobId(), cj);
-    assertEquals(expected, consumer.getFailedQueries(limit));
-
-    // See if the job retries
-    TestAgent.runRunnable(consumer);
-    doSleep();
-
-    assertEquals(0, dao.getRunningJobs().size());
-    Map<Long, CallableJob> jobRuns =
-      dao.getJobRuns(null, AgentConsumer.LIMIT_JOB_RUNS);
-    assertEquals("jobRuns: " + jobRuns, 1, jobRuns.values().size());
-    assertEquals(1, consumer.getFinishedJobs(limit).size());
-    assertEquals(0, consumer.getSuccesfulQueries(limit).size());
   }
 
   public void testCancelPendingJob() throws BackendException {
