@@ -62,14 +62,12 @@
                         <aggregate>true</aggregate>
                         <instrumentation>
                             <excludes>
-                                <exclude>com/huffingtonpost/chronos/agent/GraphiteReporting.class</exclude>
-                                <exclude>com/huffingtonpost/chronos/servlet/TestConfig.class</exclude>
-                                <exclude>com/huffingtonpost/chronos/servlet/SimpleCORSFilter.class</exclude>
-                                <exclude>com/huffingtonpost/chronos/util/SendMail.class</exclude>
                                 <exclude>com/huffingtonpost/chronos/spring/**</exclude>
+                                <exclude>com/huffingtonpost/chronos/servlet/*Test*.class</exclude>
                             </excludes>
                             <ignoreTrivial>true</ignoreTrivial>
                             <ignoreMethodAnnotations>
+                                <ignoreMethodAnnotation>com.huffingtonpost.chronos.util.CoverageIgnore</ignoreMethodAnnotation>
                                 <ignoreMethodAnnotation>org.springframework.context.annotation.Bean</ignoreMethodAnnotation>
                             </ignoreMethodAnnotations>
                         </instrumentation>

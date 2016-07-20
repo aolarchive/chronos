@@ -203,6 +203,7 @@ public class CronExpression {
         return nextTimeAfter(afterTime, afterTime.plus(durationInMillis));
     }
 
+    @CoverageIgnore
     public DateTime nextTimeAfter(DateTime afterTime, DateTime dateTimeBarrier) {
         MutableDateTime nextTime = new MutableDateTime(afterTime);
         nextTime.setMillisOfSecond(0);

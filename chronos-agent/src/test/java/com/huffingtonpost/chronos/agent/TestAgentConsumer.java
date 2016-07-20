@@ -284,6 +284,7 @@ public class TestAgentConsumer {
       local.getJobRuns(null, AgentConsumer.LIMIT_JOB_RUNS).values().size());
   }
 
+  @Test
   public void testCancelPendingJob() throws BackendException {
     JobSpec aJob = TestAgent.getTestJob("Foucault", dao);
     aJob.setShouldRerun(true);

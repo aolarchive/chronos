@@ -5,6 +5,7 @@ import com.huffingtonpost.chronos.model.JobSpec;
 import com.huffingtonpost.chronos.model.MailInfo;
 import com.huffingtonpost.chronos.model.PlannedJob;
 import com.huffingtonpost.chronos.model.SupportedDriver;
+import com.huffingtonpost.chronos.util.CoverageIgnore;
 import com.huffingtonpost.chronos.util.SendMail;
 
 import org.apache.log4j.Logger;
@@ -260,6 +261,7 @@ public class AgentConsumer extends Stoppable {
     return sw.toString();
   }
 
+  @CoverageIgnore
   public static void sendErrorReport(JobSpec jobSpec, String query,
                                      Exception ex, Long myId, String hostname,
                                      MailInfo mailInfo, Session session,

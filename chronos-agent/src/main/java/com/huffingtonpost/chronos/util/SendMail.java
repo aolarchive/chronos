@@ -2,11 +2,9 @@ package com.huffingtonpost.chronos.util;
 
 import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
-import java.util.Properties;
 
 import javax.mail.Message;
 import javax.mail.MessagingException;
-import javax.mail.PasswordAuthentication;
 import javax.mail.Session;
 import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
@@ -18,13 +16,13 @@ import com.huffingtonpost.chronos.model.MailInfo;
 
 public class SendMail {
   public static Logger LOG = Logger.getLogger(SendMail.class);
-  
-  public static void doSend(String subject, String messageBody, MailInfo mailInfo, Session session) {
 
+  @CoverageIgnore
+  public static void doSend(String subject, String messageBody, MailInfo mailInfo, Session session) {
     String hostname = "";
     try {
       hostname = InetAddress.getLocalHost().getHostName();
-    } catch (Exception e) {}
+    } catch (Exception ignore) {}
     
     try {
       Message msg = new MimeMessage(session);
