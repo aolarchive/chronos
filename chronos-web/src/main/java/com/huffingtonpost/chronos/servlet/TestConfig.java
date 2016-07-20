@@ -1,6 +1,7 @@
 package com.huffingtonpost.chronos.servlet;
 
 import com.huffingtonpost.chronos.model.*;
+import com.huffingtonpost.chronos.util.CoverageIgnore;
 import com.huffingtonpost.chronos.util.H2TestUtil;
 
 import java.net.InetAddress;

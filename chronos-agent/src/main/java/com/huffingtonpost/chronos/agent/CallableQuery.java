@@ -4,6 +4,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.huffingtonpost.chronos.model.*;
 import com.huffingtonpost.chronos.persist.BackendException;
 
+import com.huffingtonpost.chronos.util.CoverageIgnore;
 import org.apache.log4j.Logger;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -170,6 +171,7 @@ public class CallableQuery extends CallableJob implements Callable<Void>  {
     }
   }
 
+  @CoverageIgnore
   private void sendEmail(MailInfo info, DataSource attachment, String body, JobSpec currJob) {
     Message message = new MimeMessage(session);
     List<Address> to = new ArrayList<>();

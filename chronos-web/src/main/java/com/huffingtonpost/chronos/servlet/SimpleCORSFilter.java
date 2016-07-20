@@ -8,11 +8,14 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletResponse;
+
+import com.huffingtonpost.chronos.util.CoverageIgnore;
 import org.springframework.stereotype.Component;
 
 @Component
 public class SimpleCORSFilter implements Filter {
 
+  @CoverageIgnore
 	public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain)
     throws IOException, ServletException {
 		HttpServletResponse response = (HttpServletResponse) res;
@@ -23,8 +26,10 @@ public class SimpleCORSFilter implements Filter {
 		chain.doFilter(req, res);
 	}
 
+  @CoverageIgnore
 	public void init(FilterConfig filterConfig) {}
 
+  @CoverageIgnore
 	public void destroy() {}
 
 }
