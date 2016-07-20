@@ -4,4 +4,4 @@ env:
   - TESTFOLDER=chronos-agent
 script: "mvn clean test -pl $TESTFOLDER"
 after_success:
-  - mvn clean cobertura:cobertura coveralls:report
+  - mvn clean cobertura:cobertura coveralls:report -DignoreTrivial=true
