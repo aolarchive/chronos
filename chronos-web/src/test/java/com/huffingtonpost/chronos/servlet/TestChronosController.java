@@ -1,23 +1,20 @@
 package com.huffingtonpost.chronos.servlet;
 
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.junit.Assert.*;
-
-import java.io.IOException;
-import java.util.*;
-import java.util.concurrent.ConcurrentSkipListMap;
-
-import javax.mail.Session;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
+import com.huffingtonpost.chronos.agent.*;
+import com.huffingtonpost.chronos.model.*;
+import com.huffingtonpost.chronos.model.JobSpec.JobType;
+import com.huffingtonpost.chronos.spring.ChronosMapper;
+import com.huffingtonpost.chronos.util.H2TestUtil;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-import org.junit.*;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Rule;
+import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -30,11 +27,16 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import com.huffingtonpost.chronos.agent.*;
-import com.huffingtonpost.chronos.model.*;
-import com.huffingtonpost.chronos.model.JobSpec.JobType;
-import com.huffingtonpost.chronos.spring.ChronosMapper;
-import com.huffingtonpost.chronos.util.H2TestUtil;
+import javax.mail.Session;
+import java.io.IOException;
+import java.util.*;
+import java.util.concurrent.ConcurrentSkipListMap;
+
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @RunWith(MockitoJUnitRunner.class)
 public class TestChronosController {
@@ -518,7 +520,7 @@ public class TestChronosController {
   public void testJobFuture() throws Exception {
     final DateTime now = new DateTime().withMillisOfSecond(0)
       .withSecondOfMinute(0).withZone(DateTimeZone.UTC);
-    
+
     DateTime t1 = now.plusHours(1);
     JobSpec job1 = getTestJob("should be first");
     job1.setCronString(String.format("%d %d * * *",
@@ -558,8 +560,10 @@ public class TestChronosController {
     expected.add(fri3);
     expected.add(fri4);
 
+    int limit = 4;
+    assertEquals(expected, controller.getJobFuture(null, limit));
     MockHttpServletRequestBuilder jobsFutureReq =
-      get(String.format("/api/jobs/future?limit=%d", 4));
+      get(String.format("/api/jobs/future?limit=%d", limit));
     mockMvc.perform(jobsFutureReq)
       .andExpect(content().string(OM.writeValueAsString(expected)))
       .andExpect(status().isOk());
@@ -569,8 +573,9 @@ public class TestChronosController {
     expectedId.add(fri1);
     expectedId.add(fri3);
 
+    limit = 2;
     MockHttpServletRequestBuilder jobsFutureIdReq =
-      get(String.format("/api/jobs/future?limit=%d&id=%d", 2, job1.getId()));
+      get(String.format("/api/jobs/future?limit=%d&id=%d", limit, job1.getId()));
     mockMvc.perform(jobsFutureIdReq)
       .andExpect(content().string(OM.writeValueAsString(expectedId)))
       .andExpect(status().isOk());

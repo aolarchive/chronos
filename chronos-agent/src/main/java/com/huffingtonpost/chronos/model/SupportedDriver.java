@@ -1,5 +1,7 @@
 package com.huffingtonpost.chronos.model;
 
+import com.huffingtonpost.chronos.util.CoverageIgnore;
+
 import java.util.List;
 
 public class SupportedDriver {
@@ -62,6 +64,7 @@ public class SupportedDriver {
     this.connectionUrl = connectionUrl;
   }
 
+  @CoverageIgnore
   @Override
   public boolean equals(Object obj) {
     if (this == obj)
@@ -94,6 +97,7 @@ public class SupportedDriver {
     return true;
   }
 
+  @CoverageIgnore
   @Override
   public int hashCode() {
     final int prime = 31;

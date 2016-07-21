@@ -1,20 +1,18 @@
 package com.huffingtonpost.chronos.agent;
 
-import java.util.concurrent.Callable;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicReference;
-
-import javax.mail.Session;
-
-import org.apache.log4j.Logger;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.huffingtonpost.chronos.model.JobDao;
 import com.huffingtonpost.chronos.model.JobSpec;
 import com.huffingtonpost.chronos.model.MailInfo;
 import com.huffingtonpost.chronos.model.PlannedJob;
 import com.huffingtonpost.chronos.persist.BackendException;
+import org.apache.log4j.Logger;
+
+import javax.mail.Session;
+import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 
 public abstract class CallableJob implements Callable<Void> {
 
@@ -53,12 +51,6 @@ public abstract class CallableJob implements Callable<Void> {
   }
 
   protected abstract void callInternal() throws BackendException;
-
-  @Override
-  public abstract int hashCode();
-
-  @Override
-  public abstract boolean equals(Object obj);
 
   @Override
   public Void call() throws Exception {

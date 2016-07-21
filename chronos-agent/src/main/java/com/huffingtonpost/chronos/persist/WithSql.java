@@ -1,26 +1,7 @@
 package com.huffingtonpost.chronos.persist;
 
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.sql.DataSource;
-
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import org.apache.log4j.Logger;
-import org.h2.jdbcx.JdbcDataSource;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
@@ -32,6 +13,18 @@ import com.huffingtonpost.chronos.model.JobSpec;
 import com.huffingtonpost.chronos.model.JobSpec.JobType;
 import com.huffingtonpost.chronos.model.PlannedJob;
 import com.mysql.jdbc.jdbc2.optional.MysqlConnectionPoolDataSource;
+import org.apache.log4j.Logger;
+import org.h2.jdbcx.JdbcDataSource;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+
+import javax.sql.DataSource;
+import java.io.IOException;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 public class WithSql implements WithBackend {
 
@@ -71,6 +64,19 @@ public class WithSql implements WithBackend {
       return ((MysqlConnectionPoolDataSource)ds).getPooledConnection().getConnection();
     }
     return ds.getConnection();
+  }
+
+  private void closeConnections(Connection conn, Statement stat) {
+    try {
+      if (stat != null && !stat.isClosed()) stat.close();
+    } catch (SQLException e) {
+      LOG.error(e);
+    }
+    try {
+      if (conn != null && !conn.isClosed()) conn.close();
+    } catch (SQLException e) {
+      LOG.error(e);
+    }
   }
 
   private void initDbConnection() throws SQLException {
@@ -149,16 +155,7 @@ public class WithSql implements WithBackend {
     } catch (SQLException | IOException ex) {
       throw new BackendException(ex);
     } finally {
-      try {
-        if (stat != null) stat.close();
-      } catch (SQLException e) {
-        LOG.error(e);
-      }
-      try {
-        if (conn != null) conn.close();
-      } catch (SQLException e) {
-        LOG.error(e);
-      }
+      closeConnections(conn, stat);
     }
     return key;
   }
@@ -187,16 +184,7 @@ public class WithSql implements WithBackend {
     } catch (SQLException | IOException ex) {
       throw new BackendException(ex);
     } finally {
-      try {
-        if (stat != null) stat.close();
-      } catch (SQLException e) {
-        LOG.error(e);
-      }
-      try {
-        if (conn != null) conn.close();
-      } catch (SQLException e) {
-        LOG.error(e);
-      }
+      closeConnections(conn, stat);
     }
   }
   
@@ -221,8 +209,10 @@ public class WithSql implements WithBackend {
       ResultSet rs = stat.executeQuery();
       while (rs.next()) {
         long anId = rs.getLong("id");
+        long cjId = rs.getLong("callable_job_id");
         CallableJob cj = OBJECT_MAPPER.readValue(
             rs.getString("callable_job").getBytes(), CallableJob.class);
+        cj.setJobId(cjId);
         toRet.put(anId, cj);
       }
       rs.close();
@@ -232,16 +222,7 @@ public class WithSql implements WithBackend {
     } catch (SQLException | IOException ex) {
       throw new BackendException(ex);
     } finally {
-      try {
-        if (stat != null) stat.close();
-      } catch (SQLException e) {
-        LOG.error(e);
-      }
-      try {
-        if (conn != null) conn.close();
-      } catch (SQLException e) {
-        LOG.error(e);
-      }
+      closeConnections(conn, stat);
     }
     return toRet;
   }
@@ -273,16 +254,7 @@ public class WithSql implements WithBackend {
     } catch (SQLException | IOException ex) {
       throw new BackendException(ex);
     } finally {
-      try {
-        if (stat != null) stat.close();
-      } catch (SQLException e) {
-        LOG.error(e);
-      }
-      try {
-        if (conn != null) conn.close();
-      } catch (SQLException e) {
-        LOG.error(e);
-      }
+      closeConnections(conn, stat);
     }
     return toRet;
   }
@@ -340,16 +312,7 @@ public class WithSql implements WithBackend {
     } catch (SQLException | IOException ex) {
       throw new BackendException(ex);
     } finally {
-      try {
-        if (stat != null) stat.close();
-      } catch (SQLException e) {
-        LOG.error(e);
-      }
-      try {
-        if (conn != null) conn.close();
-      } catch (SQLException e) {
-        LOG.error(e);
-      }
+      closeConnections(conn, stat);
     }
     return key;
   }
@@ -395,16 +358,7 @@ public class WithSql implements WithBackend {
     } catch (SQLException | IOException ex) {
       throw new BackendException(ex);
     } finally {
-      try {
-        if (stat != null) stat.close();
-      } catch (SQLException e) {
-        LOG.error(e);
-      }
-      try {
-        if (conn != null) conn.close();
-      } catch (SQLException e) {
-        LOG.error(e);
-      }
+      closeConnections(conn, stat);
     }
   }
 
@@ -425,16 +379,7 @@ public class WithSql implements WithBackend {
     } catch (SQLException ex) {
       throw new BackendException(ex);
     } finally {
-      try {
-        if (stat != null) stat.close();
-      } catch (SQLException e) {
-        LOG.error(e);
-      }
-      try {
-        if (conn != null) conn.close();
-      } catch (SQLException e) {
-        LOG.error(e);
-      }
+      closeConnections(conn, stat);
     }
   }
   
@@ -504,16 +449,7 @@ public class WithSql implements WithBackend {
     } catch (SQLException ex) {
       throw new BackendException(ex);
     } finally {
-      try {
-        if (stat != null) stat.close();
-      } catch (SQLException e) {
-        LOG.error(e);
-      }
-      try {
-        if (conn != null) conn.close();
-      } catch (SQLException e) {
-        LOG.error(e);
-      }
+      closeConnections(conn, stat);
     }
     return toRet;
   }
@@ -539,16 +475,7 @@ public class WithSql implements WithBackend {
     } catch (SQLException ex) {
       throw new BackendException(ex);
     } finally {
-      try {
-        if (stat != null) stat.close();
-      } catch (SQLException e) {
-        LOG.error(e);
-      }
-      try {
-        if (conn != null) conn.close();
-      } catch (SQLException e) {
-        LOG.error(e);
-      }
+      closeConnections(conn, stat);
     }
     return toRet;
   }
@@ -579,16 +506,7 @@ public class WithSql implements WithBackend {
     } catch (SQLException ex) {
       throw new BackendException(ex);
     } finally {
-      try {
-        if (stat != null) stat.close();
-      } catch (SQLException e) {
-        LOG.error(e);
-      }
-      try {
-        if (conn != null) conn.close();
-      } catch (SQLException e) {
-        LOG.error(e);
-      }
+      closeConnections(conn, stat);
     }
     return toRet;
   }
@@ -631,16 +549,7 @@ public class WithSql implements WithBackend {
     } catch (SQLException ex) {
       throw new BackendException(ex);
     } finally {
-      try {
-        if (stat != null) stat.close();
-      } catch (SQLException e) {
-        LOG.error(e);
-      }
-      try {
-        if (conn != null) conn.close();
-      } catch (SQLException e) {
-        LOG.error(e);
-      }
+      closeConnections(conn, stat);
     }
     return toRet;
   }
@@ -670,16 +579,7 @@ public class WithSql implements WithBackend {
     } catch (SQLException ex) {
       throw new BackendException(ex);
     } finally {
-      try {
-        if (stat != null) stat.close();
-      } catch (SQLException e) {
-        LOG.error(e);
-      }
-      try {
-        if (conn != null) conn.close();
-      } catch (SQLException e) {
-        LOG.error(e);
-      }
+      closeConnections(conn, stat);
     }
   }
   
@@ -708,16 +608,7 @@ public class WithSql implements WithBackend {
     } catch (SQLException ex) {
       throw new BackendException(ex);
     } finally {
-      try {
-        if (stat != null) stat.close();
-      } catch (SQLException e) {
-        LOG.error(e);
-      }
-      try {
-        if (conn != null) conn.close();
-      } catch (SQLException e) {
-        LOG.error(e);
-      }
+      closeConnections(conn, stat);
     }
     return toRet;
   }
@@ -767,21 +658,8 @@ public class WithSql implements WithBackend {
     } catch (SQLException ex) {
       throw new BackendException(ex);
     } finally {
-      try {
-        if (selStat != null) selStat.close();
-      } catch (SQLException e) {
-        LOG.error(e);
-      }
-      try {
-        if (delStat != null) delStat.close();
-      } catch (SQLException e) {
-        LOG.error(e);
-      }
-      try {
-        if (conn != null) conn.close();
-      } catch (SQLException e) {
-        LOG.error(e);
-      }
+      closeConnections(conn, selStat);
+      closeConnections(conn, delStat);
     }
     return toRet;
   }
