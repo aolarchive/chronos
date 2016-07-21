@@ -8,10 +8,8 @@ import com.huffingtonpost.chronos.util.H2TestUtil;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormatter;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.*;
+import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
@@ -20,12 +18,13 @@ import org.powermock.modules.junit4.PowerMockRunner;
 
 import javax.mail.Session;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 
@@ -44,6 +43,9 @@ public class TestAgentConsumer {
   List<SupportedDriver> drivers = H2TestUtil.createDriverForTesting();
   MailInfo mailInfo = new MailInfo("f", "f", "t", "t");
 
+  @Rule
+  TemporaryFolder folder = new TemporaryFolder();
+
   @Before
   public void setUp() throws Exception {
     reporting = new NoReporting();
@@ -57,6 +59,7 @@ public class TestAgentConsumer {
         new MailInfo("", "", "", ""),
         Session.getDefaultInstance(new Properties()), drivers, numOfConcurrentJobs,
         numOfConcurrentReruns, maxReruns, 0, 1);
+    consumer.writeReportToLocal(folder.getRoot().getPath());
     consumer.SLEEP_FOR = 20;
 
     AgentConsumer.setShouldSendErrorReports(false);
@@ -170,7 +173,35 @@ public class TestAgentConsumer {
     assertEquals(1, consumer.getFinishedJobs(limit).size());
   }
 
-  @Test
+  @Test(timeout=10000)
+  public void testSaveReportToLocal() {
+
+    JobSpec aJob = TestAgent.getTestJob("a job with report", dao);
+    aJob.setCode("CREATE TABLE IF NOT EXISTS test111 (ID INTEGER not NULL);\n"
+                         + "INSERT INTO test111 Values (199)");
+    aJob.setResultQuery("select * from test111 limit 10");
+    aJob.setResultEmail(null);
+    dao.createJob(aJob);
+    PlannedJob pj = new PlannedJob(aJob, Utils.getCurrentTime());
+
+    CallableQuery cj = new CallableQuery(pj, dao, reporting,
+                                       "example.com", mailInfo, null, drivers.get(0), folder.getRoot().getPath(), 1);
+
+    consumer.submitJob(cj);
+
+    TestAgent.waitUntilJobsFinished(consumer, 1);
+
+    boolean isSuccess = cj.isSuccess();
+    assertEquals(true, isSuccess);
+    assertEquals(true, cj.isDone());
+    assertNotNull(folder.getRoot().list());
+    assertNotNull(folder.getRoot().listFiles()[0].list());
+
+    dao.execute( "DROP TABLE IF EXISTS test111");
+
+  }
+
+  @Test(timeout=60000)
   public void testJobResubmitSuccessSecondTime() throws BackendException {
     JobSpec aJob = TestAgent.getTestJob("DFW", dao);
     String tableName = "table_dne_yet";

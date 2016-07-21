@@ -127,8 +127,8 @@ public class CallableQuery extends CallableJob implements Callable<Void>  {
 
     String job = String.valueOf(plannedJob.getJobSpec().getId());
     String dt =  COMPLETED_DT_FMT.print(plannedJob.getReplaceTime());
-    String reportJobPath = rootPath + "/" + job;
-    String reportPath = reportJobPath + "/" + dt + ".tsv";
+    String reportJobPath = rootPath + File.separator + job;
+    String reportPath = reportJobPath + File.separator + dt + ".tsv";
 
     //ensure dir exists
     boolean dirCreated = new File(reportJobPath).mkdirs();
@@ -177,8 +177,12 @@ public class CallableQuery extends CallableJob implements Callable<Void>  {
     Message message = new MimeMessage(session);
     List<Address> to = new ArrayList<>();
     try {
+      List<String> resultEmails = currJob.getResultEmail();
+      if (resultEmails.size() == 0) {
+        return;
+      }
       message.setFrom(new InternetAddress(info.from));
-      for (String s : currJob.getResultEmail()) {
+      for (String s : resultEmails) {
         for (Address ad : InternetAddress.parse(s)) {
           to.add(ad);
         }
