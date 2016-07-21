@@ -30,6 +30,7 @@ import java.util.concurrent.Callable;
 public class CallableQuery extends CallableJob implements Callable<Void>  {
 
   public static Logger LOG = Logger.getLogger(CallableQuery.class);
+  public static final String TSV = "text/tab-separated-values";
   private static DateTimeFormatter DT_FMT =
     DateTimeFormat.forPattern("yyMMddHH").withZoneUTC();
   private static DateTimeFormatter COMPLETED_DT_FMT =
@@ -100,9 +101,9 @@ public class CallableQuery extends CallableJob implements Callable<Void>  {
         throw new BackendException(ex);
       }
       if (replacedReportQuery != null && !replacedReportQuery.isEmpty()) {
-        PersistentResultSet results = doReportStep(conn, currJob, replacedReportQuery);
-        String content = createMessageContent (results, currJob);
-        DataSource attachment = createAttachment(results, currJob);
+        PersistentResultSet results = doReportStep(conn, replacedReportQuery);
+        String content = createMessageContent (results, currJob, this.getReplacedReportQuery());
+        DataSource attachment = createAttachment(results);
         if (reportRootPath != null) {
           writeReportToLocal(results, reportRootPath, plannedJob);
         }
@@ -182,7 +183,7 @@ public class CallableQuery extends CallableJob implements Callable<Void>  {
           to.add(ad);
         }
       }
-      message.setRecipients(Message.RecipientType.TO, (Address[])
+      message.setRecipients(Message.RecipientType.TO,
         to.toArray(new Address[]{}));
       message.setSubject("Chronos " + currJob.getName());
       Multipart multipart = new MimeMultipart();
@@ -207,7 +208,9 @@ public class CallableQuery extends CallableJob implements Callable<Void>  {
     }
   }
 
-  private String createMessageContent(PersistentResultSet results, JobSpec spec) {
+  @VisibleForTesting
+  public static String createMessageContent(PersistentResultSet results, JobSpec spec,
+                                             String replacedReportQuery) {
     StringBuilder sb = new StringBuilder();
     sb.append("<br>");
     sb.append(createInlineResults(results, spec));
@@ -218,7 +221,6 @@ public class CallableQuery extends CallableJob implements Callable<Void>  {
     return sb.toString();
   }
 
-  @VisibleForTesting
   public static StringBuilder createInlineResults(PersistentResultSet results, JobSpec spec) {
     StringBuilder sb = new StringBuilder();
     sb.append("<table border='1' cellspacing='0' cellpadding='2' align='center' style='width:100%'>\n");
@@ -243,12 +245,12 @@ public class CallableQuery extends CallableJob implements Callable<Void>  {
     sb.append("</table>\n");
     return sb;
   }
-  
-  private DataSource createAttachment(PersistentResultSet results, JobSpec spec) {
+
+  public static String makeAttachmentText(PersistentResultSet results) {
     StringBuilder sb = new StringBuilder();
     for (int i = 0 ; i < results.getColumnNames().size() ; i++) {
       sb.append(results.getColumnNames().get(i))
-      .append("(").append(results.getColumnTypes().get(i)).append(")");
+        .append("(").append(results.getColumnTypes().get(i)).append(")");
       if (i != results.getColumnNames().size() - 1) {
         sb.append('\t');
       }
@@ -263,15 +265,21 @@ public class CallableQuery extends CallableJob implements Callable<Void>  {
       }
       sb.append('\n');
     }
+    return sb.toString();
+  }
+
+  @CoverageIgnore
+  private static DataSource createAttachment(PersistentResultSet results) {
     try {
-      DataSource source = new ByteArrayDataSource(sb.toString(), "text/tab-separated-values");
+      String text = makeAttachmentText(results);
+      DataSource source = new ByteArrayDataSource(text, TSV);
       return source;
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
   }
 
-  private PersistentResultSet doReportStep(Connection conn, JobSpec currJob, String replacedReportQuery) throws SQLException {
+  private PersistentResultSet doReportStep(Connection conn, String replacedReportQuery) throws SQLException {
     PersistentResultSet r = new PersistentResultSet();
     try (Statement statement = conn.createStatement();
             ResultSet rs = statement.executeQuery(replacedReportQuery)) {
@@ -320,6 +328,8 @@ public class CallableQuery extends CallableJob implements Callable<Void>  {
   public String getReplacedQuery() {
     return replacedCode;
   }
+
+  public String getReplacedReportQuery() { return replacedReportQuery; }
 
   @Override
   public String toString() {

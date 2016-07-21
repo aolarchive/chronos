@@ -1,17 +1,11 @@
 package com.huffingtonpost.chronos.model;
 
-import com.huffingtonpost.chronos.agent.H2TestJobDaoImpl;
-import com.huffingtonpost.chronos.agent.TestAgent;
-import com.huffingtonpost.chronos.agent.Utils;
-
+import com.huffingtonpost.chronos.agent.*;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -21,6 +15,7 @@ import static org.junit.Assert.assertEquals;
 
 public class TestJobDao {
 
+  int limit = AgentConsumer.LIMIT_JOB_RUNS;
   JobDao dao;
 
   @Before
@@ -177,5 +172,34 @@ public class TestJobDao {
       dao.addToQueue(pj);
     }
     assertEquals(count, dao.getQueue(null).size());
+  }
+
+  @Test
+  public void testGetJobRuns() {
+    List<Long> ids = new ArrayList<>();
+    Map<Long, CallableJob> expected = new HashMap<>();
+    for (String name : new String[] { "Wifredo Lam", "Rene Magritte" }) {
+      JobSpec aJob = TestAgent.getTestJob(name, dao);
+      try {
+        dao.createJob(aJob);
+        aJob = dao.getJob(aJob.getId());
+        PlannedJob pj = new PlannedJob(aJob, Utils.getCurrentTime());
+        CallableJob cj = new CallableQuery(pj, dao, null,
+          "example.com", null, null, null, null, 1);
+        dao.createJobRun(cj);
+        ids.add(aJob.getId());
+        expected.put(aJob.getId(), cj);
+      } catch (Exception ex) {
+        ex.printStackTrace();
+      }
+    }
+
+    for (Long id : ids) {
+      Map<Long, CallableJob> got = dao.getJobRuns(id, limit);
+      assertEquals(1, got.size());
+      assertEquals(expected.get(id), got.get(id));
+    }
+    Map<Long, CallableJob> got = dao.getJobRuns(null, limit);
+    assertEquals(expected, got);
   }
 }
