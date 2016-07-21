@@ -277,11 +277,15 @@ public class ChronosController {
     if (id == null) {
       file = new File(reportRootPath);
     } else {
-      file = new File(reportRootPath + File.separator + String.valueOf(id));
+      try {
+        file = new File(reportRootPath + File.separator + String.valueOf(id));
+      } catch (NumberFormatException e) {
+        return Arrays.asList("Param id must be long");
+      }
     }
     if (file.exists()) {
       return Arrays.asList(file.list());
     }
-    throw new NotFoundException("Job " + id + " was not found in report file system");
+    throw new NotFoundException("Job/Dir " + id + " was not found in report file system");
   }
 }
