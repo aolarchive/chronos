@@ -10,7 +10,11 @@ export const routeJobs = createDispatcher(() => {
 });
 
 export const routeJobUpdate = createDispatcher((job) => {
-  return routerActions.push({pathname: '/job/' + (job.id || job)});
+  return routerActions.push({pathname: '/job/' + (job.id || job) + '/edit'});
+});
+
+export const routeJobRevert = createDispatcher((job) => {
+  return routerActions.push({pathname: '/job/' + (job.id || job) + '/revert'});
 });
 
 export const routeJobCreate = createDispatcher(() => {

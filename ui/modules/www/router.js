@@ -11,6 +11,7 @@ import store from './store';
 import AppRoute from './AppRoute/AppRoute.js';
 import JobUpdateRoute from './JobUpdateRoute/JobUpdateRoute.js';
 import JobCreateRoute from './JobCreateRoute/JobCreateRoute.js';
+import JobRevertRoute from './JobRevertRoute/JobRevertRoute.js';
 import JobsRoute from './JobsRoute/JobsRoute.js';
 
 // export
@@ -22,8 +23,10 @@ export const routes = (
 
     <Route path="/jobs" component={JobsRoute}/>
     <Route path="/job/create" component={JobCreateRoute}/>
-    <Route path="/job/:id" components={JobUpdateRoute}/>
+    <Route path="/job/:id/edit" components={JobUpdateRoute}/>
+    <Route path="/job/:id/revert" components={JobRevertRoute}/>
 
+    <Redirect path="/job/:id" to="/job/:id/edit"/>
     <Redirect path="/*" to="/jobs"/>
   </Route>
 );

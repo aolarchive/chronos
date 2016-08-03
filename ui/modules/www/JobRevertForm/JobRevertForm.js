@@ -14,69 +14,18 @@ import {createModal} from '../SiteModalStore/SiteModalStore.js';
 import _ from 'lodash';
 import {routeJobs} from '../RouterStore/RouterStore.js';
 import {createMessage} from '../MessageStore/MessageStore.js';
-import styles from './JobForm.css';
+import styles from './JobRevertForm.css';
 import formStyles from '../Styles/Form.css';
 import sharedStyles from '../Styles/Shared.css';
 import cn from 'classnames';
 import {getJobNiceInterval} from '../JobsHelper/JobsHelper.js';
 import {queryJobs} from '../JobsStore/JobsStore.js';
 
-// vars
-
-const requiredFields = ['driver', 'name'];
-
-// fns
-
-function collectChildren(children, jobsByID) {
-  const newChildren = [];
-
-  children.forEach((child) => {
-    if (jobsByID[child].children && jobsByID[child].children.length) {
-      newChildren.push.apply(newChildren, collectChildren(jobsByID[child].children, jobsByID));
-    }
-  });
-
-  return children.concat(newChildren);
-}
-
-function findParent(id, jobsByID) {
-  return _.findKey(jobsByID, (job) => {
-    return job.children && job.children.indexOf(id) > -1;
-  });
-}
-
-function findRoot(id, jobsByID) {
-  let searchID = id;
-  let foundID = null;
-
-  while (searchID) {
-    searchID = findParent(searchID, jobsByID);
-    foundID = searchID || foundID;
-  }
-
-  return foundID;
-}
-
 // export
 
 @reduxForm({
-  form: 'job',
-  fields: ['enabled', 'shouldRerun', 'name', 'type', 'description', 'driver', 'user', 'password', 'resultEmail', 'statusEmail', 'id', 'lastModified', 'code', 'resultQuery', 'cronString', '_dependsOn', 'children'],
-  validate(vals) {
-    const errors = {};
-
-    _.forEach(vals, (val, key) => {
-      if (_.includes(requiredFields, key) && _.isUndefined(val)) {
-        errors[key] = 'This field is required.';
-      }
-    });
-
-    if (vals.type === 'Script') {
-      delete errors.driver;
-    }
-
-    return errors;
-  },
+  form: 'jobrevert',
+  fields: ['version'],
 })
 @connect((state) => {
   return {
@@ -89,7 +38,7 @@ function findRoot(id, jobsByID) {
     useLocalTime: state.localStorage.useLocalTime === 'true',
   };
 })
-export default class JobForm extends Component {
+export default class JobRevertForm extends Component {
   static propTypes = {
     deletedJobs: PropTypes.array.isRequired,
     errors: PropTypes.object.isRequired,
@@ -107,6 +56,7 @@ export default class JobForm extends Component {
     sources: PropTypes.array,
     submitFailed: PropTypes.bool.isRequired,
     useLocalTime: PropTypes.bool.isRequired,
+    versions: PropTypes.array,
   };
 
   state = {
@@ -117,7 +67,7 @@ export default class JobForm extends Component {
   componentDidMount() {
     querySources();
     queryJobs();
-    enableSiteLoader('JobForm');
+    enableSiteLoader('JobRevertForm');
 
     this.props.initializeForm({
       startDay: 1,
@@ -139,8 +89,8 @@ export default class JobForm extends Component {
   }
 
   componentDidUpdate(prevProps) {
-    if (this.props.sources && this.props.jobs && this.props.loader.active && this.props.loader.reasons.indexOf('JobForm') > -1) {
-      disableSiteLoader('JobForm');
+    if (this.props.sources && this.props.jobs && this.props.loader.active && this.props.loader.reasons.indexOf('JobRevertForm') > -1) {
+      disableSiteLoader('JobRevertForm');
     }
 
     if (prevProps.job !== this.props.job) {
@@ -275,7 +225,7 @@ export default class JobForm extends Component {
     const jobParent = this.getJobParent();
 
     return (
-      <form className={styles.JobForm} onSubmit={handleSubmit}>
+      <form className={styles.JobRevertForm} onSubmit={handleSubmit}>
         <FilterBar>
           <input {...name} placeholder="Name" type="text" className={this.fieldClass(name, styles.filterInput)}/>
 
@@ -322,7 +272,7 @@ export default class JobForm extends Component {
                   <option disabled value=""></option>
                   {this.getSourcesDOM()}
                 </select>
-                
+
                 <label className={formStyles.label}>Database Username (optional)</label>
                 <input {...user} type="text" className={this.fieldClass(user)}/>
 
@@ -375,7 +325,7 @@ export default class JobForm extends Component {
               </div>
             ) : null}
 
-              <label className={formStyles.label}>Status Email (one per line)</label>
+            <label className={formStyles.label}>Status Email (one per line)</label>
             <textarea {...statusEmail} className={this.fieldClass(statusEmail, styles.textarea)}/>
 
             {this.props.formKey !== 'create' &&
