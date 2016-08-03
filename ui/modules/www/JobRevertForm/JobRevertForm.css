@@ -1,0 +1,313 @@
+/* rules */
+
+/* stylelint-disable selector-no-vendor-prefix */
+/* stylelint-disable declaration-no-important */
+
+/* import */
+
+@import '../Styles/Vars.css';
+
+/* styles */
+
+.editRegion {
+  position: absolute;
+  right: calc(1bl + var(--sidebar-width));
+  left: 1bl;
+  top: 3.5bl;
+  bottom: 0;
+  display: flex;
+  transition: right var(--trans-anima);
+
+  &.hideSidebar {
+    right: 1bl;
+  }
+}
+
+/* edit fields */
+
+.link {
+  color: var(--blue);
+}
+
+.editFieldsRegion {
+  flex: 0 0 14bl;
+  padding: 1bl;
+  background-color: var(--white);
+  border-color: var(--input-border-color);
+  border-style: solid;
+  border-width: 1px 0 0 1px;
+  border-radius: var(--input-border-radius) 0 0 0;
+  max-height: 100%;
+  overflow-x: hidden;
+  overflow-y: scroll;
+
+  & > textarea:last-child {
+    margin-bottom: 0;
+  }
+
+  hr {
+    margin: 1bl auto;
+    width: 50%;
+    border-top: 1px solid var(--pale);
+
+    &::before,
+    &::after {
+      float: left;
+      position: relative;
+      content: '';
+      size: 0;
+      border-color: transparent;
+      border-width: 4px;
+      border-style: solid;
+    }
+
+    &::before {
+      left: 50%;
+      top: -8px;
+      margin-left: -4px;
+      border-bottom-color: var(--pale);
+    }
+
+    &::after {
+      left: 50%;
+      top: -1px;
+      margin-left: -8px;
+      border-top-color: var(--pale);
+    }
+  }
+
+  .job-checkbox {
+    margin-bottom: 1bl;
+    display: block;
+
+    input {
+      margin-right: 0.25bl;
+      position: relative;
+      top: -1px;
+    }
+  }
+}
+
+.input {
+  margin-bottom: 0.5bl;
+
+  &.filterInput {
+    margin-bottom: 0;
+  }
+}
+
+.textarea {
+  font-size: 0.9bf;
+  min-height: 6bl;
+  margin-bottom: 0.5bl;
+  display: block;
+}
+
+.error {
+  border-color: var(--logo-color) !important;
+}
+
+.fullWidth {
+  & + hr {
+    margin-top: 1bl;
+  }
+}
+
+.halfWidth {
+  width: calc(50% - 0.25bl);
+  margin-right: 0.5bl;
+  display: inline-block;
+
+  & + .halfWidth {
+    margin-right: 0;
+  }
+}
+
+.localTime {
+  font-style: italic;
+  font-size: 0.75bf;
+}
+
+/* code region */
+
+.editCodeRegion {
+  flex: 1 1 auto;
+  border-radius: 0 var(--input-border-radius) 0 0;
+  position: relative;
+  border-top: 1px solid var(--input-border-color);
+  border-right: 1px solid var(--input-border-color);
+  border-left: 1px solid var(--input-border-color);
+  overflow: hidden;
+}
+
+.tabs {
+  height: 2bl;
+}
+
+.tab {
+  line-height: 2bl;
+}
+
+/* input bar */
+
+.button {
+  display: block;
+  margin-left: 24px;
+  flex: 0 0 5.5bl;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--white);
+}
+
+.hollowButton {
+  display: block;
+  margin-left: 24px;
+  flex: 0 0 5.5bl;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* codemirror */
+
+:global {
+  .ReactCodeMirror,
+  .CodeMirror {
+    font-size: 0.75bf;
+    line-height: 0.75bl;
+    position: absolute;
+    height: auto;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+  }
+
+  .ReactCodeMirror {
+    top: 2bl;
+
+    &.hide {
+      display: none;
+    }
+  }
+
+  .CodeMirror {
+    pre {
+      margin: 0;
+      padding: 0;
+      border: 0;
+    }
+  }
+
+  .CodeMirror-sizer {
+    padding-left: 2px !important;
+  }
+
+  .CodeMirror {
+    background: color(var(--selected-color) l(-33%));
+    color: var(--white);
+
+    div {
+      &.CodeMirror-selected {
+        background: color(var(--logo-color) l(-33%));
+      }
+    }
+
+    .CodeMirror-gutters {
+      background: color(var(--selected-color) l(-33%));
+      border-right: 1px solid var(--input-border-color);
+    }
+
+    .CodeMirror-guttermarker {
+      color: rgb(255, 238, 128);
+    }
+
+    .CodeMirror-guttermarker-subtle {
+      color: var(--input-border-color);
+    }
+
+    .CodeMirror-linenumber {
+      color: var(--input-border-color);
+    }
+
+    .CodeMirror-cursor {
+      border-left: 1px solid var(--white);
+    }
+
+    span {
+      &.cm-comment {
+        color: rgb(0, 136, 255);
+      }
+
+      &.cm-atom {
+        color: rgb(132, 93, 196);
+      }
+
+      &.cm-keyword {
+        color: rgb(255, 238, 128);
+      }
+
+      &.cm-string {
+        color: rgb(58, 217, 0);
+      }
+
+      &.cm-meta {
+        color: rgb(255, 157, 0);
+      }
+
+      &.cm-bracket {
+        color: rgb(216, 216, 216);
+      }
+
+      &.cm-link {
+        color: rgb(132, 93, 196);
+      }
+
+      &.cm-error {
+        color: rgb(157, 30, 21);
+      }
+    }
+
+    span.cm-number,
+    span.cm-attribute {
+      color: rgb(255, 128, 225);
+    }
+
+    span.cm-variable-2,
+    span.cm-tag {
+      color: rgb(158, 255, 255);
+    }
+
+    span.cm-variable-3,
+    span.cm-def {
+      color: var(--white);
+    }
+
+    span.cm-builtin,
+    span.cm-special {
+      color: var(--logo-color);
+    }
+
+    .CodeMirror-activeline-background {
+      background: color(var(--logo-color) l(-33%));
+    }
+
+    .CodeMirror-matchingbracket {
+      outline: 1px solid var(--input-border-color);
+      color: var(--white) !important;
+    }
+  }
+
+  .CodeMirror-line::selection,
+  .CodeMirror-line > span::selection,
+  .CodeMirror-line > span > span::selection {
+    background: color(var(--logo-color) l(-33%));
+  }
+
+  .CodeMirror-line::-moz-selection,
+  .CodeMirror-line > span::-moz-selection,
+  .CodeMirror-line > span > span::-moz-selection {
+    background: color(var(--logo-color) l(-33%));
+  }
+}
