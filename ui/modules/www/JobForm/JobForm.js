@@ -249,7 +249,7 @@ export default class JobForm extends Component {
                   <option disabled value=""></option>
                   {this.getSourcesDOM(this.props.sources)}
                 </select>
-
+                
                 <label className={formStyles.label}>Database Username (optional)</label>
                 <input {...user} type="text" className={this.fieldClass(user)}/>
 
@@ -265,7 +265,7 @@ export default class JobForm extends Component {
 
             {useLocalTime ? (
               <div className={styles.fullWidth}>
-                <span className={styles.localTime}>{`This job will run ${getJobNiceInterval(cronString.value, useLocalTime).toLowerCase()} locally.`}</span>
+                <span className={styles.localTime}>{`This job will run ${getJobNiceInterval(cronString.value, useLocalTime).toLowerCase()}${useLocalTime && ' locally'}.`}</span>
               </div>
             ) : null}
 
