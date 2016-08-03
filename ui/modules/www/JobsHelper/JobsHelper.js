@@ -97,12 +97,12 @@ export function getJobNiceInterval(cronString, useLocalTime) {
     return `Daily at ${time.format('h:mma')}`;
   })
 
-  .replace(/(\d{1,2}:\d{1,2}) on the 1st of every month/i, () => {
-    return `Monthly at ${time.format('h:mma')}`;
-  })
-
   .replace(/(\d{1,2}:\d{1,2}) on (sun|mon|tue|wed|thu|fri|sat)/i, (match, p1, p2) => {
     return `${days[p2.toLowerCase()]} at ${time.format('h:mma')}`;
+  })
+
+  .replace(/(\d{1,2}:\d{1,2}) on the 1st of every month/i, () => {
+    return `Monthly at ${time.format('h:mma')}`;
   });
 }
 
@@ -128,6 +128,19 @@ export const orderJobsBy = {
   },
 
   interval(job) {
-    return getJobNiceInterval(job.cronString);
+    const val = getJobNiceInterval(job.cronString);
+    return _.padStart([
+      'Hourly',
+      'Daily',
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday',
+      'Weekly',
+      'Monthly',
+    ].indexOf((/^(\w+) /i).exec(val)[1]), 2, 0) + ' ' + val;
   },
 };
