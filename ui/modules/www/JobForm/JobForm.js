@@ -349,7 +349,7 @@ export default class JobForm extends Component {
 
                 {jobParent ? (
                   <div className={styles.fullWidth}>
-                    <span className={styles.localTime}>{`This job will run soon after ${getJobNiceInterval(jobParent.cronString, useLocalTime).toLowerCase()} locally.`}</span>
+                    <span className={styles.localTime}>{`This job will run soon after ${getJobNiceInterval(jobParent.cronString, useLocalTime).toLowerCase()}${useLocalTime && ' locally'}.`}</span>
                   </div>
                 ) : null}
               </div>
@@ -361,7 +361,7 @@ export default class JobForm extends Component {
                 <input {...cronString} type="text" className={this.fieldClass(cronString)}/>
 
                 <div className={styles.fullWidth}>
-                  <span className={styles.localTime}>{`This job will run ${getJobNiceInterval(cronString.value, useLocalTime).toLowerCase()} locally.`}</span>
+                  <span className={styles.localTime}>{`This job will run ${getJobNiceInterval(cronString.value, useLocalTime).toLowerCase()}${useLocalTime && ' locally'}.`}</span>
                 </div>
               </div>
             ) : null}
