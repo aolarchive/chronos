@@ -129,9 +129,9 @@ export default class RunsList extends Component {
     };
   }
 
-  cancel(i) {
+  cancel(run) {
     return () => {
-      cancelRun(this.props.last[i])
+      cancelRun(run)
       .then(::this.tick, ::this.tick);
     };
   }
@@ -169,9 +169,9 @@ export default class RunsList extends Component {
                 </header>
 
                 {run.err &&
-                <div className={styles.body}>
-                  {run.err}
-                </div>}
+                  <div className={styles.body}>
+                    {run.err}
+                  </div>}
 
                 <footer className={cn(styles.itemFooter, shared.clearfix)}>
                   {run.time ? (
@@ -194,7 +194,7 @@ export default class RunsList extends Component {
                     ) : null}
 
                     {this.props.tab === 'queue' ? (
-                      <span className={styles.action} onClick={this.cancel(i)}>
+                      <span className={styles.action} onClick={this.cancel(run)}>
                         cancel
                       </span>
                     ) : null}
