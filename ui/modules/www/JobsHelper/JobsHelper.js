@@ -13,6 +13,16 @@ const types = [
   'report',
 ];
 
+const days = {
+  mon: 'Monday',
+  tue: 'Tuesday',
+  wed: 'Wednesday',
+  thu: 'Thursday',
+  fri: 'Friday',
+  sat: 'Saturday',
+  sun: 'Sunday',
+};
+
 // fns
 
 function getSchedule(job = '') {
@@ -61,7 +71,7 @@ export function getJobNiceInterval(cronString, useLocalTime) {
     return 'N/A';
   }
 
-  const {M, D, d, h, m} = schedule;
+  const {D, d, h, m} = schedule;
 
   const time = moment.utc().hour(h || 0).minute(m);
 
@@ -75,27 +85,25 @@ export function getJobNiceInterval(cronString, useLocalTime) {
     time.local();
   }
 
-  const hourStr = !h ? time.format(':mm') : time.format('h:mm a');
+  return prettyCron.toString(cronString)
 
-  if (!M && !D && !d && !h) {
-    return `Hourly at ${hourStr}`;
-  }
+  .replace(/every hour, on the hour/i, `Hourly at ${time.format(':mm')}`)
 
-  if (!M && !D && !d) {
-    return `Daily at ${hourStr}`;
-  }
+  .replace(/every (\d+)(th|rd|st|nd) minute past every hour/i, () => {
+    return `Hourly at ${time.format(':mm')}`;
+  })
 
-  if (!M && !d) {
-    return `${time.format('dddd')} at ${hourStr}`;
-  }
+  .replace(/(\d{1,2}:\d{1,2}) every day/i, () => {
+    return `Daily at ${time.format('h:mma')}`;
+  })
 
-  if (!M && !D) {
-    return `Monthly at ${hourStr}`;
-  }
+  .replace(/(\d{1,2}:\d{1,2}) on the 1st of every month/i, () => {
+    return `Monthly at ${time.format('h:mma')}`;
+  })
 
-  const pretty = prettyCron.toString(cronString);
-
-  return pretty;
+  .replace(/(\d{1,2}:\d{1,2}) on (sun|mon|tue|wed|thu|fri|sat)/i, (match, p1, p2) => {
+    return `${days[p2.toLowerCase()]} at ${time.format('h:mma')}`;
+  });
 }
 
 // sort
@@ -120,6 +128,6 @@ export const orderJobsBy = {
   },
 
   interval(job) {
-    return getJobNiceInterval(job);
+    return getJobNiceInterval(job.cronString);
   },
 };
