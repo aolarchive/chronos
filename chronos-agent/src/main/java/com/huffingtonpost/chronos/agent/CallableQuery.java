@@ -39,8 +39,9 @@ public class CallableQuery extends CallableJob implements Callable<Void>  {
   private String replacedReportQuery;
   private SupportedDriver driver;
 
-  public static final String tab = "\t";
-  public static final String enter = "\n";
+  public static final String TAB = "\t";
+  public static final String ENTER = "\n";
+  public static final String NULL = "NULL";
   public static final String QUERY_SPLITTER = ";";
   private static final long MAX_RESULTS_IN_BODY = 500;
 
@@ -116,19 +117,20 @@ public class CallableQuery extends CallableJob implements Callable<Void>  {
     setStatus(0);
   }
 
-  /***
-   *  save a copy of report to local file system in /[rootPath]/[jobId]/[jobDt in yyyyMMddHH]
-   * @param result
-   * @param rootPath
-   * @param plannedJob
-   */
+  public static String getJobReportDir(String rootPath, PlannedJob plannedJob) {
+    String job = String.valueOf(plannedJob.getJobSpec().getId());
+    return rootPath + File.separator + job;
+  }
+
+  public static String getJobReportPath(String reportJobPath, PlannedJob plannedJob) {
+    String dt = COMPLETED_DT_FMT.print(plannedJob.getReplaceTime());
+    return reportJobPath + File.separator + dt + ".tsv";
+  }
+
   @VisibleForTesting
   public static void writeReportToLocal(PersistentResultSet result, String rootPath, PlannedJob plannedJob) {
-
-    String job = String.valueOf(plannedJob.getJobSpec().getId());
-    String dt =  COMPLETED_DT_FMT.print(plannedJob.getReplaceTime());
-    String reportJobPath = rootPath + File.separator + job;
-    String reportPath = reportJobPath + File.separator + dt + ".tsv";
+    String reportJobPath = getJobReportDir(rootPath, plannedJob);
+    String reportPath = getJobReportPath(reportJobPath, plannedJob);
 
     //ensure dir exists
     boolean dirCreated = new File(reportJobPath).mkdirs();
@@ -140,16 +142,20 @@ public class CallableQuery extends CallableJob implements Callable<Void>  {
       bw = new BufferedWriter(fw);
       for (String columnName : result.getColumnNames()) {
         bw.write(columnName);
-        bw.write(tab);
+        bw.write(TAB);
       }
-      bw.write(enter);
+      bw.write(ENTER);
 
       for (List<Object> line : result.getData()) {
         for (Object element : line) {
-          bw.write(element.toString());
-          bw.write(tab);
+          if (element == null) {
+            bw.write(NULL);
+          } else {
+            bw.write(element.toString());
+          }
+          bw.write(TAB);
         }
-        bw.write(enter);
+        bw.write(ENTER);
       }
 
     } catch (IOException e) {
