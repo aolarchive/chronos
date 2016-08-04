@@ -93,6 +93,10 @@ public class AgentConsumer extends Stoppable {
     this.reportRootPath = reportRootPath;
   }
 
+  public String getReportRootPath() {
+    return reportRootPath;
+  }
+
   public void init() {
     LOG.info("Cleaning previously running jobs...");
     cleanupPreviouslyRunningJobs(dao, dao.getRunningJobs());

@@ -1,33 +1,25 @@
 package com.huffingtonpost.chronos.servlet;
 
-import java.io.File;
-import java.io.IOException;
-
+import com.huffingtonpost.chronos.agent.AgentConsumer;
+import com.huffingtonpost.chronos.agent.AgentDriver;
+import com.huffingtonpost.chronos.agent.CallableJob;
+import com.huffingtonpost.chronos.model.*;
+import com.huffingtonpost.chronos.util.CronExpression;
+import org.apache.log4j.Logger;
 import org.apache.zookeeper.KeeperException;
-
-import java.sql.SQLException;
-import java.util.*;
-import java.util.Map.Entry;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.apache.log4j.Logger;
+import org.springframework.web.bind.annotation.*;
 
-import com.huffingtonpost.chronos.agent.*;
-import com.huffingtonpost.chronos.model.*;
-import com.huffingtonpost.chronos.util.CronExpression;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.File;
+import java.io.IOException;
+import java.sql.SQLException;
+import java.util.*;
+import java.util.Map.Entry;
 
 @Controller
 @RequestMapping("/api")
@@ -248,7 +240,8 @@ public class ChronosController {
   }
 
   @RequestMapping(value="/queue", method=RequestMethod.DELETE)
-  public @ResponseBody Response cancelJob(@RequestBody final PlannedJob aJob) throws NotFoundException {
+  public @ResponseBody Response cancelJob(@RequestBody final PlannedJob aJob)
+    throws NotFoundException {
     int num = jobDao.cancelJob(aJob);
     if (num == 1) {
       return SUCCESS;
@@ -257,35 +250,33 @@ public class ChronosController {
     }
   }
 
-  /***
-   * Assume all reports are under reportRootPath with the structure of [jobId][reportTimeStamp] :
-   *
-   *  /[reportRootPath]/1/20160101, /[reportRootPath]/1/20160102...
-   *  /[reportRootPath]/2/20160301, /[reportRootPath]/2/20160308...
-   *  ...
-   *
-   * @return
-   */
+  public List<String> getReportsList(String root, Long id) {
+    String path;
+    if (id == null) {
+      path = root;
+    } else {
+      path = root + File.separator + String.valueOf(id);
+    }
+    File file = new File(path);
+    if (file.exists()) {
+      return Arrays.asList(file.list());
+    } else {
+      return null;
+    }
+  }
+
   @RequestMapping(value="/report-list", method=RequestMethod.GET)
-  public @ResponseBody List<String> getReportsList(@RequestParam(value="id", required=false) Long id)
-          throws NotFoundException {
+  public @ResponseBody List<String> getReportsList(
+    @RequestParam(value="id", required=false) Long id)
+    throws NotFoundException {
     if (reportRootPath == null) {
       throw new NotFoundException("Report Root Path is not set, check your Chronos configuration.");
     }
-
-    File file;
-    if (id == null) {
-      file = new File(reportRootPath);
+    List<String> listing = getReportsList(reportRootPath, id);
+    if (listing != null) {
+      return listing;
     } else {
-      try {
-        file = new File(reportRootPath + File.separator + String.valueOf(id));
-      } catch (NumberFormatException e) {
-        return Arrays.asList("Param id must be long");
-      }
+      throw new NotFoundException("Job id " + id + " was not found in report file system");
     }
-    if (file.exists()) {
-      return Arrays.asList(file.list());
-    }
-    throw new NotFoundException("Job/Dir " + id + " was not found in report file system");
   }
 }
