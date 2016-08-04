@@ -4,7 +4,6 @@ import com.huffingtonpost.chronos.model.*;
 import com.huffingtonpost.chronos.model.JobSpec.JobType;
 import com.huffingtonpost.chronos.persist.BackendException;
 import com.huffingtonpost.chronos.util.H2TestUtil;
-
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormatter;
@@ -17,15 +16,12 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import javax.mail.Session;
-
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.when;
 
 @PowerMockIgnore("javax.management.*")
@@ -173,31 +169,53 @@ public class TestAgentConsumer {
     assertEquals(1, consumer.getFinishedJobs(limit).size());
   }
 
-  @Test(timeout=10000)
-  public void testSaveReportToLocal() {
+  public String[] getLines(String file) throws IOException {
+    List<String> lines = new ArrayList<>();
+    try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+      String line;
+      while ((line = br.readLine()) != null) {
+        lines.add(line);
+      }
+    }
+    return lines.toArray(new String[lines.size()]);
+  }
 
+  @Test(timeout=10000)
+  public void testSaveReportToLocal() throws IOException {
+    String id1 = "199";
+    String aval1 = "NULL";
     JobSpec aJob = TestAgent.getTestJob("a job with report", dao);
-    aJob.setCode("CREATE TABLE IF NOT EXISTS test111 (ID INTEGER not NULL);\n"
-                         + "INSERT INTO test111 Values (199)");
+    aJob.setCode(String.format("CREATE TABLE IF NOT EXISTS test111" +
+      "(ID INTEGER, AVAL INTEGER);\n" +
+      "INSERT INTO test111 VALUES (%s, %s);", id1, aval1));
     aJob.setResultQuery("select * from test111 limit 10");
     aJob.setResultEmail(null);
     dao.createJob(aJob);
     PlannedJob pj = new PlannedJob(aJob, Utils.getCurrentTime());
 
     CallableQuery cj = new CallableQuery(pj, dao, reporting,
-                                       "example.com", mailInfo, null, drivers.get(0), folder.getRoot().getPath(), 1);
-
+      "example.com", mailInfo, null, drivers.get(0),
+      folder.getRoot().getPath(), 1);
     consumer.submitJob(cj);
+    TestAgent.runRunnable(consumer);
+
+    String reportJobPath =
+      CallableQuery.getJobReportDir(consumer.getReportRootPath(), pj);
+    String reportPath = CallableQuery.getJobReportPath(reportJobPath, pj);
 
     TestAgent.waitUntilJobsFinished(consumer, 1);
-
-    boolean isSuccess = cj.isSuccess();
-    assertEquals(true, isSuccess);
     assertEquals(true, cj.isDone());
+    assertEquals(true, cj.isSuccess());
     assertNotNull(folder.getRoot().list());
-    assertNotNull(folder.getRoot().listFiles()[0].list());
+    String actualPath =
+      folder.getRoot().listFiles()[0].listFiles()[0].getPath();
+    assertEquals(reportPath, actualPath);
 
-    dao.execute( "DROP TABLE IF EXISTS test111");
+    String[] expected = new String[] { "ID\tAVAL\t",
+      String.format("%s%s%s%s",
+                    id1, CallableQuery.TAB, aval1, CallableQuery.TAB)};
+    assertArrayEquals(expected, getLines(reportPath));
+    dao.execute("DROP TABLE IF EXISTS test111");
 
   }
 
