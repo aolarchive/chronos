@@ -10,6 +10,7 @@ import {createRequestMessage} from '../MessageStore/MessageStore';
 const initialState = {
   query: [],
   byID: {},
+  byParent: [],
   jobs: {},
   versions: {},
   deleted: [],
@@ -158,11 +159,11 @@ function queryJobsReducer(state, action) {
     state.query = action.res.body.map(jobToClient);
     state.byID = _.keyBy(state.query, 'id');
 
-    const clones = _.cloneDeep(state.byID);
+    const clones = _.cloneDeep(state.query);
 
     const children = _.chain(clones).reduce((arr, job) => {
       return job.children ? arr.concat(job.children) : arr;
-    }, []).unique();
+    }, []).uniq().value();
 
     state.byParent = clones.reduce((arr, job, id) => {
       if (children.indexOf(id) === -1) {

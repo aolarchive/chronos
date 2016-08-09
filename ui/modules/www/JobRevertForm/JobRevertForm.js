@@ -8,17 +8,16 @@ import {sqlOpts, shellOpts} from '../CodeHelper/CodeHelper.js';
 import {enableSiteLoader, disableSiteLoader} from '../SiteLoaderStore/SiteLoaderStore.js';
 import {querySources} from '../SourceStore/SourceStore.js';
 import {connect} from 'react-redux';
-import RerunJobsModal from '../RerunJobsModal/RerunJobsModal.js';
 import DeleteJobModal from '../DeleteJobModal/DeleteJobModal.js';
 import {createModal} from '../SiteModalStore/SiteModalStore.js';
 import _ from 'lodash';
-import {routeJobs} from '../RouterStore/RouterStore.js';
+import {routeJobs, routeJobUpdate} from '../RouterStore/RouterStore.js';
 import {createMessage} from '../MessageStore/MessageStore.js';
 import styles from './JobRevertForm.css';
 import formStyles from '../Styles/Form.css';
 import sharedStyles from '../Styles/Shared.css';
 import cn from 'classnames';
-import {getJobNiceInterval} from '../JobsHelper/JobsHelper.js';
+import {getJobNiceInterval, findRoot} from '../JobsHelper/JobsHelper.js';
 import {queryJobs} from '../JobsStore/JobsStore.js';
 
 // export
@@ -114,14 +113,8 @@ export default class JobRevertForm extends Component {
     this.props.resetForm();
   }
 
-  rerun() {
-    createModal({
-      title: 'Re-Run Job',
-      component: RerunJobsModal,
-      props: {
-        jobs: [this.props.job],
-      },
-    });
+  edit() {
+    routeJobUpdate(this.props.job);
   }
 
   deleteJob() {
@@ -131,52 +124,6 @@ export default class JobRevertForm extends Component {
       props: {
         job: this.props.job,
       },
-    });
-  }
-
-  getDependsDOM() {
-    const {job, jobs, jobsByID} = this.props;
-
-    if (!jobsByID) {
-      return null;
-    }
-
-    const children = collectChildren(job.children || [], jobsByID);
-
-    return jobs
-    .filter((thisJob) => {
-      return children.indexOf(thisJob.id) === -1;
-    })
-    .map((thisJob, i) => {
-      return <option key={i} value={thisJob.id}>{thisJob.name}</option>;
-    });
-  }
-
-  getSourcesDOM() {
-    if (!this.props.sources) {
-      return null;
-    }
-
-    return this.props.sources.map((source, i) => {
-      return <option key={i} value={source.name}>{source.name}</option>;
-    });
-  }
-
-  getIntervalDOM() {
-    return ['Hourly', 'Daily', 'Weekly', 'Monthly'].map((interval, i) => {
-      return <option key={i} value={interval}>{interval}</option>;
-    });
-  }
-
-  getWeekDOM() {
-    return ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day, i) => {
-      return <option key={i} value={i + 1}>{day}</option>;
-    });
-  }
-
-  getTimeDOM(len, pad) {
-    return Array.from(new Array(len), (x, i) => {return i;}).map((i) => {
-      return <option key={i} value={i}>{(pad && i < 10) ? '0' + i : i}</option>;
     });
   }
 
@@ -196,10 +143,8 @@ export default class JobRevertForm extends Component {
     };
   }
 
-  fieldClass(field, cls) {
-    return cn(formStyles.input, styles.input, cls, {
-      [styles.error]: field.error,
-    });
+  fieldClass(cls) {
+    return cn(formStyles.input, styles.input, cls);
   }
 
   toggleCode(query) {
@@ -219,65 +164,61 @@ export default class JobRevertForm extends Component {
   }
 
   render() {
-    const {fields: {enabled, shouldRerun, type, name, description, driver, user, password, cronString, resultEmail, statusEmail, id, lastModified, code, resultQuery, _dependsOn}, handleSubmit, hideSidebar, useLocalTime} = this.props;
+    const {fields: {version}, handleSubmit, hideSidebar, useLocalTime} = this.props;
+    const job = version.value;
 
-    const thisQuery = this.state.thisQuery === 'code' ? code : resultQuery;
+    const thisQuery = this.state.thisQuery === 'code' ? job.code : job.resultQuery;
     const jobParent = this.getJobParent();
 
     return (
       <form className={styles.JobRevertForm} onSubmit={handleSubmit}>
         <FilterBar>
-          <input {...name} placeholder="Name" type="text" className={this.fieldClass(name, styles.filterInput)}/>
+          <input type="text" className={this.fieldClass(styles.filterInput)} value={job.name} disabled/>
 
-          <button className={cn(formStyles.button, formStyles.buttonPrimary, styles.button)} onClick={handleSubmit}>Save</button>
-          {this.props.formKey !== 'create' &&
-            <button type="button" className={cn(formStyles.button, formStyles.hollowButton, styles.hollowButton)} onClick={::this.rerun}>
-              <span>Re-run</span>
-            </button>}
-          {this.props.formKey !== 'create' &&
-            <button type="button" className={cn(formStyles.button, formStyles.hollowButton, styles.hollowButton)} onClick={::this.deleteJob}>
-              <span>Delete</span>
-            </button>}
+          <button className={cn(formStyles.button, formStyles.buttonPrimary, styles.button)} onClick={handleSubmit}>
+            Revert
+          </button>
+
+          <button type="button" className={cn(formStyles.button, formStyles.hollowButton, styles.hollowButton)} onClick={::this.edit}>
+            <span>Edit</span>
+          </button>
+
+          <button type="button" className={cn(formStyles.button, formStyles.hollowButton, styles.hollowButton)} onClick={::this.deleteJob}>
+            <span>Delete</span>
+          </button>
         </FilterBar>
 
         <section className={cn(styles.editRegion, {[styles.hideSidebar]: hideSidebar})}>
           <div className={styles.editFieldsRegion}>
             <label className={formStyles.label}>Description</label>
-            <textarea {...description} className={this.fieldClass(description, styles.textarea)}/>
+            <textarea className={this.fieldClass(styles.textarea)} value={job.description} disabled/>
 
             <label className={formStyles.checkboxLabel}>
-              <input {...enabled} type="checkbox" className={this.fieldClass(enabled)}/>
+              <input type="checkbox" className={this.fieldClass()} value={job.enabled} disabled/>
               Enabled
             </label>
 
             <label className={formStyles.checkboxLabel}>
-              <input {...shouldRerun} type="checkbox" className={this.fieldClass(shouldRerun)}/>
+              <input type="checkbox" className={this.fieldClass()} value={job.shouldRerun} disabled/>
               Rerun on error
             </label>
 
             <hr/>
 
             <label className={formStyles.label}>Job Type</label>
-            <div className={formStyles.selectOverlay}/>
-            <select {...type} className={this.fieldClass(type)} defaultValue="Query" style={this.selectStyle(type.value)}>
-              <option value="Query">Query</option>
-              <option value="Script">Script</option>
-            </select>
+            <input type="text" className={this.fieldClass()} value={job.type} disabled/>
 
-            {type.value === 'Query' ? (
+            {job.type === 'Query' ? (
               <div className={styles.fullWidth}>
                 <label className={formStyles.label}>Data Source</label>
                 <div className={formStyles.selectOverlay}/>
-                <select {...driver} className={this.fieldClass(driver)} defaultValue="" style={this.selectStyle(driver.value)}>
-                  <option disabled value=""></option>
-                  {this.getSourcesDOM()}
-                </select>
+                <input className={this.fieldClass()} value={job.driver} disabled/>
 
-                <label className={formStyles.label}>Database Username (optional)</label>
-                <input {...user} type="text" className={this.fieldClass(user)}/>
+                <label className={formStyles.label}>Database Username</label>
+                <input type="text" className={this.fieldClass()} value={job.user} disabled/>
 
-                <label className={formStyles.label}>Database Password (optional)</label>
-                <input {...password} type="password" className={this.fieldClass(password)}/>
+                <label className={formStyles.label}>Database Password</label>
+                <input type="password" className={this.fieldClass()} value={job.password} disabled/>
               </div>
             ) : null}
 
@@ -291,11 +232,7 @@ export default class JobRevertForm extends Component {
             {this.state.dependsOn ? (
               <div>
                 <label className={formStyles.label}>Depends On</label>
-                <div className={formStyles.selectOverlay}/>
-                <select {..._dependsOn} className={this.fieldClass(_dependsOn)} defaultValue="" style={this.selectStyle(_dependsOn.value)}>
-                  <option disabled value=""></option>
-                  {this.getDependsDOM()}
-                </select>
+                <input className={this.fieldClass()} value={jobParent.name} disabled/>
 
                 {jobParent ? (
                   <div className={styles.fullWidth}>
@@ -308,45 +245,40 @@ export default class JobRevertForm extends Component {
             {!this.state.dependsOn ? (
               <div>
                 <label className={formStyles.label}><a className={styles.link} href="https://en.wikipedia.org/wiki/Cron#Format" target="_blank">CRON String</a></label>
-                <input {...cronString} type="text" className={this.fieldClass(cronString)}/>
+                <input type="text" className={this.fieldClass()} value={job.cronString} disabled/>
 
                 <div className={styles.fullWidth}>
-                  <span className={styles.localTime}>{`This job will run ${getJobNiceInterval(cronString.value, useLocalTime).toLowerCase()} locally.`}</span>
+                  <span className={styles.localTime}>{`This job will run ${getJobNiceInterval(job.cronString, useLocalTime).toLowerCase()} locally.`}</span>
                 </div>
               </div>
             ) : null}
 
             <hr/>
 
-            {type.value === 'Query' ? (
+            {job.type === 'Query' ? (
               <div className={styles.fullWidth}>
                 <label className={formStyles.label}>Result Email (one per line)</label>
-                <textarea {...resultEmail} className={this.fieldClass(resultEmail, styles.textarea)}/>
+                <textarea className={this.fieldClass(styles.textarea)} value={job.resultEmail} disabled/>
               </div>
             ) : null}
 
             <label className={formStyles.label}>Status Email (one per line)</label>
-            <textarea {...statusEmail} className={this.fieldClass(statusEmail, styles.textarea)}/>
-
-            {this.props.formKey !== 'create' &&
-              <input {...id} type="hidden" className={this.fieldClass(id)}/>}
-            {this.props.formKey !== 'create' &&
-              <input {...lastModified} type="hidden" className={this.fieldClass(lastModified)}/>}
+            <textarea className={this.fieldClass(styles.textarea)} value={job.statusEmail} disabled/>
           </div>
 
           <div className={styles.editCodeRegion}>
             <div className={cn(sharedStyles.tabs, styles.tabs)}>
-              <div className={this.tabClass(thisQuery === code)} onClick={this.toggleCode('code')}>
-                {type.value === 'Query' ? 'Query' : 'Script'}
+              <div className={this.tabClass(thisQuery === job.code)} onClick={this.toggleCode('code')}>
+                {job.type === 'Query' ? 'Query' : 'Script'}
               </div>
-              {type.value === 'Query' ? (
-                <div className={this.tabClass(thisQuery === resultQuery)} onClick={this.toggleCode('resultQuery')}>
+              {job.type === 'Query' ? (
+                <div className={this.tabClass(thisQuery === job.resultQuery)} onClick={this.toggleCode('resultQuery')}>
                   Result
                 </div>
               ) : null}
             </div>
 
-            <Codemirror key={thisQuery === code ? 'code' : 'resultQuery'} {...thisQuery} value={thisQuery.value || ''} options={type.value === 'Query' ? sqlOpts : shellOpts}/>
+            <Codemirror key={thisQuery === job.code ? 'code' : 'resultQuery'} {...thisQuery} value={thisQuery || ''} options={job.type === 'Query' ? sqlOpts : shellOpts}/>
           </div>
         </section>
       </form>

@@ -148,3 +148,35 @@ export const orderJobsBy = {
 >>>>>>> fix cron display
   },
 };
+
+// parents
+
+export function collectChildren(children, jobsByID) {
+  const newChildren = [];
+
+  children.forEach((child) => {
+    if (jobsByID[child].children && jobsByID[child].children.length) {
+      newChildren.push.apply(newChildren, collectChildren(jobsByID[child].children, jobsByID));
+    }
+  });
+
+  return children.concat(newChildren);
+}
+
+export function findParent(id, jobsByID) {
+  return _.findKey(jobsByID, (job) => {
+    return job.children && job.children.indexOf(id) > -1;
+  });
+}
+
+export function findRoot(id, jobsByID) {
+  let searchID = id;
+  let foundID = null;
+
+  while (searchID) {
+    searchID = findParent(searchID, jobsByID);
+    foundID = searchID || foundID;
+  }
+
+  return foundID;
+}

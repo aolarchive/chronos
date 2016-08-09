@@ -30,14 +30,15 @@ export default class SiteMain extends Component {
     className: PropTypes.string,
     hideSidebar: PropTypes.bool.isRequired,
     routeParams: PropTypes.object.isRequired,
+    sidebar: PropTypes.node,
     title: PropTypes.string,
   };
 
   render() {
-    const {className, title, children, hideSidebar, routeParams} = this.props;
+    const {className, title, children, sidebar, hideSidebar, routeParams} = this.props;
 
     return (
-      <main className={cn(styles.SiteMain, className, {[styles.hideSidebar]: hideSidebar})}>
+      <main className={cn(styles.SiteMain, className, {[styles.hideSidebar]: hideSidebar && !sidebar})}>
         <Helmet title={formatTitle(title)}/>
 
         {children}
