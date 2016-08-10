@@ -68,15 +68,14 @@ export const getJobVersions = createRequestAction({
 });
 
 function updateParent(action, after) {
-  const {_dependsOn} = action.send;
+  const {parentID} = action.query;
 
-  if (_dependsOn) {
-    const parent = _.cloneDeep(cache.byID[_dependsOn]);
+  if (parentID) {
+    const parent = _.cloneDeep(cache.byID[parentID]);
 
-    parent.children = parent.children ? _.uniq(parent.children.concat(_dependsOn)) : [_dependsOn];
-    parent._silent = true;
+    parent.children = parent.children ? _.uniq(parent.children.concat(action.id)) : [parentID];
 
-    updateJob(action.send._dependsOn, null, parent).then(after);
+    updateJob(parentID, {silent: 1}, parent).then(after);
   } else {
     after();
   }
@@ -87,7 +86,8 @@ export const createJob = createRequestAction({
   endpoint: '/api/job',
   method: 'post',
   requestFn(id, query, send) {
-    return {send: jobToServer(send)};
+    const {parentID} = send;
+    return {query: {parentID}, send: jobToServer(send)};
   },
   successFn(action) {
     updateParent(action, () => {
@@ -111,13 +111,14 @@ export const updateJob = createRequestAction({
   endpoint: '/api/job/:id',
   method: 'put',
   requestFn(id, query, send) {
-    return {send: jobToServer(send)};
+    const {parentID} = send;
+    return {query: {parentID, ...query}, send: jobToServer(send)};
   },
   successFn(action) {
     updateParent(action, () => {
       getJob(action.id);
 
-      if (!action.send._silent) {
+      if (!action.query.silent) {
         createRequestMessage(action.err, action.res, {
           title: 'Update Job',
           message: 'Job updated successfully.',

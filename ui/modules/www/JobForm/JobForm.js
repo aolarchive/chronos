@@ -18,7 +18,7 @@ import styles from './JobForm.css';
 import formStyles from '../Styles/Form.css';
 import sharedStyles from '../Styles/Shared.css';
 import cn from 'classnames';
-import {getJobNiceInterval, collectChildren, findRoot} from '../JobsHelper/JobsHelper.js';
+import {getJobNiceInterval, collectChildren, getRoot} from '../JobsHelper/JobsHelper.js';
 import {queryJobs} from '../JobsStore/JobsStore.js';
 
 // vars
@@ -29,7 +29,7 @@ const requiredFields = ['driver', 'name'];
 
 @reduxForm({
   form: 'job',
-  fields: ['enabled', 'shouldRerun', 'name', 'type', 'description', 'driver', 'user', 'password', 'resultEmail', 'statusEmail', 'id', 'lastModified', 'code', 'resultQuery', 'cronString', '_dependsOn', 'children'],
+  fields: ['enabled', 'shouldRerun', 'name', 'type', 'description', 'driver', 'user', 'password', 'resultEmail', 'statusEmail', 'id', 'lastModified', 'code', 'resultQuery', 'cronString', 'parentID', 'children'],
   validate(vals) {
     const errors = {};
 
@@ -46,8 +46,9 @@ const requiredFields = ['driver', 'name'];
     return errors;
   },
 })
-@connect((state) => {
+@connect((state, props) => {
   return {
+    jobParent: getRoot(props.job && props.job.id, state.jobs.byID),
     jobs: state.jobs.query,
     jobsByID: state.jobs.byID,
     loader: state.siteLoader,
@@ -126,6 +127,10 @@ export default class JobForm extends Component {
         level: 'error',
       });
     }
+
+    if (this.props.jobParent !== prevProps.jobParent) {
+      this.setDependsOn(!!this.props.jobParent);
+    }
   }
 
   componentWillUnmount() {
@@ -167,7 +172,7 @@ export default class JobForm extends Component {
 
     return jobs
     .filter((thisJob) => {
-      return children.indexOf(thisJob.id) === -1;
+      return children.indexOf(thisJob.id) === -1 && thisJob.id !== job.id;
     })
     .map((thisJob, i) => {
       return <option key={i} value={thisJob.id}>{thisJob.name}</option>;
@@ -202,16 +207,6 @@ export default class JobForm extends Component {
     });
   }
 
-  getJobParent() {
-    const {job, jobsByID} = this.props;
-
-    if (!job || !jobsByID) {
-      return null;
-    }
-
-    return jobsByID[findRoot(job.id, jobsByID)];
-  }
-
   selectStyle(val) {
     return {
       color: _.isUndefined(val) && 'rgb(201, 201, 201)',
@@ -240,11 +235,14 @@ export default class JobForm extends Component {
     this.setState({dependsOn: event.target.value});
   }
 
+  setDependsOn(dependsOn) {
+    this.setState({dependsOn});
+  }
+
   render() {
-    const {fields: {enabled, shouldRerun, type, name, description, driver, user, password, cronString, resultEmail, statusEmail, id, lastModified, code, resultQuery, _dependsOn}, handleSubmit, hideSidebar, useLocalTime} = this.props;
+    const {fields: {enabled, shouldRerun, type, name, description, driver, user, password, cronString, resultEmail, statusEmail, id, lastModified, code, resultQuery, parentID}, handleSubmit, hideSidebar, useLocalTime, jobParent} = this.props;
 
     const thisQuery = this.state.thisQuery === 'code' ? code : resultQuery;
-    const jobParent = this.getJobParent();
 
     return (
       <form className={styles.JobForm} onSubmit={handleSubmit}>
@@ -318,7 +316,7 @@ export default class JobForm extends Component {
               <div>
                 <label className={formStyles.label}>Depends On</label>
                 <div className={formStyles.selectOverlay}/>
-                <select {..._dependsOn} className={this.fieldClass(_dependsOn)} defaultValue="" style={this.selectStyle(_dependsOn.value)}>
+                <select {...parentID} className={this.fieldClass(parentID)} defaultValue="" style={this.selectStyle(parentID.value)}>
                   <option disabled value=""></option>
                   {this.getDependsDOM()}
                 </select>
