@@ -50,6 +50,8 @@ export function jobToClient(job) {
 }
 
 export function jobToServer(job) {
+  delete job.parentID;
+
   return _.assign(job, {
     resultEmail: _.isArray(job.resultEmail) ? job.resultEmail : job.resultEmail.split('\n').map((line) => {
       return line.trim();
@@ -160,9 +162,11 @@ export function collectChildren(children, jobsByID) {
 }
 
 export function findParent(id, jobsByID) {
-  return _.findKey(jobsByID, (job) => {
+  const key = _.findKey(jobsByID, (job) => {
     return job.children && job.children.indexOf(id) > -1;
   });
+
+  return key ? parseInt(key) : null;
 }
 
 export function findRoot(id, jobsByID) {
@@ -175,4 +179,12 @@ export function findRoot(id, jobsByID) {
   }
 
   return foundID;
+}
+
+export function getRoot(id, jobsByID) {
+  if (!id || !jobsByID) {
+    return null;
+  }
+
+  return jobsByID[findRoot(id, jobsByID)];
 }
