@@ -12,7 +12,7 @@ import RerunJobsModal from '../RerunJobsModal/RerunJobsModal.js';
 import DeleteJobModal from '../DeleteJobModal/DeleteJobModal.js';
 import {createModal} from '../SiteModalStore/SiteModalStore.js';
 import _ from 'lodash';
-import {routeJobs} from '../RouterStore/RouterStore.js';
+import {routeJobs, routeJobRevert} from '../RouterStore/RouterStore.js';
 import {createMessage} from '../MessageStore/MessageStore.js';
 import styles from './JobForm.css';
 import formStyles from '../Styles/Form.css';
@@ -142,6 +142,10 @@ export default class JobForm extends Component {
     });
   }
 
+  revertJob() {
+    routeJobRevert(this.props.job);
+  }
+
   deleteJob() {
     createModal({
       title: 'Delete Job',
@@ -251,6 +255,10 @@ export default class JobForm extends Component {
           {this.props.formKey !== 'create' &&
             <button type="button" className={cn(formStyles.button, formStyles.hollowButton, styles.hollowButton)} onClick={::this.rerun}>
               <span>Re-run</span>
+            </button>}
+          {this.props.formKey !== 'create' &&
+            <button type="button" className={cn(formStyles.button, formStyles.hollowButton, styles.hollowButton)} onClick={::this.revertJob}>
+              <span>Revert</span>
             </button>}
           {this.props.formKey !== 'create' &&
             <button type="button" className={cn(formStyles.button, formStyles.hollowButton, styles.hollowButton)} onClick={::this.deleteJob}>

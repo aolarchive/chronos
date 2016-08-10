@@ -12,7 +12,6 @@ import DeleteJobModal from '../DeleteJobModal/DeleteJobModal.js';
 import {createModal} from '../SiteModalStore/SiteModalStore.js';
 import _ from 'lodash';
 import {routeJobs, routeJobUpdate} from '../RouterStore/RouterStore.js';
-import {createMessage} from '../MessageStore/MessageStore.js';
 import styles from './JobRevertForm.css';
 import formStyles from '../Styles/Form.css';
 import sharedStyles from '../Styles/Shared.css';
@@ -69,21 +68,13 @@ export default class JobRevertForm extends Component {
     enableSiteLoader('JobRevertForm');
 
     this.props.initializeForm({
-      startDay: 1,
-      code: '',
-      resultQuery: '',
-      resultEmail: '',
-      statusEmail: '',
+      version: _.last(this.props.versions),
     });
   }
 
   componentWillUpdate(nextProps) {
-    if (nextProps.fields.type.value === 'Script' && this.state.thisQuery !== 'code') {
+    if (nextProps.fields.version.type === 'Script' && this.state.thisQuery !== 'code') {
       this.setState({thisQuery: 'code'});
-    }
-
-    if (!this.props.fields.type.value) {
-      this.props.fields.type.onChange('Query');
     }
   }
 
@@ -100,11 +91,9 @@ export default class JobRevertForm extends Component {
       routeJobs();
     }
 
-    if (!_.isEmpty(this.props.errors) && this.props.submitFailed) {
-      createMessage({
-        title: 'Save Job',
-        message: 'Please fill in required fields.',
-        level: 'error',
+    if (this.props.versions !== prevProps.versions) {
+      this.props.initializeForm({
+        version: _.last(this.props.versions),
       });
     }
   }
@@ -211,7 +200,6 @@ export default class JobRevertForm extends Component {
             {job.type === 'Query' ? (
               <div className={styles.fullWidth}>
                 <label className={formStyles.label}>Data Source</label>
-                <div className={formStyles.selectOverlay}/>
                 <input className={this.fieldClass()} value={job.driver} disabled/>
 
                 <label className={formStyles.label}>Database Username</label>
@@ -224,15 +212,10 @@ export default class JobRevertForm extends Component {
 
             <hr/>
 
-            <label className={formStyles.checkboxLabel}>
-              <input type="checkbox" className={cn(formStyles.input, styles.input)} onChange={::this.toggleDependsOn}/>
-              This job depends on another job.
-            </label>
-
             {this.state.dependsOn ? (
               <div>
                 <label className={formStyles.label}>Depends On</label>
-                <input className={this.fieldClass()} value={jobParent.name} disabled/>
+                <input className={this.fieldClass()} value={jobParent ? jobParent.name : ''} disabled/>
 
                 {jobParent ? (
                   <div className={styles.fullWidth}>
