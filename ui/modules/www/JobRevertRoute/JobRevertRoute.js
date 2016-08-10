@@ -8,6 +8,7 @@ import {connect} from 'react-redux';
 import styles from './JobRevertRoute.css';
 import SiteMain from '../SiteMain/SiteMain.js';
 import cn from 'classnames';
+import VersionsList from '../VersionsList/VersionsList.js';
 
 // export
 
@@ -38,7 +39,7 @@ export default class JobRevertRoute extends Component {
     }
 
     if (this.props.versions !== prevProps.versions) {
-      disableSiteLoader('revert-job');
+      disableSiteLoader('revert-versions');
     }
   }
 
@@ -55,8 +56,8 @@ export default class JobRevertRoute extends Component {
     const title = job ? 'Job: ' + job.name : 'Loading...';
 
     return (
-      <SiteMain {...props} title={title} className={this.className()}>
-        <JobRevertForm formKey={this.props.routeParams.id} job={job} onSubmit={this.handleSubmit.bind(this)} versions={versions}/>
+      <SiteMain {...props} title={title} className={this.className()} sidebar={VersionsList}>
+        {job && versions && <JobRevertForm formKey={this.props.routeParams.id} job={job} onSubmit={this.handleSubmit.bind(this)} versions={versions}/>}
       </SiteMain>
     );
   }

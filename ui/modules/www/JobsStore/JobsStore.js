@@ -200,7 +200,7 @@ function getJobReducer(state, action) {
 function getJobVersionsReducer(state, action) {
   switch (action.status) {
   case 'success':
-    state.versions[action.res.body.id] = action.res.body.map(jobToClient);
+    state.versions[action.id] = action.res.body.map(jobToClient);
     cache = _.clone(state);
     return _.clone(state);
   }
