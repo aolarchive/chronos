@@ -32,7 +32,6 @@ import {queryJobs} from '../JobsStore/JobsStore.js';
     loader: state.siteLoader,
     sources: state.sources.query,
     deletedJobs: state.jobs.deleted,
-    hideSidebar: state.localStorage.hideSidebar === 'true',
     useLocalTime: state.localStorage.useLocalTime === 'true',
   };
 })
@@ -44,7 +43,6 @@ export default class JobRevertForm extends Component {
     form: PropTypes.object,
     formKey: PropTypes.string.isRequired,
     handleSubmit: PropTypes.func.isRequired,
-    hideSidebar: PropTypes.bool.isRequired,
     initializeForm: PropTypes.func.isRequired,
     job: PropTypes.object,
     jobs: PropTypes.array.isRequired,
@@ -153,7 +151,7 @@ export default class JobRevertForm extends Component {
   }
 
   render() {
-    const {fields: {version}, handleSubmit, hideSidebar, useLocalTime} = this.props;
+    const {fields: {version}, handleSubmit, useLocalTime} = this.props;
     const job = version.value;
 
     const thisQuery = this.state.thisQuery === 'code' ? job.code : job.resultQuery;
@@ -177,7 +175,7 @@ export default class JobRevertForm extends Component {
           </button>
         </FilterBar>
 
-        <section className={cn(styles.editRegion, {[styles.hideSidebar]: hideSidebar})}>
+        <section className={cn(styles.editRegion)}>
           <div className={styles.editFieldsRegion}>
             <label className={formStyles.label}>Description</label>
             <textarea className={this.fieldClass(styles.textarea)} value={job.description} disabled/>

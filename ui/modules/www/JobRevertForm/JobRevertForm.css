@@ -17,10 +17,6 @@
   bottom: 0;
   display: flex;
   transition: right var(--trans-anima);
-
-  &.hideSidebar {
-    right: 1bl;
-  }
 }
 
 /* edit fields */
