@@ -5,7 +5,7 @@ import {connect} from 'react-redux';
 import cn from 'classnames';
 import styles from './VersionsList.css';
 import shared from '../Styles/Shared.css';
-import {getJobVersions} from '../JobsStore/JobsStore.js';
+import {getJobVersions, selectJobVersion} from '../JobsStore/JobsStore.js';
 import moment from 'moment';
 
 // export
@@ -13,7 +13,8 @@ import moment from 'moment';
 @connect((state, props) => {
   return {
     job: state.jobs.jobs[props.id] || null,
-    versions: state.jobs.versions[props.id] || [],
+    version: state.jobs.versionSelected[props.id],
+    versions: state.jobs.versions[props.id],
   };
 })
 export default class VersionsList extends Component {
@@ -21,6 +22,7 @@ export default class VersionsList extends Component {
     className: PropTypes.string,
     id: PropTypes.string,
     job: PropTypes.object,
+    version: PropTypes.object,
     versions: PropTypes.array,
   };
 
@@ -35,8 +37,8 @@ export default class VersionsList extends Component {
   }
 
   render() {
-    const {className, versions} = this.props;
-    const reversed = versions.slice(0).reverse();
+    const {className, version, versions, job} = this.props;
+    const reversed = (versions || []).slice(0).reverse();
 
     return (
       <aside className={cn(shared.sidebar, className)}>
@@ -47,8 +49,10 @@ export default class VersionsList extends Component {
         <div className={cn(shared.sidebarContent)}>
           {reversed.map((v, i) => {
             return (
-              <section key={i} className={cn(styles.item, styles.version, styles.activeVersion)}>
-                {moment(v).format('h:mma on MMM D, YYYY')}
+              <section key={i} className={cn(styles.item, styles.version, {
+                [styles.activeVersion]: version ? v.lastModified === version.lastModified : i === 0,
+              })} onClick={() => selectJobVersion(job, v)}>
+                {moment(v.lastModified).format('h:mma on MMM D, YYYY')}
               </section>
             );
           })}

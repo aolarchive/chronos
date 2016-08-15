@@ -9,6 +9,7 @@ import styles from './JobRevertRoute.css';
 import SiteMain from '../SiteMain/SiteMain.js';
 import cn from 'classnames';
 import VersionsList from '../VersionsList/VersionsList.js';
+import {routeJobUpdate} from '../RouterStore/RouterStore.js';
 
 // export
 
@@ -48,7 +49,9 @@ export default class JobRevertRoute extends Component {
   }
 
   handleSubmit(data) {
-    updateJob(this.props.routeParams.id, null, data.version);
+    updateJob(this.props.routeParams.id, null, data).then(() => {
+      routeJobUpdate(this.props.routeParams.id);
+    });
   }
 
   render() {
@@ -57,7 +60,7 @@ export default class JobRevertRoute extends Component {
 
     return (
       <SiteMain {...props} title={title} className={this.className()} sidebar={VersionsList}>
-        {job && versions && <JobRevertForm formKey={this.props.routeParams.id} job={job} onSubmit={this.handleSubmit.bind(this)} versions={versions}/>}
+        {job && versions && <JobRevertForm formKey={this.props.routeParams.id} job={job} handleSubmit={::this.handleSubmit} versions={versions}/>}
       </SiteMain>
     );
   }

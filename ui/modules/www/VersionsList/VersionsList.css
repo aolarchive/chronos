@@ -14,6 +14,7 @@
   margin-bottom: 1px;
   transition: background var(--trans-anima);
   text-align: center;
+  cursor: pointer;
 
   &:nth-child(odd) {
     background-color: var(--table-row-odd);
@@ -53,4 +54,8 @@
       border-color: var(--selected-color);
     }
   }
+}
+
+.activeVersion {
+  font-weight: bold;
 }
