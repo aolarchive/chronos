@@ -31,7 +31,7 @@ export default class SiteMain extends Component {
     className: PropTypes.string,
     hideSidebar: PropTypes.bool.isRequired,
     routeParams: PropTypes.object.isRequired,
-    sidebar: PropTypes.element,
+    sidebar: PropTypes.any,
     title: PropTypes.string,
   };
 

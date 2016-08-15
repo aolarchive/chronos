@@ -1,7 +1,7 @@
 // import
 
 import _ from 'lodash';
-import {createRequestAction} from '../ActionHelper/ActionHelper';
+import {createRequestAction, createAction} from '../ActionHelper/ActionHelper';
 import {jobToClient, jobToServer} from '../JobsHelper/JobsHelper';
 import {createRequestMessage} from '../MessageStore/MessageStore';
 
@@ -13,6 +13,7 @@ const initialState = {
   byParent: [],
   jobs: {},
   versions: {},
+  versionSelected: {},
   deleted: [],
 };
 
@@ -27,9 +28,12 @@ export const types = {
   createJob: 'JOBS_CREATE',
   updateJob: 'JOBS_UPDATE',
   deleteJob: 'JOBS_DELETE',
+  selectJobVersion: 'JOBS_SELECT_VERSION',
 };
 
 // actions
+
+export const selectJobVersion = createAction(types.selectJobVersion, ['job', 'version']);
 
 export const queryJobs = createRequestAction({
   type: types.queryJobs,
@@ -240,6 +244,11 @@ function deleteJobReducer(state, action) {
   return state;
 }
 
+function selectJobVersionReducer(state, action) {
+  state.versionSelected[action.job.id || action.job] = action.version;
+  return _.clone(state);
+}
+
 export function jobsReducer(state = initialState, action) {
   switch (action.type) {
   case types.queryJobs:
@@ -259,6 +268,9 @@ export function jobsReducer(state = initialState, action) {
 
   case types.deleteJob:
     return deleteJobReducer(state, action);
+
+  case types.selectJobVersion:
+    return selectJobVersionReducer(state, action);
   }
 
   return state;

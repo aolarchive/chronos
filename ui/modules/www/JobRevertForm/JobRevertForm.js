@@ -2,7 +2,6 @@
 
 import React, {Component, PropTypes} from 'react';
 import FilterBar from '../FilterBar/FilterBar';
-import {reduxForm} from 'redux-form';
 import Codemirror from 'react-codemirror';
 import {sqlOpts, shellOpts} from '../CodeHelper/CodeHelper.js';
 import {enableSiteLoader, disableSiteLoader} from '../SiteLoaderStore/SiteLoaderStore.js';
@@ -21,11 +20,9 @@ import {queryJobs} from '../JobsStore/JobsStore.js';
 
 // export
 
-@reduxForm({
-  form: 'jobrevert',
-  fields: ['version'],
-})
-@connect((state) => {
+@connect((state, props) => {
+  const {job, versions} = props;
+
   return {
     jobs: state.jobs.query,
     jobsByID: state.jobs.byID,
@@ -33,25 +30,20 @@ import {queryJobs} from '../JobsStore/JobsStore.js';
     sources: state.sources.query,
     deletedJobs: state.jobs.deleted,
     useLocalTime: state.localStorage.useLocalTime === 'true',
+    version: state.jobs.versionSelected[job && job.id] || _.last(versions),
   };
 })
 export default class JobRevertForm extends Component {
   static propTypes = {
     deletedJobs: PropTypes.array.isRequired,
-    errors: PropTypes.object.isRequired,
-    fields: PropTypes.object.isRequired,
-    form: PropTypes.object,
-    formKey: PropTypes.string.isRequired,
     handleSubmit: PropTypes.func.isRequired,
-    initializeForm: PropTypes.func.isRequired,
     job: PropTypes.object,
     jobs: PropTypes.array.isRequired,
     jobsByID: PropTypes.object.isRequired,
     loader: PropTypes.object.isRequired,
-    resetForm: PropTypes.func.isRequired,
     sources: PropTypes.array,
-    submitFailed: PropTypes.bool.isRequired,
     useLocalTime: PropTypes.bool.isRequired,
+    version: PropTypes.object,
     versions: PropTypes.array,
   };
 
@@ -64,14 +56,10 @@ export default class JobRevertForm extends Component {
     querySources();
     queryJobs();
     enableSiteLoader('JobRevertForm');
-
-    this.props.initializeForm({
-      version: _.last(this.props.versions),
-    });
   }
 
   componentWillUpdate(nextProps) {
-    if (nextProps.fields.version.type === 'Script' && this.state.thisQuery !== 'code') {
+    if (nextProps.version.type === 'Script' && this.state.thisQuery !== 'code') {
       this.setState({thisQuery: 'code'});
     }
   }
@@ -81,23 +69,9 @@ export default class JobRevertForm extends Component {
       disableSiteLoader('JobRevertForm');
     }
 
-    if (prevProps.job !== this.props.job) {
-      this.props.initializeForm(this.props.job);
-    }
-
     if (prevProps.job && this.props.deletedJobs.length && prevProps.job.id === _.last(this.props.deletedJobs).id) {
       routeJobs();
     }
-
-    if (this.props.versions !== prevProps.versions) {
-      this.props.initializeForm({
-        version: _.last(this.props.versions),
-      });
-    }
-  }
-
-  componentWillUnmount() {
-    this.props.resetForm();
   }
 
   edit() {
@@ -151,18 +125,22 @@ export default class JobRevertForm extends Component {
   }
 
   render() {
-    const {fields: {version}, handleSubmit, useLocalTime} = this.props;
-    const job = version.value;
+    const {handleSubmit, useLocalTime, version} = this.props;
 
-    const thisQuery = this.state.thisQuery === 'code' ? job.code : job.resultQuery;
+    const thisQuery = this.state.thisQuery === 'code' ? version.code : version.resultQuery;
     const jobParent = this.getJobParent();
 
-    return (
-      <form className={styles.JobRevertForm} onSubmit={handleSubmit}>
-        <FilterBar>
-          <input type="text" className={this.fieldClass(styles.filterInput)} value={job.name} disabled/>
+    const submit = (e) => {
+      e.preventDefault();
+      handleSubmit(version);
+    };
 
-          <button className={cn(formStyles.button, formStyles.buttonPrimary, styles.button)} onClick={handleSubmit}>
+    return (
+      <form className={styles.JobRevertForm} onSubmit={submit}>
+        <FilterBar>
+          <input type="text" className={this.fieldClass(styles.filterInput)} value={version.name} disabled/>
+
+          <button className={cn(formStyles.button, formStyles.buttonPrimary, styles.button)} onClick={submit}>
             Revert
           </button>
 
@@ -178,33 +156,33 @@ export default class JobRevertForm extends Component {
         <section className={cn(styles.editRegion)}>
           <div className={styles.editFieldsRegion}>
             <label className={formStyles.label}>Description</label>
-            <textarea className={this.fieldClass(styles.textarea)} value={job.description} disabled/>
+            <textarea className={this.fieldClass(styles.textarea)} value={version.description} disabled/>
 
             <label className={formStyles.checkboxLabel}>
-              <input type="checkbox" className={this.fieldClass()} value={job.enabled} disabled/>
+              <input type="checkbox" className={this.fieldClass()} value={version.enabled} disabled/>
               Enabled
             </label>
 
             <label className={formStyles.checkboxLabel}>
-              <input type="checkbox" className={this.fieldClass()} value={job.shouldRerun} disabled/>
+              <input type="checkbox" className={this.fieldClass()} value={version.shouldRerun} disabled/>
               Rerun on error
             </label>
 
             <hr/>
 
             <label className={formStyles.label}>Job Type</label>
-            <input type="text" className={this.fieldClass()} value={job.type} disabled/>
+            <input type="text" className={this.fieldClass()} value={version.type} disabled/>
 
-            {job.type === 'Query' ? (
+            {version.type === 'Query' ? (
               <div className={styles.fullWidth}>
                 <label className={formStyles.label}>Data Source</label>
-                <input className={this.fieldClass()} value={job.driver} disabled/>
+                <input className={this.fieldClass()} value={version.driver} disabled/>
 
                 <label className={formStyles.label}>Database Username</label>
-                <input type="text" className={this.fieldClass()} value={job.user} disabled/>
+                <input type="text" className={this.fieldClass()} value={version.user} disabled/>
 
                 <label className={formStyles.label}>Database Password</label>
-                <input type="password" className={this.fieldClass()} value={job.password} disabled/>
+                <input type="password" className={this.fieldClass()} value={version.password} disabled/>
               </div>
             ) : null}
 
@@ -226,40 +204,40 @@ export default class JobRevertForm extends Component {
             {!this.state.dependsOn ? (
               <div>
                 <label className={formStyles.label}><a className={styles.link} href="https://en.wikipedia.org/wiki/Cron#Format" target="_blank">CRON String</a></label>
-                <input type="text" className={this.fieldClass()} value={job.cronString} disabled/>
+                <input type="text" className={this.fieldClass()} value={version.cronString} disabled/>
 
                 <div className={styles.fullWidth}>
-                  <span className={styles.localTime}>{`This job will run ${getJobNiceInterval(job.cronString, useLocalTime).toLowerCase()} locally.`}</span>
+                  <span className={styles.localTime}>{`This job will run ${getJobNiceInterval(version.cronString, useLocalTime).toLowerCase()} locally.`}</span>
                 </div>
               </div>
             ) : null}
 
             <hr/>
 
-            {job.type === 'Query' ? (
+            {version.type === 'Query' ? (
               <div className={styles.fullWidth}>
                 <label className={formStyles.label}>Result Email (one per line)</label>
-                <textarea className={this.fieldClass(styles.textarea)} value={job.resultEmail} disabled/>
+                <textarea className={this.fieldClass(styles.textarea)} value={version.resultEmail} disabled/>
               </div>
             ) : null}
 
             <label className={formStyles.label}>Status Email (one per line)</label>
-            <textarea className={this.fieldClass(styles.textarea)} value={job.statusEmail} disabled/>
+            <textarea className={this.fieldClass(styles.textarea)} value={version.statusEmail} disabled/>
           </div>
 
           <div className={styles.editCodeRegion}>
             <div className={cn(sharedStyles.tabs, styles.tabs)}>
-              <div className={this.tabClass(thisQuery === job.code)} onClick={this.toggleCode('code')}>
-                {job.type === 'Query' ? 'Query' : 'Script'}
+              <div className={this.tabClass(thisQuery === version.code)} onClick={this.toggleCode('code')}>
+                {version.type === 'Query' ? 'Query' : 'Script'}
               </div>
-              {job.type === 'Query' ? (
-                <div className={this.tabClass(thisQuery === job.resultQuery)} onClick={this.toggleCode('resultQuery')}>
+              {version.type === 'Query' ? (
+                <div className={this.tabClass(thisQuery === version.resultQuery)} onClick={this.toggleCode('resultQuery')}>
                   Result
                 </div>
               ) : null}
             </div>
 
-            <Codemirror key={thisQuery === job.code ? 'code' : 'resultQuery'} {...thisQuery} value={thisQuery || ''} options={job.type === 'Query' ? sqlOpts : shellOpts}/>
+            <Codemirror key={thisQuery === version.code ? 'code' : 'resultQuery'} {...thisQuery} value={thisQuery || ''} options={_.assign({readOnly: true}, version.type === 'Query' ? sqlOpts : shellOpts)}/>
           </div>
         </section>
       </form>
