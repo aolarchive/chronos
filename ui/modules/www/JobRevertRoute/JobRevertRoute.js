@@ -2,7 +2,7 @@
 
 import React, {Component, PropTypes} from 'react';
 import {enableSiteLoader, disableSiteLoader} from '../SiteLoaderStore/SiteLoaderStore';
-import {getJob, updateJob, getJobVersions} from '../JobsStore/JobsStore.js';
+import {getJob, updateJob, getJobVersions, selectJobVersion} from '../JobsStore/JobsStore.js';
 import JobRevertForm from '../JobRevertForm/JobRevertForm';
 import {connect} from 'react-redux';
 import styles from './JobRevertRoute.css';
@@ -51,6 +51,7 @@ export default class JobRevertRoute extends Component {
   handleSubmit(data) {
     updateJob(this.props.routeParams.id, null, data).then(() => {
       routeJobUpdate(this.props.routeParams.id);
+      selectJobVersion(this.props.routeParams.id, null);
     });
   }
 
