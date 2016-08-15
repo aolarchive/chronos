@@ -231,8 +231,8 @@ export default class JobForm extends Component {
     });
   }
 
-  toggleDependsOn(event) {
-    this.setState({dependsOn: event.target.value});
+  toggleDependsOn() {
+    this.setState({dependsOn: !this.state.dependsOn});
   }
 
   setDependsOn(dependsOn) {
@@ -308,7 +308,7 @@ export default class JobForm extends Component {
             <hr/>
 
             <label className={formStyles.checkboxLabel}>
-              <input type="checkbox" className={cn(formStyles.input, styles.input)} onChange={::this.toggleDependsOn}/>
+              <input type="checkbox" className={cn(formStyles.input, styles.input)} onChange={::this.toggleDependsOn} checked={this.state.dependsOn}/>
               This job depends on another job.
             </label>
 
@@ -316,7 +316,7 @@ export default class JobForm extends Component {
               <div>
                 <label className={formStyles.label}>Depends On</label>
                 <div className={formStyles.selectOverlay}/>
-                <select {...parentID} className={this.fieldClass(parentID)} defaultValue="" style={this.selectStyle(parentID.value)}>
+                <select {...parentID} className={this.fieldClass(parentID)} defaultValue="" style={this.selectStyle(parentID.value)} value={jobParent && jobParent.id}>
                   <option disabled value=""></option>
                   {this.getDependsDOM()}
                 </select>
