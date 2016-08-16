@@ -130,8 +130,8 @@ export const orderJobsBy = {
   },
 
   interval(job) {
-<<<<<<< HEAD
     const val = getJobNiceInterval(job.cronString);
+    
     return _.padStart([
       'Hourly',
       'Daily',
@@ -145,9 +145,6 @@ export const orderJobsBy = {
       'Weekly',
       'Monthly',
     ].indexOf((/^(\w+) /i).exec(val)[1]), 2, 0) + ' ' + val;
-=======
-    return getJobNiceInterval(job.cronString);
->>>>>>> fix cron display
   },
 };
 

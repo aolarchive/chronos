@@ -296,7 +296,7 @@ export default class JobForm extends Component {
                   <option disabled value=""></option>
                   {this.getSourcesDOM()}
                 </select>
-                
+
                 <label className={formStyles.label}>Database Username (optional)</label>
                 <input {...user} type="text" className={this.fieldClass(user)}/>
 
