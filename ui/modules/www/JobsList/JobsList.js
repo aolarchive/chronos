@@ -98,7 +98,7 @@ export default class JobsList extends Component {
                   <td className={this.cellClassName('type')}>
                     <div className={cn(styles.icon, 'icon icon-' + getJobType(job))}/>
                   </td>
-                  
+
                   <td className={this.cellClassName('name')}>
                     {job.name}
                   </td>
