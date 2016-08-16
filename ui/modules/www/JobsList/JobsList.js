@@ -105,9 +105,9 @@ export default class JobsList extends Component {
 
                   <td className={this.cellClassName('interval')}>
                     {getJobNiceInterval(job.cronString, useLocalTime).toLowerCase()}
-                </td>
-              </tr>
-            );
+                  </td>
+                </tr>
+              );
             })}
         </tbody>
       </table>

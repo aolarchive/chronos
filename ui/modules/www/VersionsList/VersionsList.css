@@ -1,0 +1,61 @@
+/* rules */
+
+/* stylelint-disable declaration-no-important */
+
+/* import */
+
+@import '../Styles/Vars.css';
+
+/* styles */
+
+.item {
+  position: relative;
+  padding: 0.5bl;
+  margin-bottom: 1px;
+  transition: background var(--trans-anima);
+  text-align: center;
+  cursor: pointer;
+
+  &:nth-child(odd) {
+    background-color: var(--table-row-odd);
+  }
+
+  &::before,
+  &::after {
+    content: '';
+    display: block;
+    position: absolute;
+    width: calc(100% + 1px);
+    height: calc(1.5bl + 1px);
+    pointer-events: none;
+    transition: border var(--trans-anima);
+  }
+
+  &::before {
+    top: -1px;
+    left: -1px;
+    border-top: 1px solid var(--table-border-color);
+    border-left: 1px solid var(--table-border-color);
+  }
+
+  &::after {
+    bottom: -1px;
+    right: -1px;
+    border-bottom: 1px solid var(--table-border-color);
+    border-right: 1px solid var(--table-border-color);
+  }
+
+  &:hover {
+    background-color: color(var(--selected-color) tint(80%)) !important;
+    z-index: 1;
+
+    &::before,
+    &::after {
+      border-color: var(--selected-color);
+    }
+  }
+}
+
+.activeVersion {
+  font-weight: bold;
+}

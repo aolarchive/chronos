@@ -12,13 +12,14 @@ import RerunJobsModal from '../RerunJobsModal/RerunJobsModal.js';
 import DeleteJobModal from '../DeleteJobModal/DeleteJobModal.js';
 import {createModal} from '../SiteModalStore/SiteModalStore.js';
 import _ from 'lodash';
-import {routeJobs} from '../RouterStore/RouterStore.js';
+import {routeJobs, routeJobRevert} from '../RouterStore/RouterStore.js';
 import {createMessage} from '../MessageStore/MessageStore.js';
 import styles from './JobForm.css';
 import formStyles from '../Styles/Form.css';
 import sharedStyles from '../Styles/Shared.css';
 import cn from 'classnames';
-import {getJobNiceInterval} from '../JobsHelper/JobsHelper.js';
+import {getJobNiceInterval, collectChildren, getRoot} from '../JobsHelper/JobsHelper.js';
+import {queryJobs} from '../JobsStore/JobsStore.js';
 
 // vars
 
@@ -28,7 +29,7 @@ const requiredFields = ['driver', 'name'];
 
 @reduxForm({
   form: 'job',
-  fields: ['enabled', 'shouldRerun', 'name', 'type', 'description', 'driver', 'user', 'password', 'resultEmail', 'statusEmail', 'id', 'lastModified', 'code', 'resultQuery', 'cronString'],
+  fields: ['enabled', 'shouldRerun', 'name', 'type', 'description', 'driver', 'user', 'password', 'resultEmail', 'statusEmail', 'id', 'lastModified', 'code', 'resultQuery', 'cronString', 'parentID', 'children'],
   validate(vals) {
     const errors = {};
 
@@ -45,8 +46,11 @@ const requiredFields = ['driver', 'name'];
     return errors;
   },
 })
-@connect((state) => {
+@connect((state, props) => {
   return {
+    jobParent: getRoot(props.job && props.job.id, state.jobs.byID),
+    jobs: state.jobs.query,
+    jobsByID: state.jobs.byID,
     loader: state.siteLoader,
     sources: state.sources.query,
     deletedJobs: state.jobs.deleted,
@@ -65,6 +69,8 @@ export default class JobForm extends Component {
     hideSidebar: PropTypes.bool.isRequired,
     initializeForm: PropTypes.func.isRequired,
     job: PropTypes.object,
+    jobs: PropTypes.array.isRequired,
+    jobsByID: PropTypes.object.isRequired,
     loader: PropTypes.object.isRequired,
     resetForm: PropTypes.func.isRequired,
     sources: PropTypes.array,
@@ -74,11 +80,14 @@ export default class JobForm extends Component {
 
   state = {
     thisQuery: 'code',
+    dependsOn: false,
   };
 
   componentDidMount() {
     querySources();
+    queryJobs();
     enableSiteLoader('JobForm');
+
     this.props.initializeForm({
       startDay: 1,
       code: '',
@@ -99,7 +108,7 @@ export default class JobForm extends Component {
   }
 
   componentDidUpdate(prevProps) {
-    if (this.props.sources && this.props.loader.active && this.props.loader.reasons.indexOf('JobForm') > -1) {
+    if (this.props.sources && this.props.jobs && this.props.loader.active && this.props.loader.reasons.indexOf('JobForm') > -1) {
       disableSiteLoader('JobForm');
     }
 
@@ -118,6 +127,10 @@ export default class JobForm extends Component {
         level: 'error',
       });
     }
+
+    if (this.props.jobParent !== prevProps.jobParent) {
+      this.setDependsOn(!!this.props.jobParent);
+    }
   }
 
   componentWillUnmount() {
@@ -134,6 +147,10 @@ export default class JobForm extends Component {
     });
   }
 
+  revertJob() {
+    routeJobRevert(this.props.job);
+  }
+
   deleteJob() {
     createModal({
       title: 'Delete Job',
@@ -144,12 +161,30 @@ export default class JobForm extends Component {
     });
   }
 
-  getSourcesDOM(sources) {
-    if (!sources) {
+  getDependsDOM() {
+    const {job, jobs, jobsByID} = this.props;
+
+    if (!jobsByID) {
       return null;
     }
 
-    return sources.map((source, i) => {
+    const children = collectChildren(job.children || [], jobsByID);
+
+    return jobs
+    .filter((thisJob) => {
+      return children.indexOf(thisJob.id) === -1 && thisJob.id !== job.id;
+    })
+    .map((thisJob, i) => {
+      return <option key={i} value={thisJob.id}>{thisJob.name}</option>;
+    });
+  }
+
+  getSourcesDOM() {
+    if (!this.props.sources) {
+      return null;
+    }
+
+    return this.props.sources.map((source, i) => {
       return <option key={i} value={source.name}>{source.name}</option>;
     });
   }
@@ -196,8 +231,16 @@ export default class JobForm extends Component {
     });
   }
 
+  toggleDependsOn() {
+    this.setState({dependsOn: !this.state.dependsOn});
+  }
+
+  setDependsOn(dependsOn) {
+    this.setState({dependsOn});
+  }
+
   render() {
-    const {fields: {enabled, shouldRerun, type, name, description, driver, user, password, cronString, resultEmail, statusEmail, id, lastModified, code, resultQuery}, handleSubmit, hideSidebar, useLocalTime} = this.props;
+    const {fields: {enabled, shouldRerun, type, name, description, driver, user, password, cronString, resultEmail, statusEmail, id, lastModified, code, resultQuery, parentID}, handleSubmit, hideSidebar, useLocalTime, jobParent} = this.props;
 
     const thisQuery = this.state.thisQuery === 'code' ? code : resultQuery;
 
@@ -210,6 +253,10 @@ export default class JobForm extends Component {
           {this.props.formKey !== 'create' &&
             <button type="button" className={cn(formStyles.button, formStyles.hollowButton, styles.hollowButton)} onClick={::this.rerun}>
               <span>Re-run</span>
+            </button>}
+          {this.props.formKey !== 'create' &&
+            <button type="button" className={cn(formStyles.button, formStyles.hollowButton, styles.hollowButton)} onClick={::this.revertJob}>
+              <span>Revert</span>
             </button>}
           {this.props.formKey !== 'create' &&
             <button type="button" className={cn(formStyles.button, formStyles.hollowButton, styles.hollowButton)} onClick={::this.deleteJob}>
@@ -247,9 +294,9 @@ export default class JobForm extends Component {
                 <div className={formStyles.selectOverlay}/>
                 <select {...driver} className={this.fieldClass(driver)} defaultValue="" style={this.selectStyle(driver.value)}>
                   <option disabled value=""></option>
-                  {this.getSourcesDOM(this.props.sources)}
+                  {this.getSourcesDOM()}
                 </select>
-                
+
                 <label className={formStyles.label}>Database Username (optional)</label>
                 <input {...user} type="text" className={this.fieldClass(user)}/>
 
@@ -260,12 +307,36 @@ export default class JobForm extends Component {
 
             <hr/>
 
-            <label className={formStyles.label}><a className={styles.link} href="https://en.wikipedia.org/wiki/Cron#Format" target="_blank">CRON String</a></label>
-            <input {...cronString} type="text" className={this.fieldClass(cronString)}/>
+            <label className={formStyles.checkboxLabel}>
+              <input type="checkbox" className={cn(formStyles.input, styles.input)} onChange={::this.toggleDependsOn} checked={this.state.dependsOn}/>
+              This job depends on another job.
+            </label>
 
-            {useLocalTime ? (
-              <div className={styles.fullWidth}>
-                <span className={styles.localTime}>{`This job will run ${getJobNiceInterval(cronString.value, useLocalTime).toLowerCase()}${useLocalTime && ' locally'}.`}</span>
+            {this.state.dependsOn ? (
+              <div>
+                <label className={formStyles.label}>Depends On</label>
+                <div className={formStyles.selectOverlay}/>
+                <select {...parentID} className={this.fieldClass(parentID)} defaultValue="" style={this.selectStyle(parentID.value)} value={jobParent && jobParent.id}>
+                  <option disabled value=""></option>
+                  {this.getDependsDOM()}
+                </select>
+
+                {jobParent ? (
+                  <div className={styles.fullWidth}>
+                    <span className={styles.localTime}>{`This job will run soon after ${getJobNiceInterval(jobParent.cronString, useLocalTime).toLowerCase()}${useLocalTime && ' locally'}.`}</span>
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+
+            {!this.state.dependsOn ? (
+              <div>
+                <label className={formStyles.label}><a className={styles.link} href="https://en.wikipedia.org/wiki/Cron#Format" target="_blank">CRON String</a></label>
+                <input {...cronString} type="text" className={this.fieldClass(cronString)}/>
+
+                <div className={styles.fullWidth}>
+                  <span className={styles.localTime}>{`This job will run ${getJobNiceInterval(cronString.value, useLocalTime).toLowerCase()}${useLocalTime && ' locally'}.`}</span>
+                </div>
               </div>
             ) : null}
 
@@ -278,7 +349,7 @@ export default class JobForm extends Component {
               </div>
             ) : null}
 
-            <label className={formStyles.label}>Status Email (one per line)</label>
+              <label className={formStyles.label}>Status Email (one per line)</label>
             <textarea {...statusEmail} className={this.fieldClass(statusEmail, styles.textarea)}/>
 
             {this.props.formKey !== 'create' &&

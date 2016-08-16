@@ -1,0 +1,45 @@
+/* rules */
+
+/* stylelint-disable declaration-no-important */
+
+/* import */
+
+@import '../Vars.css';
+
+/* styles */
+
+.sidebar {
+  position: fixed;
+  top: var(--header-height);
+  right: 0;
+  bottom: 0;
+  width: var(--sidebar-width);
+  overflow: hidden;
+  background-color: var(--white);
+  z-index: 500;
+  box-shadow: 0 0 12px var(--gray);
+  user-select: none;
+}
+
+.sidebarHeader {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2.5bl;
+  overflow: hidden;
+}
+
+.sidebarContent {
+  position: absolute;
+  top: 2.5bl;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow-x: hidden;
+  overflow-y: scroll;
+
+  &::-webkit-scrollbar {
+    width: 0 !important;
+  }
+}

@@ -25,7 +25,7 @@ const jobIntervals = [
   initialValues: {
     intervals: [],
   },
-  validate: function validateRerunJobsForm() {
+  validate() {
     return {};
   },
 })

@@ -50,6 +50,8 @@ export function jobToClient(job) {
 }
 
 export function jobToServer(job) {
+  delete job.parentID;
+
   return _.assign(job, {
     resultEmail: _.isArray(job.resultEmail) ? job.resultEmail : job.resultEmail.split('\n').map((line) => {
       return line.trim();
@@ -144,3 +146,45 @@ export const orderJobsBy = {
     ].indexOf((/^(\w+) /i).exec(val)[1]), 2, 0) + ' ' + val;
   },
 };
+
+// parents
+
+export function collectChildren(children, jobsByID) {
+  const newChildren = [];
+
+  children.forEach((child) => {
+    if (jobsByID[child].children && jobsByID[child].children.length) {
+      newChildren.push.apply(newChildren, collectChildren(jobsByID[child].children, jobsByID));
+    }
+  });
+
+  return children.concat(newChildren);
+}
+
+export function findParent(id, jobsByID) {
+  const key = _.findKey(jobsByID, (job) => {
+    return job.children && job.children.indexOf(id) > -1;
+  });
+
+  return key ? parseInt(key) : null;
+}
+
+export function findRoot(id, jobsByID) {
+  let searchID = id;
+  let foundID = null;
+
+  while (searchID) {
+    searchID = findParent(searchID, jobsByID);
+    foundID = searchID || foundID;
+  }
+
+  return foundID;
+}
+
+export function getRoot(id, jobsByID) {
+  if (!id || !jobsByID) {
+    return null;
+  }
+
+  return jobsByID[findRoot(id, jobsByID)];
+}
