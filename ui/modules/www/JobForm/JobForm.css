@@ -163,10 +163,40 @@
 .hollowButton {
   display: block;
   margin-left: 24px;
-  flex: 0 0 5.5bl;
+  flex: 0 0 4.5bl;
   font-weight: bold;
   text-transform: uppercase;
   letter-spacing: 1px;
+}
+
+.buttonGroup {
+  flex: 0 0 12bl;
+  display: flex;
+  margin-left: 24px;
+
+  .hollowButton {
+    margin-left: 0;
+    flex: 1 1 33%;
+
+    &:nth-child(1) {
+      span {
+        right: 1px;
+      }
+    }
+
+    &:nth-child(2) {
+      span {
+        left: 1px;
+        right: 1px;
+      }
+    }
+
+    &:nth-child(3) {
+      span {
+        left: 1px;
+      }
+    }
+  }
 }
 
 /* codemirror */

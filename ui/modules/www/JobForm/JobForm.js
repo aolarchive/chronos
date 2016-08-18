@@ -10,6 +10,7 @@ import {querySources} from '../SourceStore/SourceStore.js';
 import {connect} from 'react-redux';
 import RerunJobsModal from '../RerunJobsModal/RerunJobsModal.js';
 import DeleteJobModal from '../DeleteJobModal/DeleteJobModal.js';
+import CopyJobModal from '../CopyJobModal/CopyJobModal.js';
 import {createModal} from '../SiteModalStore/SiteModalStore.js';
 import _ from 'lodash';
 import {routeJobs, routeJobRevert} from '../RouterStore/RouterStore.js';
@@ -24,6 +25,7 @@ import {queryJobs} from '../JobsStore/JobsStore.js';
 // vars
 
 const requiredFields = ['driver', 'name'];
+const requiredReportFields = ['resultEmail'];
 
 // export
 
@@ -32,9 +34,14 @@ const requiredFields = ['driver', 'name'];
   fields: ['enabled', 'shouldRerun', 'name', 'type', 'description', 'driver', 'user', 'password', 'resultEmail', 'statusEmail', 'id', 'lastModified', 'code', 'resultQuery', 'cronString', 'parentID', 'children'],
   validate(vals) {
     const errors = {};
+    const required = requiredFields.slice();
+
+    if (vals.resultQuery) {
+      required.push.apply(required, requiredReportFields);
+    }
 
     _.forEach(vals, (val, key) => {
-      if (_.includes(requiredFields, key) && _.isUndefined(val)) {
+      if (_.includes(required, key) && (_.isUndefined(val) || (_.isString(val) && !val))) {
         errors[key] = 'This field is required.';
       }
     });
@@ -46,9 +53,8 @@ const requiredFields = ['driver', 'name'];
     return errors;
   },
 })
-@connect((state, props) => {
+@connect((state) => {
   return {
-    jobParent: getRoot(props.job && props.job.id, state.jobs.byID),
     jobs: state.jobs.query,
     jobsByID: state.jobs.byID,
     loader: state.siteLoader,
@@ -105,6 +111,10 @@ export default class JobForm extends Component {
     if (!this.props.fields.type.value) {
       this.props.fields.type.onChange('Query');
     }
+
+    if (nextProps.job !== this.props.job) {
+      this.setDependsOn(!!this.getJobRoot());
+    }
   }
 
   componentDidUpdate(prevProps) {
@@ -126,10 +136,8 @@ export default class JobForm extends Component {
         message: 'Please fill in required fields.',
         level: 'error',
       });
-    }
 
-    if (this.props.jobParent !== prevProps.jobParent) {
-      this.setDependsOn(!!this.props.jobParent);
+      this.props.initializeForm();
     }
   }
 
@@ -151,6 +159,16 @@ export default class JobForm extends Component {
     routeJobRevert(this.props.job);
   }
 
+  copyJob() {
+    createModal({
+      title: 'Copy Job',
+      component: CopyJobModal,
+      props: {
+        job: this.props.job,
+      },
+    });
+  }
+
   deleteJob() {
     createModal({
       title: 'Delete Job',
@@ -168,11 +186,11 @@ export default class JobForm extends Component {
       return null;
     }
 
-    const children = collectChildren(job.children || [], jobsByID);
+    const children = collectChildren(job ? job.children : [], jobsByID);
 
     return jobs
     .filter((thisJob) => {
-      return children.indexOf(thisJob.id) === -1 && thisJob.id !== job.id;
+      return children.indexOf(thisJob.id) === -1 && (!job || thisJob.id !== job.id);
     })
     .map((thisJob, i) => {
       return <option key={i} value={thisJob.id}>{thisJob.name}</option>;
@@ -239,10 +257,22 @@ export default class JobForm extends Component {
     this.setState({dependsOn});
   }
 
+  getJobRoot() {
+    return getRoot(this.props.fields.parentID.value, this.props.jobsByID);
+  }
+
+  getJobParent() {
+    return this.props.jobsByID[this.props.fields.parentID.value];
+  }
+
   render() {
-    const {fields: {enabled, shouldRerun, type, name, description, driver, user, password, cronString, resultEmail, statusEmail, id, lastModified, code, resultQuery, parentID}, handleSubmit, hideSidebar, useLocalTime, jobParent} = this.props;
+    const {fields: {enabled, shouldRerun, type, name, description, driver, user, password, cronString, resultEmail, statusEmail, id, lastModified, code, resultQuery, parentID}, handleSubmit, hideSidebar, useLocalTime} = this.props;
+
+    const jobRoot = this.getJobRoot();
+    const jobParent = this.getJobParent();
 
     const thisQuery = this.state.thisQuery === 'code' ? code : resultQuery;
+    const whenRun = getJobNiceInterval(this.state.dependsOn && jobRoot ? jobRoot.cronString : cronString.value, useLocalTime);
 
     return (
       <form className={styles.JobForm} onSubmit={handleSubmit}>
@@ -250,18 +280,28 @@ export default class JobForm extends Component {
           <input {...name} placeholder="Name" type="text" className={this.fieldClass(name, styles.filterInput)}/>
 
           <button className={cn(formStyles.button, formStyles.buttonPrimary, styles.button)} onClick={handleSubmit}>Save</button>
-          {this.props.formKey !== 'create' &&
+
+          {this.props.formKey !== 'create' && (
             <button type="button" className={cn(formStyles.button, formStyles.hollowButton, styles.hollowButton)} onClick={::this.rerun}>
               <span>Re-run</span>
-            </button>}
-          {this.props.formKey !== 'create' &&
-            <button type="button" className={cn(formStyles.button, formStyles.hollowButton, styles.hollowButton)} onClick={::this.revertJob}>
-              <span>Revert</span>
-            </button>}
-          {this.props.formKey !== 'create' &&
-            <button type="button" className={cn(formStyles.button, formStyles.hollowButton, styles.hollowButton)} onClick={::this.deleteJob}>
-              <span>Delete</span>
-            </button>}
+            </button>
+          )}
+
+          {this.props.formKey !== 'create' && (
+            <div className={styles.buttonGroup}>
+              <button type="button" className={cn(formStyles.button, formStyles.hollowButton, styles.hollowButton)} onClick={::this.copyJob}>
+                <span>Copy</span>
+              </button>
+
+              <button type="button" className={cn(formStyles.button, formStyles.hollowButton, styles.hollowButton)} onClick={::this.revertJob}>
+                <span>Revert</span>
+              </button>
+
+              <button type="button" className={cn(formStyles.button, formStyles.hollowButton, styles.hollowButton)} onClick={::this.deleteJob}>
+                <span>Delete</span>
+              </button>
+            </div>
+          )}
         </FilterBar>
 
         <section className={cn(styles.editRegion, {[styles.hideSidebar]: hideSidebar})}>
@@ -321,9 +361,9 @@ export default class JobForm extends Component {
                   {this.getDependsDOM()}
                 </select>
 
-                {jobParent ? (
+                {whenRun ? (
                   <div className={styles.fullWidth}>
-                    <span className={styles.localTime}>{`This job will run soon after ${getJobNiceInterval(jobParent.cronString, useLocalTime).toLowerCase()}${useLocalTime && ' locally'}.`}</span>
+                    <span className={styles.localTime}>{`This job will run soon after ${whenRun.toLowerCase()}${useLocalTime ? ' locally' : ''}.`}</span>
                   </div>
                 ) : null}
               </div>
@@ -334,9 +374,11 @@ export default class JobForm extends Component {
                 <label className={formStyles.label}><a className={styles.link} href="https://en.wikipedia.org/wiki/Cron#Format" target="_blank">CRON String</a></label>
                 <input {...cronString} type="text" className={this.fieldClass(cronString)}/>
 
-                <div className={styles.fullWidth}>
-                  <span className={styles.localTime}>{`This job will run ${getJobNiceInterval(cronString.value, useLocalTime).toLowerCase()}${useLocalTime && ' locally'}.`}</span>
-                </div>
+                {whenRun ? (
+                  <div className={styles.fullWidth}>
+                    <span className={styles.localTime}>{`This job will run ${whenRun.toLowerCase()}${useLocalTime ? ' locally' : ''}.`}</span>
+                  </div>
+                ) : null}
               </div>
             ) : null}
 
@@ -349,7 +391,7 @@ export default class JobForm extends Component {
               </div>
             ) : null}
 
-              <label className={formStyles.label}>Status Email (one per line)</label>
+            <label className={formStyles.label}>Status Email (one per line)</label>
             <textarea {...statusEmail} className={this.fieldClass(statusEmail, styles.textarea)}/>
 
             {this.props.formKey !== 'create' &&

@@ -17,6 +17,7 @@ import sharedStyles from '../Styles/Shared.css';
 import cn from 'classnames';
 import {getJobNiceInterval, findRoot} from '../JobsHelper/JobsHelper.js';
 import {queryJobs} from '../JobsStore/JobsStore.js';
+import CopyJobModal from '../CopyJobModal/CopyJobModal.js';
 
 // export
 
@@ -88,6 +89,16 @@ export default class JobRevertForm extends Component {
     });
   }
 
+  copyJob() {
+    createModal({
+      title: 'Copy Revision',
+      component: CopyJobModal,
+      props: {
+        job: this.props.version,
+      },
+    });
+  }
+
   getJobParent() {
     const {job, jobsByID} = this.props;
 
@@ -144,13 +155,19 @@ export default class JobRevertForm extends Component {
             Revert
           </button>
 
-          <button type="button" className={cn(formStyles.button, formStyles.hollowButton, styles.hollowButton)} onClick={::this.edit}>
-            <span>Edit</span>
-          </button>
+          <div className={styles.buttonGroup}>
+            <button type="button" className={cn(formStyles.button, formStyles.hollowButton, styles.hollowButton)} onClick={::this.copyJob}>
+              <span>Copy</span>
+            </button>
 
-          <button type="button" className={cn(formStyles.button, formStyles.hollowButton, styles.hollowButton)} onClick={::this.deleteJob}>
-            <span>Delete</span>
-          </button>
+            <button type="button" className={cn(formStyles.button, formStyles.hollowButton, styles.hollowButton)} onClick={::this.edit}>
+              <span>Edit</span>
+            </button>
+
+            <button type="button" className={cn(formStyles.button, formStyles.hollowButton, styles.hollowButton)} onClick={::this.deleteJob}>
+              <span>Delete</span>
+            </button>
+          </div>
         </FilterBar>
 
         <section className={cn(styles.editRegion)}>
