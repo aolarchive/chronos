@@ -289,12 +289,12 @@ export default class JobForm extends Component {
 
           {this.props.formKey !== 'create' && (
             <div className={styles.buttonGroup}>
-              <button type="button" className={cn(formStyles.button, formStyles.hollowButton, styles.hollowButton)} onClick={::this.copyJob}>
-                <span>Copy</span>
-              </button>
-
               <button type="button" className={cn(formStyles.button, formStyles.hollowButton, styles.hollowButton)} onClick={::this.revertJob}>
                 <span>Revert</span>
+              </button>
+
+              <button type="button" className={cn(formStyles.button, formStyles.hollowButton, styles.hollowButton)} onClick={::this.copyJob}>
+                <span>Copy</span>
               </button>
 
               <button type="button" className={cn(formStyles.button, formStyles.hollowButton, styles.hollowButton)} onClick={::this.deleteJob}>

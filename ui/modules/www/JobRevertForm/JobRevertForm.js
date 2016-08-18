@@ -91,7 +91,7 @@ export default class JobRevertForm extends Component {
 
   copyJob() {
     createModal({
-      title: 'Copy Revision',
+      title: 'Copy Job Revision',
       component: CopyJobModal,
       props: {
         job: this.props.version,
@@ -156,12 +156,12 @@ export default class JobRevertForm extends Component {
           </button>
 
           <div className={styles.buttonGroup}>
-            <button type="button" className={cn(formStyles.button, formStyles.hollowButton, styles.hollowButton)} onClick={::this.copyJob}>
-              <span>Copy</span>
-            </button>
-
             <button type="button" className={cn(formStyles.button, formStyles.hollowButton, styles.hollowButton)} onClick={::this.edit}>
               <span>Edit</span>
+            </button>
+            
+            <button type="button" className={cn(formStyles.button, formStyles.hollowButton, styles.hollowButton)} onClick={::this.copyJob}>
+              <span>Copy</span>
             </button>
 
             <button type="button" className={cn(formStyles.button, formStyles.hollowButton, styles.hollowButton)} onClick={::this.deleteJob}>

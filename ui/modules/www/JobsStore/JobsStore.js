@@ -76,8 +76,9 @@ function updateParent(action, after) {
 
   if (parentID) {
     const parent = _.cloneDeep(cache.byID[parentID]);
+    const childID = action.id || action.res.body.id;
 
-    parent.children = parent.children ? _.uniq(parent.children.concat(action.id)) : [parentID];
+    parent.children = parent.children ? _.uniq(parent.children.concat(childID)) : [childID];
 
     updateJob(parentID, {silent: 1}, parent).then(after);
   } else {
