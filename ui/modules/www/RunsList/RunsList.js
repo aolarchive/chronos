@@ -145,14 +145,14 @@ export default class RunsList extends Component {
     const {className, useLocalTime} = this.props;
 
     return (
-      <aside className={cn(styles.RunsList, className)}>
-        <nav className={shared.tabs}>
+      <aside className={cn(shared.sidebar, className)}>
+        <nav className={cn(shared.sidebarHeader, shared.tabs)}>
           <div className={this.navLinkClassName('last')} onClick={::this.changeTab('last')}>last</div>
           <div className={this.navLinkClassName('queue')} onClick={::this.changeTab('queue')}>queue</div>
           <div className={this.navLinkClassName('next')} onClick={::this.changeTab('next')}>next</div>
         </nav>
-
-        <div className={styles.items}>
+        
+        <div className={cn(shared.sidebarContent)}>
           {this.getRunsArray().map((run, i) => {
             run = this.props.tab === 'last' ? formatLast(run) : this.props.tab === 'queue' ? formatQueue(run) : formatNext(run);
 

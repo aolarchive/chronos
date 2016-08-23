@@ -17,10 +17,6 @@
   bottom: 0;
   display: flex;
   transition: right var(--trans-anima);
-
-  &.hideSidebar {
-    right: 1bl;
-  }
 }
 
 /* edit fields */
@@ -163,7 +159,7 @@
 .hollowButton {
   display: block;
   margin-left: 24px;
-  flex: 0 0 4.5bl;
+  flex: 0 0 5.5bl;
   font-weight: bold;
   text-transform: uppercase;
   letter-spacing: 1px;

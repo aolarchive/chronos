@@ -18,7 +18,7 @@ import RerunJobsModal from '../RerunJobsModal/RerunJobsModal.js';
 
 @connect((state) => {
   return {
-    jobs: state.jobs.query,
+    jobs: state.jobs.byParent,
   };
 })
 export default class JobsRoute extends Component {

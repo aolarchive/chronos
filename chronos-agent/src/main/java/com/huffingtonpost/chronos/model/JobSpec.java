@@ -36,6 +36,7 @@ public class JobSpec {
   private List<String> resultEmail = new ArrayList<>();
   private List<String> statusEmail = new ArrayList<>();
   private DateTime lastModified;
+  private List<Long> children = new ArrayList<>();
 
   public JobSpec(){
     
@@ -57,21 +58,22 @@ public class JobSpec {
       c = code.substring(0, code.length() > 100 ? 100 :
         code.length());
     }
-    return new String("<JobSpec - id:" + id +
+    return "<JobSpec - id:" + id +
       ", name:" + name + ", description:" + description +
       ", code:" + c + ", jobType:" + jobType +
       ", resultQuery:" + rq +
       ", resultTable:" + resultTable + ", driver:" + driver +
       ", enabled:" + enabled + ", shouldRerun:" + shouldRerun +
-      ", statusEmail:" + statusEmail + ", lastModified:" + lastModified + ">");
+      ", statusEmail:" + statusEmail + ", lastModified:" + lastModified +
+      ", children:" + children + ">";
   }
 
   @Override
   public int hashCode() {
     return Objects.hash(name, description, code,
-                        resultTable, cronString,
-                        driver, enabled, shouldRerun,
-                        resultQuery, resultEmail, statusEmail, jobType);
+                        resultTable, cronString, driver, enabled, shouldRerun,
+                        resultQuery, resultEmail, statusEmail, jobType,
+                        children);
   }
   
   @Override
@@ -93,7 +95,8 @@ public class JobSpec {
              Objects.equals(resultQuery, other.resultQuery) &&
              Objects.equals(resultEmail, other.resultEmail) &&
              Objects.equals(statusEmail, other.statusEmail) &&
-             Objects.equals(jobType, other.jobType)
+             Objects.equals(jobType, other.jobType) &&
+             Objects.equals(children, other.children)
              ;
     }
     return false;
@@ -242,4 +245,17 @@ public class JobSpec {
   public JobType getType() {
     return jobType;
   }
+
+  public List<Long> getChildren() {
+    return children;
+  }
+
+  public void setChildren(List<Long> children) {
+    this.children = children;
+  }
+
+  public void addChild(Long childId) {
+    this.children.add(childId);
+  }
+
 }

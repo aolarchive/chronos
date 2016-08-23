@@ -1,29 +1,39 @@
 // import
 
 import _ from 'lodash';
-import {createRequestAction} from '../ActionHelper/ActionHelper';
+import {createRequestAction, createAction} from '../ActionHelper/ActionHelper';
 import {jobToClient, jobToServer} from '../JobsHelper/JobsHelper';
 import {createRequestMessage} from '../MessageStore/MessageStore';
 
 // vars
 
 const initialState = {
-  query: null,
+  query: [],
+  byID: {},
+  byParent: [],
   jobs: {},
+  versions: {},
+  versionSelected: {},
   deleted: [],
 };
+
+let cache = {};
 
 // types
 
 export const types = {
   queryJobs: 'JOBS_QUERY',
   getJob: 'JOBS_GET',
+  getJobVersions: 'JOBS_GET_VERSIONS',
   createJob: 'JOBS_CREATE',
   updateJob: 'JOBS_UPDATE',
   deleteJob: 'JOBS_DELETE',
+  selectJobVersion: 'JOBS_SELECT_VERSION',
 };
 
 // actions
+
+export const selectJobVersion = createAction(types.selectJobVersion, ['job', 'version']);
 
 export const queryJobs = createRequestAction({
   type: types.queryJobs,
@@ -49,20 +59,49 @@ export const getJob = createRequestAction({
   },
 });
 
+export const getJobVersions = createRequestAction({
+  type: types.getJobVersions,
+  endpoint: '/api/job/version/:id',
+  method: 'get',
+  failureFn(action) {
+    createRequestMessage(action.err, action.res, {
+      title: 'Job View',
+      error: 'Could not load version history for the requested job.',
+    });
+  },
+});
+
+function updateParent(action, after) {
+  const {parentID} = action.query;
+
+  if (parentID) {
+    const parent = _.cloneDeep(cache.byID[parentID]);
+    const childID = action.id || action.res.body.id;
+
+    parent.children = parent.children ? _.uniq(parent.children.concat(childID)) : [childID];
+
+    updateJob(parentID, {silent: 1}, parent).then(after);
+  } else {
+    after();
+  }
+}
+
 export const createJob = createRequestAction({
   type: types.createJob,
   endpoint: '/api/job',
   method: 'post',
   requestFn(id, query, send) {
-    return {send: jobToServer(send)};
+    const {parentID} = send;
+    return {query: {parentID}, send: jobToServer(send)};
   },
   successFn(action) {
-    createRequestMessage(action.err, action.res, {
-      title: 'Create Job',
-      message: 'Job created successfully.',
+    updateParent(action, () => {
+      getJob(action.res.body.id);
+      createRequestMessage(action.err, action.res, {
+        title: 'Create Job',
+        message: 'Job created successfully.',
+      });
     });
-
-    getJob(action.res.body.id);
   },
   failureFn(action) {
     createRequestMessage(action.err, action.res, {
@@ -77,15 +116,20 @@ export const updateJob = createRequestAction({
   endpoint: '/api/job/:id',
   method: 'put',
   requestFn(id, query, send) {
-    return {send: jobToServer(send)};
+    const {parentID} = send;
+    return {query: {parentID, ...query}, send: jobToServer(send)};
   },
   successFn(action) {
-    createRequestMessage(action.err, action.res, {
-      title: 'Update Job',
-      message: 'Job updated successfully.',
-    });
+    updateParent(action, () => {
+      getJob(action.id);
 
-    getJob(action.id);
+      if (!action.query.silent) {
+        createRequestMessage(action.err, action.res, {
+          title: 'Update Job',
+          message: 'Job updated successfully.',
+        });
+      }
+    });
   },
   failureFn(action) {
     createRequestMessage(action.err, action.res, {
@@ -119,6 +163,29 @@ function queryJobsReducer(state, action) {
   switch (action.status) {
   case 'success':
     state.query = action.res.body.map(jobToClient);
+    state.byID = _.keyBy(state.query, 'id');
+
+    const clones = _.cloneDeep(state.query);
+
+    const children = _.chain(clones).reduce((arr, job) => {
+      return job.children ? arr.concat(job.children) : arr;
+    }, []).uniq().value();
+
+    state.byParent = clones.reduce((arr, job, id) => {
+      if (children.indexOf(id) === -1) {
+        arr.push(job);
+      }
+
+      if (job.children) {
+        job.children = job.children.map((child) => {
+          return clones[child];
+        });
+      }
+
+      return arr;
+    }, []);
+
+    cache = _.clone(state);
     return _.clone(state);
   }
 
@@ -129,6 +196,18 @@ function getJobReducer(state, action) {
   switch (action.status) {
   case 'success':
     state.jobs[action.res.body.id] = jobToClient(action.res.body);
+    cache = _.clone(state);
+    return _.clone(state);
+  }
+
+  return state;
+}
+
+function getJobVersionsReducer(state, action) {
+  switch (action.status) {
+  case 'success':
+    state.versions[action.id] = action.res.body.map(jobToClient);
+    cache = _.clone(state);
     return _.clone(state);
   }
 
@@ -138,6 +217,7 @@ function getJobReducer(state, action) {
 function createJobReducer(state, action) {
   switch (action.status) {
   case 'success':
+    cache = _.clone(state);
     return _.clone(state);
   }
 
@@ -147,6 +227,7 @@ function createJobReducer(state, action) {
 function updateJobReducer(state, action) {
   switch (action.status) {
   case 'success':
+    cache = _.clone(state);
     return _.clone(state);
   }
 
@@ -156,10 +237,17 @@ function updateJobReducer(state, action) {
 function deleteJobReducer(state, action) {
   switch (action.status) {
   case 'success':
-    return _.assign({}, state, {deleted: state.deleted.concat(action.id)});
+    state = _.assign({}, state, {deleted: state.deleted.concat(action.id)});
+    cache = _.clone(state);
+    return state;
   }
 
   return state;
+}
+
+function selectJobVersionReducer(state, action) {
+  state.versionSelected[action.job.id || action.job] = action.version;
+  return _.clone(state);
 }
 
 export function jobsReducer(state = initialState, action) {
@@ -170,6 +258,9 @@ export function jobsReducer(state = initialState, action) {
   case types.getJob:
     return getJobReducer(state, action);
 
+  case types.getJobVersions:
+    return getJobVersionsReducer(state, action);
+
   case types.createJob:
     return createJobReducer(state, action);
 
@@ -178,6 +269,9 @@ export function jobsReducer(state = initialState, action) {
 
   case types.deleteJob:
     return deleteJobReducer(state, action);
+
+  case types.selectJobVersion:
+    return selectJobVersionReducer(state, action);
   }
 
   return state;

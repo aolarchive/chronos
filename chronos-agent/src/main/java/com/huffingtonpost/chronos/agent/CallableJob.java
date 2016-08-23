@@ -9,6 +9,7 @@ import com.huffingtonpost.chronos.persist.BackendException;
 import org.apache.log4j.Logger;
 
 import javax.mail.Session;
+import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -71,6 +72,14 @@ public abstract class CallableJob implements Callable<Void> {
     reporting.histogram("chronos.query." + jobName + "." + "querytime",
         finish.get() - start.get());
     dao.updateJobRun(this);
+    final JobSpec latest = dao.getJob(plannedJob.getJobSpec().getId());
+    List<Long> children = latest.getChildren();
+    if (children.size() > 0) {
+      for (Long id : children) {
+        JobSpec aChild = dao.getJob(id);
+        dao.addToQueue(new PlannedJob(aChild, plannedJob.getReplaceTime()));
+      }
+    }
   }
 
   protected void handleException(Exception ex) {

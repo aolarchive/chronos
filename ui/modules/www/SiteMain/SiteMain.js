@@ -9,6 +9,7 @@ import {connect} from 'react-redux';
 import RunsList from '../RunsList/RunsList.js';
 
 // fns
+
 function formatTitle(title) {
   if (!title) {
     return config.siteTitle + config.siteTitleSep + config.siteTitleSlogan;
@@ -30,19 +31,21 @@ export default class SiteMain extends Component {
     className: PropTypes.string,
     hideSidebar: PropTypes.bool.isRequired,
     routeParams: PropTypes.object.isRequired,
+    sidebar: PropTypes.any,
     title: PropTypes.string,
   };
 
   render() {
-    const {className, title, children, hideSidebar, routeParams} = this.props;
+    const {className, title, children, sidebar, hideSidebar, routeParams} = this.props;
+    const Sidebar = sidebar || RunsList;
 
     return (
-      <main className={cn(styles.SiteMain, className, {[styles.hideSidebar]: hideSidebar})}>
+      <main className={cn(styles.SiteMain, className, {[styles.hideSidebar]: hideSidebar && !sidebar})}>
         <Helmet title={formatTitle(title)}/>
 
         {children}
 
-        <RunsList className={styles.runsList} id={routeParams.id || null}/>
+        <Sidebar className={styles.runsList} id={routeParams.id || null}/>
       </main>
     );
   }

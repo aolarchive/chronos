@@ -50,6 +50,8 @@ export function jobToClient(job) {
 }
 
 export function jobToServer(job) {
+  delete job.parentID;
+
   return _.assign(job, {
     resultEmail: _.isArray(job.resultEmail) ? job.resultEmail : job.resultEmail.split('\n').map((line) => {
       return line.trim();
@@ -68,12 +70,14 @@ export function getJobNiceInterval(cronString, useLocalTime) {
   const schedule = getSchedule(cronString);
 
   if (!schedule) {
-    return 'N/A';
+    return null;
   }
 
   const {D, d, h, m} = schedule;
 
-  const time = moment.utc().hour(h || 0).minute(m);
+  const time = moment.utc();
+  time.hour(h || 0);
+  time.minute(m);
 
   if (D) {
     time.date(D);
@@ -86,23 +90,20 @@ export function getJobNiceInterval(cronString, useLocalTime) {
   }
 
   return prettyCron.toString(cronString)
-
-  .replace(/every hour, on the hour/i, `Hourly at ${time.format(':mm')}`)
-
+  .replace(/every hour, on the hour/i, () => {
+    return `Hourly at ${time.format(':mm')}`;
+  })
   .replace(/every (\d+)(th|rd|st|nd) minute past every hour/i, () => {
     return `Hourly at ${time.format(':mm')}`;
   })
-
   .replace(/(\d{1,2}:\d{1,2}) every day/i, () => {
     return `Daily at ${time.format('h:mma')}`;
   })
-
-  .replace(/(\d{1,2}:\d{1,2}) on (sun|mon|tue|wed|thu|fri|sat)/i, (match, p1, p2) => {
-    return `${days[p2.toLowerCase()]} at ${time.format('h:mma')}`;
-  })
-
   .replace(/(\d{1,2}:\d{1,2}) on the 1st of every month/i, () => {
     return `Monthly at ${time.format('h:mma')}`;
+  })
+  .replace(/(\d{1,2}:\d{1,2}) on (sun|mon|tue|wed|thu|fri|sat)/i, (match, p1, p2) => {
+    return `${days[p2.toLowerCase()]} at ${time.format('h:mma')}`;
   });
 }
 
@@ -129,6 +130,7 @@ export const orderJobsBy = {
 
   interval(job) {
     const val = getJobNiceInterval(job.cronString);
+
     return _.padStart([
       'Hourly',
       'Daily',
@@ -144,3 +146,55 @@ export const orderJobsBy = {
     ].indexOf((/^(\w+) /i).exec(val)[1]), 2, 0) + ' ' + val;
   },
 };
+
+// parents
+
+export function collectChildren(children, jobsByID) {
+  const newChildren = [];
+
+  children.forEach((child) => {
+    if (jobsByID[child].children && jobsByID[child].children.length) {
+      newChildren.push.apply(newChildren, collectChildren(jobsByID[child].children, jobsByID));
+    }
+  });
+
+  return children.concat(newChildren);
+}
+
+export function findParent(id, jobsByID) {
+  id = parseInt(id);
+
+  const key = _.findKey(jobsByID, (job) => {
+    return job.children && job.children.indexOf(id) > -1;
+  });
+
+  return key ? parseInt(key) : null;
+}
+
+export function getParent(id, jobsByID) {
+  if (!id || !jobsByID) {
+    return null;
+  }
+
+  return jobsByID[findParent(id, jobsByID)];
+}
+
+export function findRoot(id, jobsByID) {
+  let searchID = id;
+  let foundID = null;
+
+  while (searchID) {
+    searchID = findParent(searchID, jobsByID);
+    foundID = searchID || foundID;
+  }
+
+  return foundID;
+}
+
+export function getRoot(id, jobsByID) {
+  if (!id || !jobsByID) {
+    return null;
+  }
+
+  return jobsByID[findRoot(id, jobsByID)];
+}
