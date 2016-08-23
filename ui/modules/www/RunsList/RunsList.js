@@ -12,6 +12,23 @@ import shared from '../Styles/Shared.css';
 
 // fns
 
+function getCardinal(num) {
+  switch (num) {
+  case 1:
+    return '1st';
+  case 2:
+    return '2nd';
+  case 3:
+    return '3rd';
+  case 4:
+    return '4th';
+  case 5:
+    return '5th';
+  }
+
+  return null;
+}
+
 function formatRun(run) {
   return _.assign(run, {
     niceName: run.name ? run.name.replace(/_/g, '_<wbr>') : null,
@@ -27,6 +44,8 @@ function formatLast(run) {
     err: run.exceptionMessage,
     error: run.finish !== 0 && run.status !== 0,
     pending: run.finish === 0,
+    attemptNumber: run.attemptNumber,
+    shouldRerun: run.plannedJob.jobSpec.shouldRerun,
   });
 }
 
@@ -39,6 +58,7 @@ function formatQueue(run) {
     err: null,
     error: false,
     pending: false,
+    attemptNumber: run.attemptNumber,
   });
 }
 
@@ -46,6 +66,7 @@ function formatNext(run) {
   return formatRun({
     name: run.name,
     time: run.time ? moment(run.time) : null,
+    attemptNumber: run.attemptNumber,
   });
 }
 
@@ -141,6 +162,34 @@ export default class RunsList extends Component {
     return runs || [];
   }
 
+  getRunTags(run) {
+    const tags = [];
+
+    if (run.pending) {
+      tags.push(<div key="running" className={cn(styles.tag, styles.blue)}>running</div>);
+    }
+
+    if (run.error) {
+      tags.push(<div key="error" className={cn(styles.tag, styles.red)}>error</div>);
+
+      if (run.shouldRerun) {
+        if (run.attemptNumber < 5) {
+          tags.push(<div key="attempt" className={cn(styles.tag, styles.yellow)}>{getCardinal(run.attemptNumber + 1)} attempt scheduled</div>);
+        } else {
+          tags.push(<div key="attempt" className={cn(styles.tag, styles.yellow)}>final attempt</div>);
+        }
+      } else {
+        tags.push(<div key="attempt" className={cn(styles.tag, styles.yellow)}>rerun disabled</div>);
+      }
+    }
+
+    if (run.attemptNumber > 1 && !run.error) {
+      tags.push(<div key="attempt" className={cn(styles.tag, styles.yellow)}>{getCardinal(run.attemptNumber)} attempt</div>);
+    }
+
+    return tags;
+  }
+
   render() {
     const {className, useLocalTime} = this.props;
 
@@ -151,7 +200,7 @@ export default class RunsList extends Component {
           <div className={this.navLinkClassName('queue')} onClick={::this.changeTab('queue')}>queue</div>
           <div className={this.navLinkClassName('next')} onClick={::this.changeTab('next')}>next</div>
         </nav>
-        
+
         <div className={cn(shared.sidebarContent)}>
           {this.getRunsArray().map((run, i) => {
             run = this.props.tab === 'last' ? formatLast(run) : this.props.tab === 'queue' ? formatQueue(run) : formatNext(run);
@@ -167,6 +216,10 @@ export default class RunsList extends Component {
                     </time>
                   ) : null}
                 </header>
+
+                <div className={styles.tagWrap}>
+                  {this.getRunTags(run)}
+                </div>
 
                 {run.err &&
                   <div className={styles.body}>
