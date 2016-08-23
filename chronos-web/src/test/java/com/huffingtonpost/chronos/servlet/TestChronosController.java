@@ -247,6 +247,7 @@ public class TestChronosController {
   @Test
   public void testCreateJobValidation() throws Exception {
     JobSpec aJob = new JobSpec();
+    aJob.setCronString("");
 
     {
       MockHttpServletRequestBuilder request = post("/api/job")
