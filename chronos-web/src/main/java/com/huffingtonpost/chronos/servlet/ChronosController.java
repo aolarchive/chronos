@@ -81,9 +81,32 @@ public class ChronosController {
   }
 
   public static DateTime calcNextRunTime(final DateTime from, JobSpec job) {
-    DateTime toRet = CronExpression.createWithoutSeconds(job.getCronString())
+    String s = job.getCronString();
+    if (s == null) {
+      s = "* * * * *";
+    }
+    DateTime toRet = CronExpression.createWithoutSeconds(s)
             .nextTimeAfter(from);
     return toRet.withMillisOfSecond(0).withSecondOfMinute(0);
+  }
+
+  public void innerJobFuture(List<FutureRunInfo> toRet,
+                             DateTime from, List<JobSpec> iterJobs) {
+    for (JobSpec parent : iterJobs) {
+      String jobName = parent.getName();
+      DateTime nextRun = calcNextRunTime(from, parent);
+      FutureRunInfo fri =
+        new FutureRunInfo(jobName, nextRun);
+      toRet.add(fri);
+      List<Long> child = parent.getChildren();
+      if (child.size() > 0) {
+        List<JobSpec> children = new ArrayList<>();
+        for (Long id : child) {
+          children.add(jobDao.getJob(id));
+        }
+        innerJobFuture(toRet, nextRun, children);
+      }
+    }
   }
 
   public List<FutureRunInfo> getJobFuture(Long id, int limit) {
@@ -92,7 +115,7 @@ public class ChronosController {
     if (id == null) {
       iterJobs = jobDao.getJobs();
     } else {
-      iterJobs = Arrays.asList(new JobSpec[]{ jobDao.getJob(id)});
+      iterJobs = Arrays.asList(new JobSpec[]{ jobDao.getJob(id) });
     }
 
     if (iterJobs.size() == 0) {
@@ -101,13 +124,7 @@ public class ChronosController {
 
     DateTime from = new DateTime().withZone(DateTimeZone.UTC);
     while (toRet.size() < limit) {
-      for (JobSpec job : iterJobs) {
-        String jobName = job.getName();
-        DateTime nextRun = calcNextRunTime(from, job);
-        FutureRunInfo fri =
-          new FutureRunInfo(jobName, nextRun);
-        toRet.add(fri);
-      }
+      innerJobFuture(toRet, from, iterJobs);
       Collections.sort(toRet);
       from = toRet.get(toRet.size() - 1).getTime();
     }
@@ -158,7 +175,13 @@ public class ChronosController {
       throw new RuntimeException(Messages.JOB_NAME);
     }
     try {
-      CronExpression ce = CronExpression.createWithoutSeconds(aJob.getCronString());
+      String cs = aJob.getCronString();
+      if (cs == null) {
+        return;
+      } else if (cs.isEmpty()) {
+        throw new RuntimeException(Messages.JOB_CRON_EMPTY);
+      }
+      CronExpression.createWithoutSeconds(aJob.getCronString());
     } catch (Exception ex) {
       throw new RuntimeException(ex.getMessage());
     }
