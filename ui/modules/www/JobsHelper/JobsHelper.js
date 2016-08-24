@@ -27,10 +27,10 @@ const days = {
 };
 
 const statuses = [
-  'success',
-  'running',
-  'error',
   'unknown',
+  'error',
+  'running',
+  'success',
 ];
 
 // fns
@@ -134,6 +134,8 @@ export const orderJobsBy = {
   enabled(job) {
     return [
       (job.enabled ? 0 : 1),
+      statuses.indexOf(job.statusTags[0].key),
+      job.statusTags[1] ? 0 : 1,
       job.name.toLowerCase().trim(),
     ].join(' ');
   },
@@ -142,6 +144,7 @@ export const orderJobsBy = {
     return [
       (job.enabled ? 0 : 1),
       statuses.indexOf(job.statusTags[0].key),
+      job.statusTags[1] ? 0 : 1,
       job.name.toLowerCase().trim(),
     ].join(' ');
   },
@@ -231,6 +234,7 @@ export function formatLast(run) {
   return formatRun({
     id: run.jobId,
     jobId: run.plannedJob.jobSpec.id,
+    enabled: run.plannedJob.jobSpec.enabled,
     name: run.plannedJob.jobSpec.name,
     time: run.start ? moment(run.start) : null,
     err: run.exceptionMessage,
@@ -280,8 +284,8 @@ function getCardinal(num) {
   return null;
 }
 
-export function getUnknownTag() {
-  return (<div key="unknown" className={cn(styles.tag, styles.gray)}>innactive</div>);
+export function getUnknownTag(text = 'unknown') {
+  return (<div key="unknown" className={cn(styles.tag, styles.gray)}>{text}</div>);
 }
 
 export function getRunTags(run, extraTags = false) {

@@ -96,7 +96,9 @@ export default class JobsRoute extends Component {
         return false;
       });
 
-      if (!job.statusTags) {
+      if (!job.enabled) {
+        job.statusTags = [getUnknownTag('disabled')];
+      } else if (!job.statusTags) {
         job.statusTags = [getUnknownTag()];
       }
 
