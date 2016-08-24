@@ -79,6 +79,11 @@ export default class JobsList extends Component {
               Job
             </th>
 
+            <th className={this.cellClassName('status', true)}
+              onClick={this.changeOrder('status')}>
+              Status
+            </th>
+
             <th className={this.cellClassName('interval', true)}
               onClick={this.changeOrder('interval')}>
               Run Interval
@@ -101,6 +106,10 @@ export default class JobsList extends Component {
 
                   <td className={this.cellClassName('name')}>
                     {job.name}
+                  </td>
+
+                  <td className={this.cellClassName('status')}>
+                    {job.statusTags}
                   </td>
 
                   <td className={this.cellClassName('interval')}>

@@ -177,9 +177,9 @@
   flex: 0 0 250px;
 }
 
-.cellActions {
-  flex: 0 0 125px;
-  text-align: center;
+.cellStatus {
+  flex: 0 0 200px;
+  text-align: left;
 }
 
 /* looks */

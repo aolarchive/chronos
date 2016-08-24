@@ -130,6 +130,13 @@
   color: var(--input-border-color);
 }
 
+.replaceTime {
+  flex: 1 1 25%;
+  text-transform: uppercase;
+  text-align: right;
+  font-size: 0.9bf;
+}
+
 .tag {
   border-radius: 0.125bl;
   font-size: 0.5bf;

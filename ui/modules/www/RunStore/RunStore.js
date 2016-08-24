@@ -14,6 +14,7 @@ const jobHistory = {
   last: null,
   next: null,
   queue: null,
+  long: null,
 };
 
 const tabs = [
@@ -56,6 +57,7 @@ function collectRuns(runs, now) {
 // types
 
 export const types = {
+  queryLongHistory: 'RUNS_GET_LAST_LONG',
   queryHistory: 'RUNS_GET_LAST',
   queryQueue: 'RUNS_GET_QUEUE',
   queryFuture: 'RUNS_GET_NEXT',
@@ -77,6 +79,23 @@ export const queryHistory = createRequestAction({
   requestFn(id, query) {
     return {
       query: {id, limit: query || 100},
+    };
+  },
+  failureFn(action) {
+    createRequestMessage(action.err, action.res, {
+      title: 'Last Runs',
+      error: 'Unable to load the last runs list.',
+    });
+  },
+});
+
+export const queryLongHistory = createRequestAction({
+  type: types.queryLongHistory,
+  endpoint: '/api/jobs/history',
+  method: 'query',
+  requestFn(id, query) {
+    return {
+      query: {id, limit: query || 1000},
     };
   },
   failureFn(action) {
@@ -262,6 +281,16 @@ function queryHistoryReducer(state, action) {
   return state;
 }
 
+function queryLongHistoryReducer(state, action) {
+  switch (action.status) {
+  case 'success':
+    getJob(state, action.id).long = action.res.body;
+    return _.clone(state);
+  }
+
+  return state;
+}
+
 function queryQueueReducer(state, action) {
   switch (action.status) {
   case 'success':
@@ -300,6 +329,9 @@ export function runReducer(state = {
   switch (action.type) {
   case types.queryHistory:
     return queryHistoryReducer(state, action);
+
+  case types.queryLongHistory:
+    return queryLongHistoryReducer(state, action);
 
   case types.queryQueue:
     return queryQueueReducer(state, action);

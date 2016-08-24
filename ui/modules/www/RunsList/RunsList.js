@@ -5,70 +5,10 @@ import {connect} from 'react-redux';
 import {queryHistory, queryFuture, queryQueue, rerunRun, cancelRun, changeTab} from '../RunStore/RunStore';
 import moment from 'moment';
 import {routeJobUpdate} from '../RouterStore/RouterStore';
-import _ from 'lodash';
 import cn from 'classnames';
 import styles from './RunsList.css';
 import shared from '../Styles/Shared.css';
-
-// fns
-
-function getCardinal(num) {
-  switch (num) {
-  case 1:
-    return '1st';
-  case 2:
-    return '2nd';
-  case 3:
-    return '3rd';
-  case 4:
-    return '4th';
-  case 5:
-    return '5th';
-  }
-
-  return null;
-}
-
-function formatRun(run) {
-  return _.assign(run, {
-    niceName: run.name ? run.name.replace(/_/g, '_<wbr>') : null,
-  });
-}
-
-function formatLast(run) {
-  return formatRun({
-    id: run.jobId,
-    jobId: run.plannedJob.jobSpec.id,
-    name: run.plannedJob.jobSpec.name,
-    time: run.start ? moment(run.start) : null,
-    err: run.exceptionMessage,
-    error: run.finish !== 0 && run.status !== 0,
-    pending: run.finish === 0,
-    attemptNumber: run.attemptNumber,
-    shouldRerun: run.plannedJob.jobSpec.shouldRerun,
-  });
-}
-
-function formatQueue(run) {
-  return formatRun({
-    id: null,
-    jobId: run.jobSpec.id,
-    name: run.jobSpec.name,
-    time: run.start ? moment(run.start) : null,
-    err: null,
-    error: false,
-    pending: false,
-    attemptNumber: run.attemptNumber,
-  });
-}
-
-function formatNext(run) {
-  return formatRun({
-    name: run.name,
-    time: run.time ? moment(run.time) : null,
-    attemptNumber: run.attemptNumber,
-  });
-}
+import {getRunTags, formatNext, formatLast, formatQueue} from '../JobsHelper/JobsHelper.js';
 
 // export
 
@@ -162,34 +102,6 @@ export default class RunsList extends Component {
     return runs || [];
   }
 
-  getRunTags(run) {
-    const tags = [];
-
-    if (run.pending) {
-      tags.push(<div key="running" className={cn(styles.tag, styles.blue)}>running</div>);
-    }
-
-    if (run.error) {
-      tags.push(<div key="error" className={cn(styles.tag, styles.red)}>error</div>);
-
-      if (run.shouldRerun) {
-        if (run.attemptNumber < 5) {
-          tags.push(<div key="attempt" className={cn(styles.tag, styles.yellow)}>{getCardinal(run.attemptNumber + 1)} attempt scheduled</div>);
-        } else {
-          tags.push(<div key="attempt" className={cn(styles.tag, styles.yellow)}>final attempt</div>);
-        }
-      } else {
-        tags.push(<div key="attempt" className={cn(styles.tag, styles.yellow)}>rerun disabled</div>);
-      }
-    }
-
-    if (run.attemptNumber > 1 && !run.error) {
-      tags.push(<div key="attempt" className={cn(styles.tag, styles.yellow)}>{getCardinal(run.attemptNumber)} attempt</div>);
-    }
-
-    return tags;
-  }
-
   render() {
     const {className, useLocalTime} = this.props;
 
@@ -210,26 +122,29 @@ export default class RunsList extends Component {
                 <header className={styles.itemHeader}>
                   <div className={styles.name} dangerouslySetInnerHTML={{__html: run.niceName}}/>
 
-                  {run.time ? (
-                    <time className={styles.time}>
-                      {run.time[useLocalTime ? 'local' : 'utc']().format('M/D/YY')}
-                    </time>
-                  ) : null}
+                  {run.replaceTime && (
+                    <div className={styles.replaceTime}>
+                      {moment(run.replaceTime).format('M/D/YY')}
+                      <br/>
+                      {moment(run.replaceTime).format('H:mm:ss')}
+                    </div>
+                  )}
                 </header>
 
                 <div className={styles.tagWrap}>
-                  {this.getRunTags(run)}
+                  {getRunTags(run)}
                 </div>
 
-                {run.err &&
+                {run.err && (
                   <div className={styles.body}>
                     {run.err}
-                  </div>}
+                  </div>
+                )}
 
                 <footer className={cn(styles.itemFooter, shared.clearfix)}>
                   {run.time ? (
                     <time className={styles.time}>
-                      {run.time[useLocalTime ? 'local' : 'utc']().format('h:mm A')}
+                      {run.time[useLocalTime ? 'local' : 'utc']().format('M/D/YY h:mm A')}
                     </time>
                   ) : null}
 

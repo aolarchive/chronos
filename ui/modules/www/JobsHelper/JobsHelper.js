@@ -1,9 +1,12 @@
 // import
 
 import _ from 'lodash';
+import React from 'react';
+import cn from 'classnames';
 import later from 'later';
 import moment from 'moment';
 import prettyCron from 'prettycron';
+import styles from './JobsHelper.css';
 
 // vars
 
@@ -197,4 +200,103 @@ export function getRoot(id, jobsByID) {
   }
 
   return jobsByID[findRoot(id, jobsByID)];
+}
+
+/* runs */
+
+// fns
+
+export function formatRun(run) {
+  return _.assign(run, {
+    niceName: run.name ? run.name.replace(/_/g, '_<wbr>') : null,
+  });
+}
+
+export function formatLast(run) {
+  return formatRun({
+    id: run.jobId,
+    jobId: run.plannedJob.jobSpec.id,
+    name: run.plannedJob.jobSpec.name,
+    time: run.start ? moment(run.start) : null,
+    err: run.exceptionMessage,
+    error: run.finish !== 0 && run.status !== 0,
+    pending: run.finish === 0,
+    attemptNumber: run.attemptNumber,
+    shouldRerun: run.plannedJob.jobSpec.shouldRerun,
+    replaceTime: run.plannedJob.replaceTime,
+  });
+}
+
+export function formatQueue(run) {
+  return formatRun({
+    id: null,
+    jobId: run.jobSpec.id,
+    name: run.jobSpec.name,
+    time: run.start ? moment(run.start) : null,
+    err: null,
+    error: false,
+    pending: false,
+    attemptNumber: run.attemptNumber,
+  });
+}
+
+export function formatNext(run) {
+  return formatRun({
+    name: run.name,
+    time: run.time ? moment(run.time) : null,
+    attemptNumber: run.attemptNumber,
+  });
+}
+
+function getCardinal(num) {
+  switch (num) {
+  case 1:
+    return '1st';
+  case 2:
+    return '2nd';
+  case 3:
+    return '3rd';
+  case 4:
+    return '4th';
+  case 5:
+    return '5th';
+  }
+
+  return null;
+}
+
+export function getUnknownTag() {
+  return (<div key="unknown" className={cn(styles.tag, styles.gray)}>innactive</div>);
+}
+
+export function getRunTags(run, extraTags = false) {
+  const tags = [];
+
+  if (run.pending) {
+    tags.push(<div key="running" className={cn(styles.tag, styles.blue)}>running</div>);
+  }
+
+  if (run.error) {
+    tags.push(<div key="error" className={cn(styles.tag, styles.red)}>error</div>);
+
+    if (run.shouldRerun) {
+      if (run.attemptNumber < 5) {
+        tags.push(<div key="attempt" className={cn(styles.tag, styles.yellow)}>{getCardinal(run.attemptNumber + 1)} attempt scheduled</div>);
+      } else {
+        tags.push(<div key="attempt" className={cn(styles.tag, styles.yellow)}>final attempt</div>);
+      }
+    } else {
+      tags.push(<div key="attempt" className={cn(styles.tag, styles.yellow)}>rerun disabled</div>);
+    }
+  }
+
+  if (extraTags && run.pending === false && run.error === false) {
+    tags.push(<div key="success" className={cn(styles.tag, styles.green)}>success</div>);
+  }
+
+  if (run.attemptNumber > 1 && !run.error) {
+    tags.push(<div key="attempt" className={cn(styles.tag, styles.yellow)}>{getCardinal(run.attemptNumber)} attempt</div>);
+  }
+
+  return !tags.length && extraTags ? getUnknownTag() : tags;
 }
