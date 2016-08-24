@@ -26,6 +26,13 @@ const days = {
   sun: 'Sunday',
 };
 
+const statuses = [
+  'success',
+  'running',
+  'error',
+  'unknown',
+];
+
 // fns
 
 function getSchedule(job = '') {
@@ -127,6 +134,14 @@ export const orderJobsBy = {
   enabled(job) {
     return [
       (job.enabled ? 0 : 1),
+      job.name.toLowerCase().trim(),
+    ].join(' ');
+  },
+
+  status(job) {
+    return [
+      (job.enabled ? 0 : 1),
+      statuses.indexOf(job.statusTags[0].key),
       job.name.toLowerCase().trim(),
     ].join(' ');
   },

@@ -97,7 +97,7 @@ export default class JobsRoute extends Component {
       });
 
       if (!job.statusTags) {
-        job.statusTags = getUnknownTag();
+        job.statusTags = [getUnknownTag()];
       }
 
       return job;
