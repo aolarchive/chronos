@@ -35,7 +35,11 @@ const statuses = [
 
 // fns
 
-function getSchedule(job = '') {
+function getSchedule(job) {
+  if (!job) {
+    return null;
+  }
+
   const s = later.parse.cron(job.cronString || job).schedules[0];
 
   const mapped = _.mapValues(s, (val) => {
@@ -119,6 +123,15 @@ export function getJobNiceInterval(cronString, useLocalTime) {
 
 // sort
 
+function statusSort(job) {
+  return [
+    (job.enabled ? 0 : 1),
+    statuses.indexOf(job.statusTags[0].key),
+    job.statusTags[1] ? 0 : 1,
+    job.name.toLowerCase().trim(),
+  ].join(' ');
+}
+
 export const orderJobsBy = {
   name(job) {
     return job.name.toLowerCase().trim();
@@ -131,23 +144,9 @@ export const orderJobsBy = {
     ].join(' ');
   },
 
-  enabled(job) {
-    return [
-      (job.enabled ? 0 : 1),
-      statuses.indexOf(job.statusTags[0].key),
-      job.statusTags[1] ? 0 : 1,
-      job.name.toLowerCase().trim(),
-    ].join(' ');
-  },
+  enabled: statusSort,
 
-  status(job) {
-    return [
-      (job.enabled ? 0 : 1),
-      statuses.indexOf(job.statusTags[0].key),
-      job.statusTags[1] ? 0 : 1,
-      job.name.toLowerCase().trim(),
-    ].join(' ');
-  },
+  status: statusSort,
 
   interval(job) {
     const val = getJobNiceInterval(job.cronString);

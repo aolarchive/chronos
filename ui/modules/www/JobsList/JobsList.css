@@ -174,11 +174,11 @@
 }
 
 .cellInterval {
-  flex: 0 0 250px;
+  flex: 0 0 200px;
 }
 
 .cellStatus {
-  flex: 0 0 200px;
+  flex: 0 0 175px;
   text-align: left;
 }
 

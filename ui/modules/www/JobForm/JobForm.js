@@ -25,7 +25,6 @@ import {queryJobs} from '../JobsStore/JobsStore.js';
 // vars
 
 const requiredFields = ['driver', 'name'];
-const requiredReportFields = ['resultEmail'];
 
 // export
 
@@ -37,7 +36,7 @@ const requiredReportFields = ['resultEmail'];
     const required = requiredFields.slice();
 
     if (vals.resultQuery) {
-      required.push.apply(required, requiredReportFields);
+      required.push.apply(required, ['resultEmail']);
     }
 
     _.forEach(vals, (val, key) => {
@@ -48,6 +47,10 @@ const requiredReportFields = ['resultEmail'];
 
     if (vals.type === 'Script') {
       delete errors.driver;
+    }
+
+    if (!vals.cronString && !vals.parentID) {
+      errors.cronString = errors.parentID = 'Either cron string or parent job is required.';
     }
 
     return errors;
@@ -250,10 +253,11 @@ export default class JobForm extends Component {
   }
 
   toggleDependsOn() {
-    this.setState({dependsOn: !this.state.dependsOn});
+    this.setDependsOn(!this.state.dependsOn);
   }
 
   setDependsOn(dependsOn) {
+    this.props.fields[dependsOn ? 'cronString' : 'parentID'].onChange(null);
     this.setState({dependsOn});
   }
 

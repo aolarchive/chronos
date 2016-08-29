@@ -171,14 +171,14 @@ function queryJobsReducer(state, action) {
       return job.children ? arr.concat(job.children) : arr;
     }, []).uniq().value();
 
-    state.byParent = clones.reduce((arr, job, id) => {
-      if (children.indexOf(id) === -1) {
+    state.byParent = clones.reduce((arr, job) => {
+      if (children.indexOf(job.id) === -1) {
         arr.push(job);
       }
 
       if (job.children) {
         job.children = job.children.map((child) => {
-          return clones[child];
+          return state.byID[child];
         });
       }
 
