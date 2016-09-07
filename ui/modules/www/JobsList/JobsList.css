@@ -23,6 +23,12 @@
 
 .row {
   cursor: pointer;
+
+  &.gray {
+    .cellName {
+      color: var(--palegray);
+    }
+  }
 }
 
 .head,
@@ -207,5 +213,21 @@
 
   &:hover {
     color: var(--logo-color);
+  }
+}
+
+/* indent */
+
+.indent {
+  display: inline-block;
+  position: relative;
+  width: 10px;
+  height: 10px;
+  margin-right: 5px;
+  top: -2px;
+
+  &.lastIndent {
+    border-left: 2px solid var(--logo-color);
+    border-bottom: 2px solid var(--logo-color);
   }
 }

@@ -4,7 +4,7 @@ import React, {Component, PropTypes} from 'react';
 import styles from './JobsList.css';
 import cn from 'classnames';
 import _ from 'lodash';
-import {orderJobsBy, getJobType, getJobNiceInterval} from '../JobsHelper/JobsHelper.js';
+import {getJobType, getJobNiceInterval, orderJobs, flattenJobs} from '../JobsHelper/JobsHelper.js';
 import {routeJobUpdate} from '../RouterStore/RouterStore.js';
 import {connect} from 'react-redux';
 
@@ -92,10 +92,11 @@ export default class JobsList extends Component {
         </thead>
 
         <tbody className={styles.body}>
-          {_.orderBy(jobs || [], orderJobsBy[orderBy], orderDir)
+          {orderJobs(jobs, orderBy, orderDir)
+            .reduce(flattenJobs.bind(flattenJobs, 0), [])
             .map((job, i) => {
               return (
-                <tr key={i} className={styles.row} onClick={this.viewJobs(job)}>
+                <tr key={i} className={cn(styles.row, !job.shouldKeep && styles.gray)} onClick={this.viewJobs(job)}>
                   <td className={this.cellClassName('enabled')}>
                     {job.enabled && <div className={styles.enabled}/>}
                   </td>
@@ -105,7 +106,9 @@ export default class JobsList extends Component {
                   </td>
 
                   <td className={this.cellClassName('name')}>
-                    {job.name}
+                    {_.repeat(' ', job.depth).split('').map((char, k) => {
+                      return (<span key={k} className={cn(styles.indent, k + 1 === job.depth && styles.lastIndent)}/>);
+                    }).concat(job.name)}
                   </td>
 
                   <td className={this.cellClassName('status')}>

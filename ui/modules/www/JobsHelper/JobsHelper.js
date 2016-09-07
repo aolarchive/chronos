@@ -318,3 +318,25 @@ export function getRunTags(run, extraTags = false) {
 
   return !tags.length && extraTags ? getUnknownTag() : tags;
 }
+
+export function orderJobs(jobs = [], orderBy, orderDir) {
+  return _.orderBy(jobs, orderJobsBy[orderBy], orderDir)
+  .map((job) => {
+    if (job.children && job.children.length) {
+      job.children = orderJobs(job.children, orderBy, orderDir);
+    }
+
+    return job;
+  });
+}
+
+export function flattenJobs(depth, flat, job) {
+  job.depth = depth;
+  flat.push(job);
+
+  if (job.children.length) {
+    flat = flat.concat(job.children.reduce(flattenJobs.bind(flattenJobs, depth + 1), []));
+  }
+
+  return flat;
+}
