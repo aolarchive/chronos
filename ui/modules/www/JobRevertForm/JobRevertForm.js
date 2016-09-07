@@ -1,9 +1,13 @@
+// rules
+
+/* eslint-disable import/no-commonjs */
+
 // import
 
 import React, {Component, PropTypes} from 'react';
 import FilterBar from '../FilterBar/FilterBar';
 import Codemirror from 'react-codemirror';
-import {sqlOpts, shellOpts} from '../CodeHelper/CodeHelper.js';
+import {diffOpts} from '../CodeHelper/CodeHelper.js';
 import {enableSiteLoader, disableSiteLoader} from '../SiteLoaderStore/SiteLoaderStore.js';
 import {querySources} from '../SourceStore/SourceStore.js';
 import {connect} from 'react-redux';
@@ -18,6 +22,7 @@ import cn from 'classnames';
 import {getJobNiceInterval, findRoot} from '../JobsHelper/JobsHelper.js';
 import {queryJobs} from '../JobsStore/JobsStore.js';
 import CopyJobModal from '../CopyJobModal/CopyJobModal.js';
+const JsDiff = require('diff');
 
 // export
 
@@ -136,10 +141,30 @@ export default class JobRevertForm extends Component {
   }
 
   render() {
-    const {handleSubmit, useLocalTime, version} = this.props;
+    const {handleSubmit, useLocalTime, version, job} = this.props;
 
     const thisQuery = this.state.thisQuery === 'code' ? version.code : version.resultQuery;
     const jobParent = this.getJobParent();
+
+    let diff = this.state.thisQuery === 'code' ?
+    JsDiff.diffLines(job.code || '', version.code || '') :
+    JsDiff.createPatch('', version.resultQuery || '', job.resultQuery || '', '', '');
+
+    console.log(diff);
+    diff = diff.map((seg) => {
+      return seg.value.split('\n').slice(0, -1)
+      .map((line) => {
+        if (seg.added) {
+          return '+ ' + line;
+        }
+
+        if (seg.removed) {
+          return '- ' + line;
+        }
+
+        return '  ' + line;
+      }).join('\n');
+    }).join('\n');
 
     const submit = (e) => {
       e.preventDefault();
@@ -159,7 +184,7 @@ export default class JobRevertForm extends Component {
             <button type="button" className={cn(formStyles.button, formStyles.hollowButton, styles.hollowButton)} onClick={::this.edit}>
               <span>Edit</span>
             </button>
-            
+
             <button type="button" className={cn(formStyles.button, formStyles.hollowButton, styles.hollowButton)} onClick={::this.copyJob}>
               <span>Copy</span>
             </button>
@@ -223,9 +248,11 @@ export default class JobRevertForm extends Component {
                 <label className={formStyles.label}><a className={styles.link} href="https://en.wikipedia.org/wiki/Cron#Format" target="_blank">CRON String</a></label>
                 <input type="text" className={this.fieldClass()} value={version.cronString} disabled/>
 
-                <div className={styles.fullWidth}>
-                  <span className={styles.localTime}>{`This job will run ${getJobNiceInterval(version.cronString, useLocalTime).toLowerCase()} locally.`}</span>
-                </div>
+                {version.cronString && (
+                  <div className={styles.fullWidth}>
+                    <span className={styles.localTime}>{`This job will run ${getJobNiceInterval(version.cronString, useLocalTime).toLowerCase()} locally.`}</span>
+                  </div>
+                )}
               </div>
             ) : null}
 
@@ -254,7 +281,7 @@ export default class JobRevertForm extends Component {
               ) : null}
             </div>
 
-            <Codemirror key={thisQuery === version.code ? 'code' : 'resultQuery'} {...thisQuery} value={thisQuery || ''} options={_.assign({readOnly: true}, version.type === 'Query' ? sqlOpts : shellOpts)}/>
+            <Codemirror key={thisQuery === version.code ? 'code' : 'resultQuery'} value={diff || ''} options={_.assign({readOnly: true}, diffOpts)}/>
           </div>
         </section>
       </form>

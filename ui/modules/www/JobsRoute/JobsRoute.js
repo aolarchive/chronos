@@ -58,10 +58,6 @@ export default class JobsRoute extends Component {
     if (this.props.runs && !prevProps.runs) {
       disableSiteLoader('route-runs');
     }
-
-    if (prevProps.runs !== this.props.runs || prevProps.jobs !== this.props.jobs) {
-      this.filterJobs();
-    }
   }
 
   componentWillUnmount() {
@@ -84,26 +80,34 @@ export default class JobsRoute extends Component {
 
     const runs = (this.props.runs || []).map(formatLast);
 
-    jobs = jobs.map((job) => {
-      job = _.cloneDeep(job);
+    function tagJobs(theseJobs) {
+      return theseJobs.map((job) => {
+        job = _.cloneDeep(job);
 
-      runs.some((run) => {
-        if (run.id === job.id) {
-          job.statusTags = getRunTags(run, true);
-          return true;
+        runs.some((run) => {
+          if (run.id === job.id) {
+            job.statusTags = getRunTags(run, true);
+            return true;
+          }
+
+          return false;
+        });
+
+        if (!job.enabled) {
+          job.statusTags = [getUnknownTag('disabled')];
+        } else if (!job.statusTags) {
+          job.statusTags = [getUnknownTag()];
         }
 
-        return false;
+        if (job.children) {
+          job.children = tagJobs(job.children);
+        }
+
+        return job;
       });
+    }
 
-      if (!job.enabled) {
-        job.statusTags = [getUnknownTag('disabled')];
-      } else if (!job.statusTags) {
-        job.statusTags = [getUnknownTag()];
-      }
-
-      return job;
-    });
+    jobs = tagJobs(jobs);
 
     this.setState({jobs});
   }
@@ -119,12 +123,12 @@ export default class JobsRoute extends Component {
   }
 
   render() {
-    const {jobs, ...props} = this.props;
+    const {jobs, runs, ...props} = this.props;
 
     return (
       <SiteMain {...props} title="Jobs List" className={this.className()}>
         <FilterBar>
-          <JobsFilter className={styles.filter} jobs={jobs} onFilter={::this.filterJobs}/>
+          <JobsFilter className={styles.filter} jobs={jobs} runs={runs} onFilter={::this.filterJobs}/>
           <button className={cn(styles.button, formStyles.hollowButton)} onClick={::this.rerun}>
             <span>Re-run</span>
           </button>

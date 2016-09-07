@@ -73,14 +73,23 @@ export const getJobVersions = createRequestAction({
 
 function updateParent(action, after) {
   const {parentID} = action.query;
+  const childID = action.id || action.res.body.id;
+  const parents = [];
 
-  if (parentID) {
-    const parent = _.cloneDeep(cache.byID[parentID]);
-    const childID = action.id || action.res.body.id;
+  cache.query.forEach((job) => {
+    if (job.children && job.children.indexOf(childID) > -1 && job.id !== parseInt(parentID)) {
+      job = _.cloneDeep(job);
+      job.children.splice(job.children.indexOf(childID), 1);
+      parents.push(updateJob(job.id, {silent: 1}, job));
+    } else if (job.id === parseInt(parentID)) {
+      job = _.cloneDeep(job);
+      job.children = job.children ? _.uniq(job.children.concat(childID)) : [childID];
+      parents.push(updateJob(job.id, {silent: 1}, job));
+    }
+  });
 
-    parent.children = parent.children ? _.uniq(parent.children.concat(childID)) : [childID];
-
-    updateJob(parentID, {silent: 1}, parent).then(after);
+  if (parents.length) {
+    Promise.all(parents).then(after);
   } else {
     after();
   }
@@ -176,16 +185,16 @@ function queryJobsReducer(state, action) {
         arr.push(job);
       }
 
-      if (job.children) {
+      if (job.children.length) {
         job.children = job.children.map((child) => {
-          return state.byID[child];
+          return _.find(clones, thisJob => thisJob.id === child);
         });
       }
 
       return arr;
     }, []);
 
-    cache = _.clone(state);
+    cache = _.cloneDeep(state);
     return _.clone(state);
   }
 

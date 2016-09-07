@@ -293,6 +293,14 @@
       &.cm-error {
         color: rgb(157, 30, 21);
       }
+
+      &.cm-negative {
+        color: rgb(255, 100, 100);
+      }
+
+      &.cm-positive {
+        color: rgb(100, 255, 100);
+      }
     }
 
     span.cm-number,

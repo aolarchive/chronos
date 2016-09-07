@@ -33,6 +33,7 @@
     "classnames": "2.2.5",
     "codemirror": "5.16.0",
     "css-loader": "0.23.1",
+    "diff": "3.0.0",
     "dotenv": "2.0.0",
     "eslint": "3.0.1",
     "eslint-loader": "1.4.1",
