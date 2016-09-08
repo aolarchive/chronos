@@ -48,7 +48,7 @@ export default class JobUpdateRoute extends Component {
 
     return (
       <SiteMain {...props} title={title} className={this.className()}>
-          <JobForm formKey={this.props.routeParams.id} onSubmit={this.handleSubmit.bind(this)} job={this.props.job}/>
+        <JobForm formKey={this.props.routeParams.id} onSubmit={::this.handleSubmit} job={this.props.job}/>
       </SiteMain>
     );
   }

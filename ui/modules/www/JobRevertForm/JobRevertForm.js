@@ -1,13 +1,9 @@
-// rules
-
-/* eslint-disable import/no-commonjs */
-
 // import
 
 import React, {Component, PropTypes} from 'react';
 import FilterBar from '../FilterBar/FilterBar';
 import Codemirror from 'react-codemirror';
-import {diffOpts} from '../CodeHelper/CodeHelper.js';
+import {diffOpts, sqlOpts, shellOpts} from '../CodeHelper/CodeHelper.js';
 import {enableSiteLoader, disableSiteLoader} from '../SiteLoaderStore/SiteLoaderStore.js';
 import {querySources} from '../SourceStore/SourceStore.js';
 import {connect} from 'react-redux';
@@ -19,10 +15,9 @@ import styles from './JobRevertForm.css';
 import formStyles from '../Styles/Form.css';
 import sharedStyles from '../Styles/Shared.css';
 import cn from 'classnames';
-import {getJobNiceInterval, findRoot} from '../JobsHelper/JobsHelper.js';
+import {getJobNiceInterval, findRoot, getJobDiff} from '../JobsHelper/JobsHelper.js';
 import {queryJobs} from '../JobsStore/JobsStore.js';
 import CopyJobModal from '../CopyJobModal/CopyJobModal.js';
-const JsDiff = require('diff');
 
 // export
 
@@ -37,11 +32,13 @@ const JsDiff = require('diff');
     deletedJobs: state.jobs.deleted,
     useLocalTime: state.localStorage.useLocalTime === 'true',
     version: state.jobs.versionSelected[job && job.id] || _.last(versions),
+    diffView: state.jobs.diffView,
   };
 })
 export default class JobRevertForm extends Component {
   static propTypes = {
     deletedJobs: PropTypes.array.isRequired,
+    diffView: PropTypes.string.isRequired,
     handleSubmit: PropTypes.func.isRequired,
     job: PropTypes.object,
     jobs: PropTypes.array.isRequired,
@@ -141,30 +138,13 @@ export default class JobRevertForm extends Component {
   }
 
   render() {
-    const {handleSubmit, useLocalTime, version, job} = this.props;
+    const {handleSubmit, useLocalTime, version, job, diffView, versions} = this.props;
 
     const thisQuery = this.state.thisQuery === 'code' ? version.code : version.resultQuery;
     const jobParent = this.getJobParent();
 
-    let diff = this.state.thisQuery === 'code' ?
-    JsDiff.diffLines(job.code || '', version.code || '') :
-    JsDiff.createPatch('', version.resultQuery || '', job.resultQuery || '', '', '');
-
-    console.log(diff);
-    diff = diff.map((seg) => {
-      return seg.value.split('\n').slice(0, -1)
-      .map((line) => {
-        if (seg.added) {
-          return '+ ' + line;
-        }
-
-        if (seg.removed) {
-          return '- ' + line;
-        }
-
-        return '  ' + line;
-      }).join('\n');
-    }).join('\n');
+    const prev = diffView === 'current' ? job : versions[_.findIndex(versions, version) - 1];
+    const diff = getJobDiff(prev, version, this.state.thisQuery === 'code' ? 'code' : 'resultQuery');
 
     const submit = (e) => {
       e.preventDefault();
@@ -281,7 +261,11 @@ export default class JobRevertForm extends Component {
               ) : null}
             </div>
 
-            <Codemirror key={thisQuery === version.code ? 'code' : 'resultQuery'} value={diff || ''} options={_.assign({readOnly: true}, diffOpts)}/>
+            {diffView === 'none' ? (
+              <Codemirror key={thisQuery === version.code ? 'code' : 'resultQuery'} value={thisQuery || ''} options={_.assign({readOnly: true}, version.type === 'Query' ? sqlOpts : shellOpts)}/>
+              ) : (
+              <Codemirror key={thisQuery === version.code ? 'code' : 'resultQuery'} value={diff || ''} options={_.assign({readOnly: true}, diffOpts)}/>
+            )}
           </div>
         </section>
       </form>

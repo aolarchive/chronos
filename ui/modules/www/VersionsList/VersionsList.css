@@ -1,6 +1,7 @@
 /* rules */
 
 /* stylelint-disable declaration-no-important */
+/* stylelint-disable selector-no-universal */
 
 /* import */
 
@@ -8,12 +9,33 @@
 
 /* styles */
 
+.sidebarContent {
+  bottom: calc(var(--header-height) - 1px);
+}
+
+.footer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: var(--header-height);
+  padding: 0.5bl;
+  border-top: 1px solid var(--gray);
+  z-index: 200;
+}
+
+.input {
+  display: block;
+}
+
+/* items */
+
 .item {
   position: relative;
   padding: 0.5bl;
   margin-bottom: 1px;
   transition: background var(--trans-anima);
-  text-align: center;
+  text-align: left;
   cursor: pointer;
 
   &:nth-child(odd) {
@@ -52,6 +74,20 @@
     &::before,
     &::after {
       border-color: var(--selected-color);
+    }
+  }
+
+  :global {
+    .ReactCodeMirror,
+    .CodeMirror {
+      position: static;
+      margin-top: 0.25bl;
+      font-weight: normal;
+
+      * {
+        cursor: pointer !important;
+        user-select: none !important;
+      }
     }
   }
 }

@@ -45,8 +45,8 @@ export default class SiteHeader extends Component {
         <Link to="/" className={cn(styles.logo, 'icon icon-chronos')}/>
 
         <nav className={styles.links}>
-          <Link to="/jobs" className={styles.link} activeClassName={styles.active}>jobs</Link>
-          <Link to="/job/create" className={styles.link} activeClassName={styles.active}>new job</Link>
+          <Link to="/jobs" className={styles.link}>jobs</Link>
+          <Link to="/job/create" className={styles.link}>new job</Link>
         </nav>
 
         <div className={styles.actions}>

@@ -1,3 +1,7 @@
+// rules
+
+/* eslint-disable import/no-commonjs */
+
 // import
 
 import _ from 'lodash';
@@ -7,6 +11,7 @@ import later from 'later';
 import moment from 'moment';
 import prettyCron from 'prettycron';
 import styles from './JobsHelper.css';
+const JsDiff = require('diff');
 
 // vars
 
@@ -339,4 +344,29 @@ export function flattenJobs(depth, flat, job) {
   }
 
   return flat;
+}
+
+export function getJobDiff(prev, next, field) {
+  prev = prev || {};
+  next = next || {};
+  
+  return JsDiff.diffLines(prev[field] || '', next[field] || '')
+  .map((seg) => {
+    return seg.value
+    .split('\n')
+    .slice(0, -1)
+    .map((line) => {
+      if (seg.added) {
+        return '+ ' + line;
+      }
+
+      if (seg.removed) {
+        return '- ' + line;
+      }
+
+      return '  ' + line;
+    })
+    .join('\n');
+  })
+  .join('\n');
 }

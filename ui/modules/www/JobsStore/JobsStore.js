@@ -15,6 +15,7 @@ const initialState = {
   versions: {},
   versionSelected: {},
   deleted: [],
+  diffView: 'current',
 };
 
 let cache = {};
@@ -29,11 +30,13 @@ export const types = {
   updateJob: 'JOBS_UPDATE',
   deleteJob: 'JOBS_DELETE',
   selectJobVersion: 'JOBS_SELECT_VERSION',
+  selectDiffView: 'JOBS_SELECT_DIFFVIEW',
 };
 
 // actions
 
 export const selectJobVersion = createAction(types.selectJobVersion, ['job', 'version']);
+export const selectDiffView = createAction(types.selectDiffView, ['view']);
 
 export const queryJobs = createRequestAction({
   type: types.queryJobs,
@@ -259,6 +262,11 @@ function selectJobVersionReducer(state, action) {
   return _.clone(state);
 }
 
+function selectDiffViewReducer(state, action) {
+  state.diffView = action.view;
+  return _.clone(state);
+}
+
 export function jobsReducer(state = initialState, action) {
   switch (action.type) {
   case types.queryJobs:
@@ -281,6 +289,9 @@ export function jobsReducer(state = initialState, action) {
 
   case types.selectJobVersion:
     return selectJobVersionReducer(state, action);
+
+  case types.selectDiffView:
+    return selectDiffViewReducer(state, action);
   }
 
   return state;
