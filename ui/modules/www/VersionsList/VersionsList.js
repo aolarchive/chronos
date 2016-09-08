@@ -71,13 +71,14 @@ export default class VersionsList extends Component {
           <select onChange={::this.selectView} className={cn(formStyles.input, styles.input)} defaultValue={diffView}>
             <option value="current">Compare with current version</option>
             <option value="history">Compare with previous version</option>
-            <option value="none">Disable comparison engine</option>
+            <option value="none">Disable comparison</option>
           </select>
         </footer>
 
         <div className={cn(shared.sidebarContent, styles.sidebarContent)}>
           {job && reversed.map((v, i) => {
-            const prev = diffView === 'current' ? job : versions[i + 1];
+            const prev = diffView === 'current' ? job : reversed[i + 1];
+
             const diff = (getJobDiff(prev, v, 'code') || getJobDiff(prev, v, 'resultQuery'))
             .split('\n')
             .reduce((agg, line) => {

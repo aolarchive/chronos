@@ -349,7 +349,7 @@ export function flattenJobs(depth, flat, job) {
 export function getJobDiff(prev, next, field) {
   prev = prev || {};
   next = next || {};
-  
+
   return JsDiff.diffLines(prev[field] || '', next[field] || '')
   .map((seg) => {
     return seg.value
