@@ -12,9 +12,7 @@ import com.huffingtonpost.chronos.agent.PolymorphicCallableJobMixin;
 import com.huffingtonpost.chronos.model.JobSpec;
 import com.huffingtonpost.chronos.model.JobSpec.JobType;
 import com.huffingtonpost.chronos.model.PlannedJob;
-import com.mysql.jdbc.jdbc2.optional.MysqlConnectionPoolDataSource;
 import org.apache.log4j.Logger;
-import org.h2.jdbcx.JdbcDataSource;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
@@ -52,30 +50,26 @@ public class WithSql implements WithBackend {
     }
   }
 
-  public void setDataSource(DataSource ds) {
-    this.ds = ds;
-  }
-  
+  public void setDataSource(DataSource ds) { this.ds = ds; }
+
   public Connection newConnection() throws SQLException {
-    if (ds instanceof JdbcDataSource) {
-      return ((JdbcDataSource)ds).getPooledConnection().getConnection();
-    }
-    if (ds instanceof MysqlConnectionPoolDataSource) {
-      return ((MysqlConnectionPoolDataSource)ds).getPooledConnection().getConnection();
-    }
     return ds.getConnection();
   }
 
   private void closeConnections(Connection conn, Statement stat) {
-    try {
-      if (stat != null && !stat.isClosed()) stat.close();
-    } catch (SQLException e) {
-      LOG.error(e);
+    if (stat != null) {
+      try {
+        stat.close();
+      } catch (SQLException e) {
+        LOG.error(e);
+      }
     }
-    try {
-      if (conn != null && !conn.isClosed()) conn.close();
-    } catch (SQLException e) {
-      LOG.error(e);
+    if (conn != null) {
+      try {
+        conn.close();
+      } catch (SQLException e) {
+        LOG.error(e);
+      }
     }
   }
 
