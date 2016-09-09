@@ -1,39 +1,34 @@
 package com.huffingtonpost.chronos.servlet;
 
-import com.huffingtonpost.chronos.model.*;
-import com.huffingtonpost.chronos.util.CoverageIgnore;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.huffingtonpost.chronos.agent.AgentConsumer;
+import com.huffingtonpost.chronos.agent.AgentDriver;
+import com.huffingtonpost.chronos.agent.NoReporting;
+import com.huffingtonpost.chronos.agent.Reporting;
+import com.huffingtonpost.chronos.model.JobDao;
+import com.huffingtonpost.chronos.model.JobDaoImpl;
+import com.huffingtonpost.chronos.model.MailInfo;
+import com.huffingtonpost.chronos.model.SupportedDriver;
+import com.huffingtonpost.chronos.spring.ChronosMapper;
+import com.huffingtonpost.chronos.spring.Utils;
 import com.huffingtonpost.chronos.util.H2TestUtil;
-
-import java.net.InetAddress;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
-
-import javax.mail.PasswordAuthentication;
-import javax.mail.Session;
-import javax.sql.DataSource;
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
-import org.springframework.web.servlet.config.annotation.DefaultServletHandlerConfigurer;
-import org.springframework.web.servlet.config.annotation.EnableWebMvc;
-import org.springframework.web.servlet.config.annotation.PathMatchConfigurer;
-import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
-import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
+import org.springframework.web.servlet.config.annotation.*;
 import org.springframework.web.servlet.resource.GzipResourceResolver;
 import org.springframework.web.servlet.resource.PathResourceResolver;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.huffingtonpost.chronos.agent.AgentConsumer;
-import com.huffingtonpost.chronos.agent.AgentDriver;
-import com.huffingtonpost.chronos.agent.Reporting;
-import com.huffingtonpost.chronos.agent.NoReporting;
-import com.huffingtonpost.chronos.spring.ChronosMapper;
+import javax.mail.PasswordAuthentication;
+import javax.mail.Session;
+import javax.sql.DataSource;
+import java.net.InetAddress;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
 
 /**
  * Docs here: http://docs.spring.io/spring/docs/current/spring-framework-reference/html/mvc.html#mvc-config-customize
@@ -62,7 +57,7 @@ public class TestConfig extends WebMvcConfigurerAdapter {
 
   @Override
   public void configureDefaultServletHandling(DefaultServletHandlerConfigurer configurer) {
-      configurer.enable();
+    configurer.enable();
   }
 
   @Override
@@ -135,7 +130,7 @@ public class TestConfig extends WebMvcConfigurerAdapter {
     final String password = "abracaduh";
     Session session = Session.getInstance(authMailProperties(), new javax.mail.Authenticator() {
       protected PasswordAuthentication getPasswordAuthentication() {
-        return new PasswordAuthentication(username, password);
+      return new PasswordAuthentication(username, password);
       }
     });
     return session;
@@ -147,10 +142,12 @@ public class TestConfig extends WebMvcConfigurerAdapter {
     converter.setObjectMapper(jacksonObjectMapper());
     return converter;
   }
-  
+
   @Bean(name="dataSource")
   public DataSource ds() {
-    return H2TestUtil.getDataSource();
+    DataSource ds = Utils.getPooledDataSource(H2TestUtil.H2_URL,
+      10, 30 * 1000);
+    return ds;
   }
 
   @DependsOn(value="dataSource")

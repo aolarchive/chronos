@@ -1,16 +1,17 @@
 package com.huffingtonpost.chronos.model;
 
 import com.huffingtonpost.chronos.agent.CallableJob;
-import com.huffingtonpost.chronos.agent.CallableQuery;
 import com.huffingtonpost.chronos.persist.BackendException;
 import com.huffingtonpost.chronos.persist.WithSql;
-
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
 import java.sql.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class JobDaoImpl extends WithSql implements JobDao {
 
