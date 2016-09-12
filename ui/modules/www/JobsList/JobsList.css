@@ -23,6 +23,12 @@
 
 .row {
   cursor: pointer;
+
+  &.gray {
+    .cellName {
+      color: var(--palegray);
+    }
+  }
 }
 
 .head,
@@ -174,12 +180,12 @@
 }
 
 .cellInterval {
-  flex: 0 0 250px;
+  flex: 0 0 200px;
 }
 
-.cellActions {
-  flex: 0 0 125px;
-  text-align: center;
+.cellStatus {
+  flex: 0 0 175px;
+  text-align: left;
 }
 
 /* looks */
@@ -207,5 +213,21 @@
 
   &:hover {
     color: var(--logo-color);
+  }
+}
+
+/* indent */
+
+.indent {
+  display: inline-block;
+  position: relative;
+  width: 10px;
+  height: 10px;
+  margin-right: 5px;
+  top: -2px;
+
+  &.lastIndent {
+    border-left: 2px solid var(--logo-color);
+    border-bottom: 2px solid var(--logo-color);
   }
 }

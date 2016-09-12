@@ -1,14 +1,14 @@
 package com.huffingtonpost.chronos.agent;
 
-import java.io.IOException;
-import java.util.List;
-import org.apache.log4j.Logger;
-import org.joda.time.DateTime; 
-
 import com.huffingtonpost.chronos.model.JobDao;
 import com.huffingtonpost.chronos.model.JobSpec;
 import com.huffingtonpost.chronos.model.PlannedJob;
-import com.huffingtonpost.chronos.util.CronExpression; 
+import com.huffingtonpost.chronos.util.CronExpression;
+import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
+
+import java.io.IOException;
+import java.util.List;
 
 public class AgentDriver extends Stoppable {
   public static Logger LOG = Logger.getLogger(AgentDriver.class);
@@ -30,8 +30,7 @@ public class AgentDriver extends Stoppable {
   }
   
   public static boolean shouldJobRun(JobSpec aJob, DateTime now) {
-    if (aJob.isEnabled() == false || aJob.getCronString() == ""
-        || aJob.getCronString() == null) {
+    if (aJob.isEnabled() == false || aJob.getCronString() == null) {
       return false;
     }
     CronExpression ce = CronExpression.createWithoutSeconds(aJob.getCronString());

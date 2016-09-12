@@ -3,7 +3,7 @@
 import React, {Component, PropTypes} from 'react';
 import FilterBar from '../FilterBar/FilterBar';
 import Codemirror from 'react-codemirror';
-import {sqlOpts, shellOpts} from '../CodeHelper/CodeHelper.js';
+import {diffOpts, sqlOpts, shellOpts} from '../CodeHelper/CodeHelper.js';
 import {enableSiteLoader, disableSiteLoader} from '../SiteLoaderStore/SiteLoaderStore.js';
 import {querySources} from '../SourceStore/SourceStore.js';
 import {connect} from 'react-redux';
@@ -15,7 +15,7 @@ import styles from './JobRevertForm.css';
 import formStyles from '../Styles/Form.css';
 import sharedStyles from '../Styles/Shared.css';
 import cn from 'classnames';
-import {getJobNiceInterval, findRoot} from '../JobsHelper/JobsHelper.js';
+import {getJobNiceInterval, findRoot, getJobDiff} from '../JobsHelper/JobsHelper.js';
 import {queryJobs} from '../JobsStore/JobsStore.js';
 import CopyJobModal from '../CopyJobModal/CopyJobModal.js';
 
@@ -32,11 +32,13 @@ import CopyJobModal from '../CopyJobModal/CopyJobModal.js';
     deletedJobs: state.jobs.deleted,
     useLocalTime: state.localStorage.useLocalTime === 'true',
     version: state.jobs.versionSelected[job && job.id] || _.last(versions),
+    diffView: state.jobs.diffView,
   };
 })
 export default class JobRevertForm extends Component {
   static propTypes = {
     deletedJobs: PropTypes.array.isRequired,
+    diffView: PropTypes.string.isRequired,
     handleSubmit: PropTypes.func.isRequired,
     job: PropTypes.object,
     jobs: PropTypes.array.isRequired,
@@ -136,10 +138,13 @@ export default class JobRevertForm extends Component {
   }
 
   render() {
-    const {handleSubmit, useLocalTime, version} = this.props;
+    const {handleSubmit, useLocalTime, version, job, diffView, versions} = this.props;
 
     const thisQuery = this.state.thisQuery === 'code' ? version.code : version.resultQuery;
     const jobParent = this.getJobParent();
+
+    const prev = diffView === 'current' ? job : versions[_.findIndex(versions, version) - 1];
+    const diff = getJobDiff(prev, version, this.state.thisQuery === 'code' ? 'code' : 'resultQuery');
 
     const submit = (e) => {
       e.preventDefault();
@@ -159,7 +164,7 @@ export default class JobRevertForm extends Component {
             <button type="button" className={cn(formStyles.button, formStyles.hollowButton, styles.hollowButton)} onClick={::this.edit}>
               <span>Edit</span>
             </button>
-            
+
             <button type="button" className={cn(formStyles.button, formStyles.hollowButton, styles.hollowButton)} onClick={::this.copyJob}>
               <span>Copy</span>
             </button>
@@ -223,9 +228,11 @@ export default class JobRevertForm extends Component {
                 <label className={formStyles.label}><a className={styles.link} href="https://en.wikipedia.org/wiki/Cron#Format" target="_blank">CRON String</a></label>
                 <input type="text" className={this.fieldClass()} value={version.cronString} disabled/>
 
-                <div className={styles.fullWidth}>
-                  <span className={styles.localTime}>{`This job will run ${getJobNiceInterval(version.cronString, useLocalTime).toLowerCase()} locally.`}</span>
-                </div>
+                {version.cronString && (
+                  <div className={styles.fullWidth}>
+                    <span className={styles.localTime}>{`This job will run ${getJobNiceInterval(version.cronString, useLocalTime).toLowerCase()} locally.`}</span>
+                  </div>
+                )}
               </div>
             ) : null}
 
@@ -254,7 +261,11 @@ export default class JobRevertForm extends Component {
               ) : null}
             </div>
 
-            <Codemirror key={thisQuery === version.code ? 'code' : 'resultQuery'} {...thisQuery} value={thisQuery || ''} options={_.assign({readOnly: true}, version.type === 'Query' ? sqlOpts : shellOpts)}/>
+            {diffView === 'none' ? (
+              <Codemirror key={thisQuery === version.code ? 'code' : 'resultQuery'} value={thisQuery || ''} options={_.assign({readOnly: true}, version.type === 'Query' ? sqlOpts : shellOpts)}/>
+              ) : (
+              <Codemirror key={thisQuery === version.code ? 'code' : 'resultQuery'} value={diff || ''} options={_.assign({readOnly: true}, diffOpts)}/>
+            )}
           </div>
         </section>
       </form>

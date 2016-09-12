@@ -11,6 +11,48 @@ import {connect} from 'react-redux';
 
 const searchFields = ['code', 'description', 'interval', 'name', 'resultQuery', 'statusEmail', 'resultEmail'];
 
+// fns
+
+function shouldKeep(job, textFilter, useLocalTime) {
+  if (textFilter.length) {
+    return textFilter.every((text) => {
+      if (_.includes((getJobNiceInterval(job.cronString, useLocalTime) || '').toLowerCase(), text)) {
+        return true;
+      }
+
+      return _.some(job, (val, key) => {
+        if (!_.isString(val) || searchFields.indexOf(key) === -1) {
+          return false;
+        }
+
+        if (Array.isArray(val)) {
+          val = val.join(', ');
+        }
+
+        return _.includes(val.toLowerCase(), text);
+      });
+    });
+  }
+
+  return true;
+}
+
+function filterSomeJobs(jobs = [], textFilter, useLocalTime) {
+  return (jobs || []).reduce((keep, job) => {
+    job.shouldKeep = shouldKeep(job, textFilter, useLocalTime);
+
+    if (job.children) {
+      job.children = filterSomeJobs(job.children, textFilter, useLocalTime);
+    }
+
+    if (job.shouldKeep || job.children.length) {
+      keep.push(job);
+    }
+
+    return keep;
+  }, []);
+}
+
 // export
 
 @connect((state) => {
@@ -23,6 +65,7 @@ export default class JobsFilter extends Component {
     className: PropTypes.string,
     jobs: PropTypes.array,
     onFilter: PropTypes.func.isRequired,
+    runs: PropTypes.array,
     useLocalTime: PropTypes.bool.isRequired,
   };
 
@@ -35,7 +78,7 @@ export default class JobsFilter extends Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    if (this.props.jobs !== prevProps.jobs || this.state.text !== prevState.text) {
+    if (this.props.jobs !== prevProps.jobs || this.props.runs !== prevProps.runs || this.state.text !== prevState.text) {
       this.filterJobs();
     }
   }
@@ -51,32 +94,10 @@ export default class JobsFilter extends Component {
   }
 
   filterJobs() {
-    const {useLocalTime} = this.props;
+    const {useLocalTime, jobs} = this.props;
     const textFilter = this.state.text;
 
-    this.props.onFilter((this.props.jobs || []).filter((job) => {
-      if (textFilter.length) {
-        return textFilter.every((text) => {
-          if (_.includes(getJobNiceInterval(job.cronString, useLocalTime).toLowerCase(), text)) {
-            return true;
-          }
-
-          return _.some(job, (val, key) => {
-            if (!_.isString(val) || searchFields.indexOf(key) === -1) {
-              return false;
-            }
-
-            if (Array.isArray(val)) {
-              val = val.join(', ');
-            }
-
-            return _.includes(val.toLowerCase(), text);
-          });
-        });
-      }
-
-      return true;
-    }));
+    this.props.onFilter(filterSomeJobs(_.cloneDeep(jobs), textFilter, useLocalTime));
   }
 
   render() {

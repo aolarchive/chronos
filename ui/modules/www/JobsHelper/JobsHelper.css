@@ -1,0 +1,44 @@
+/* rules */
+
+/* stylelint-disable declaration-no-important */
+
+/* import */
+
+@import '../Styles/Vars.css';
+
+/* styles */
+
+.tag {
+  border-radius: 0.125bl;
+  font-size: 0.5bf;
+  text-transform: uppercase;
+  padding: 0 0.25bl;
+  display: inline-block;
+  font-weight: bold;
+  line-height: 0.75bl;
+  position: relative;
+  top: -0.125bl;
+  margin-right: 0.125bl;
+
+  &.blue {
+    color: var(--white);
+    background-color: var(--selected-color);
+  }
+
+  &.red {
+    color: var(--white);
+    background-color: var(--logo-color);
+  }
+
+  &.yellow {
+    background-color: rgb(238, 238, 0);
+  }
+
+  &.green {
+    background-color: rgb(0, 238, 0);
+  }
+
+  &.gray {
+    background-color: var(--palegray);
+  }
+}

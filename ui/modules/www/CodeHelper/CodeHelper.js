@@ -7,6 +7,7 @@ import _ from 'lodash';
 
 import 'codemirror/mode/sql/sql.js';
 import 'codemirror/mode/shell/shell.js';
+import 'codemirror/mode/diff/diff.js';
 import 'style!css!codemirror/lib/codemirror.css';
 
 // fns
@@ -45,4 +46,9 @@ export const sqlOpts = {
 export const shellOpts = {
   lineNumbers: true,
   mode: 'shell',
+};
+
+export const diffOpts = {
+  lineNumbers: true,
+  mode: 'text/x-diff',
 };

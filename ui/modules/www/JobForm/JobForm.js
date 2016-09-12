@@ -25,7 +25,6 @@ import {queryJobs} from '../JobsStore/JobsStore.js';
 // vars
 
 const requiredFields = ['driver', 'name'];
-const requiredReportFields = ['resultEmail'];
 
 // export
 
@@ -37,7 +36,7 @@ const requiredReportFields = ['resultEmail'];
     const required = requiredFields.slice();
 
     if (vals.resultQuery) {
-      required.push.apply(required, requiredReportFields);
+      required.push.apply(required, ['resultEmail']);
     }
 
     _.forEach(vals, (val, key) => {
@@ -48,6 +47,10 @@ const requiredReportFields = ['resultEmail'];
 
     if (vals.type === 'Script') {
       delete errors.driver;
+    }
+
+    if (!vals.cronString && !vals.parentID) {
+      errors.cronString = errors.parentID = 'Either cron string or parent job is required.';
     }
 
     return errors;
@@ -86,7 +89,7 @@ export default class JobForm extends Component {
 
   state = {
     thisQuery: 'code',
-    dependsOn: false,
+    dependsOn: null,
   };
 
   componentDidMount() {
@@ -95,6 +98,7 @@ export default class JobForm extends Component {
     enableSiteLoader('JobForm');
 
     this.props.initializeForm({
+      shouldRerun: true,
       startDay: 1,
       code: '',
       resultQuery: '',
@@ -110,10 +114,6 @@ export default class JobForm extends Component {
 
     if (!this.props.fields.type.value) {
       this.props.fields.type.onChange('Query');
-    }
-
-    if (nextProps.job !== this.props.job) {
-      this.setDependsOn(!!this.getJobRoot());
     }
   }
 
@@ -182,7 +182,7 @@ export default class JobForm extends Component {
   getDependsDOM() {
     const {job, jobs, jobsByID} = this.props;
 
-    if (!jobsByID) {
+    if (!jobsByID || _.isEmpty(jobsByID)) {
       return null;
     }
 
@@ -204,24 +204,6 @@ export default class JobForm extends Component {
 
     return this.props.sources.map((source, i) => {
       return <option key={i} value={source.name}>{source.name}</option>;
-    });
-  }
-
-  getIntervalDOM() {
-    return ['Hourly', 'Daily', 'Weekly', 'Monthly'].map((interval, i) => {
-      return <option key={i} value={interval}>{interval}</option>;
-    });
-  }
-
-  getWeekDOM() {
-    return ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day, i) => {
-      return <option key={i} value={i + 1}>{day}</option>;
-    });
-  }
-
-  getTimeDOM(len, pad) {
-    return Array.from(new Array(len), (x, i) => {return i;}).map((i) => {
-      return <option key={i} value={i}>{(pad && i < 10) ? '0' + i : i}</option>;
     });
   }
 
@@ -250,11 +232,25 @@ export default class JobForm extends Component {
   }
 
   toggleDependsOn() {
-    this.setState({dependsOn: !this.state.dependsOn});
+    this.setDependsOn(!this.getDependsOn());
   }
 
-  setDependsOn(dependsOn) {
+  setDependsOn(dependsOn, soft) {
+    console.warn('change', dependsOn, soft);
+
+    if (!soft) {
+      this.props.fields[dependsOn ? 'cronString' : 'parentID'].onChange(null);
+    }
+
     this.setState({dependsOn});
+  }
+
+  getDependsOn() {
+    const {dependsOn} = this.state;
+    const {fields: {parentID}} = this.props;
+    console.log('get', dependsOn, this.props.job);
+
+    return dependsOn === null ? !!parentID.value : dependsOn;
   }
 
   getJobRoot() {
@@ -272,7 +268,7 @@ export default class JobForm extends Component {
     const jobParent = this.getJobParent();
 
     const thisQuery = this.state.thisQuery === 'code' ? code : resultQuery;
-    const whenRun = getJobNiceInterval(this.state.dependsOn && jobRoot ? jobRoot.cronString : cronString.value, useLocalTime);
+    const whenRun = getJobNiceInterval(this.getDependsOn() && jobRoot ? jobRoot.cronString : cronString.value, useLocalTime);
 
     return (
       <form className={styles.JobForm} onSubmit={handleSubmit}>
@@ -348,37 +344,27 @@ export default class JobForm extends Component {
             <hr/>
 
             <label className={formStyles.checkboxLabel}>
-              <input type="checkbox" className={cn(formStyles.input, styles.input)} onChange={::this.toggleDependsOn} checked={this.state.dependsOn}/>
+              <input type="checkbox" className={cn(formStyles.input, styles.input)} onChange={::this.toggleDependsOn} checked={this.getDependsOn()}/>
               This job depends on another job.
             </label>
 
-            {this.state.dependsOn ? (
-              <div>
-                <label className={formStyles.label}>Depends On</label>
-                <div className={formStyles.selectOverlay}/>
-                <select {...parentID} className={this.fieldClass(parentID)} defaultValue="" style={this.selectStyle(parentID.value)} value={jobParent && jobParent.id}>
-                  <option disabled value=""></option>
-                  {this.getDependsDOM()}
-                </select>
+            <div style={{display: this.getDependsOn() ? 'block' : 'none'}}>
+              <label className={formStyles.label}>Depends On</label>
+              <div className={formStyles.selectOverlay}/>
+              <select {...parentID} className={this.fieldClass(parentID)} defaultValue="" style={this.selectStyle(parentID.value)} value={jobParent && jobParent.id}>
+                <option disabled value=""></option>
+                {this.getDependsDOM()}
+              </select>
+            </div>
 
-                {whenRun ? (
-                  <div className={styles.fullWidth}>
-                    <span className={styles.localTime}>{`This job will run soon after ${whenRun.toLowerCase()}${useLocalTime ? ' locally' : ''}.`}</span>
-                  </div>
-                ) : null}
-              </div>
-            ) : null}
+            <div style={{display: !this.getDependsOn() ? 'block' : 'none'}}>
+              <label className={formStyles.label}><a className={styles.link} href="https://en.wikipedia.org/wiki/Cron#Format" target="_blank">CRON String</a></label>
+              <input {...cronString} type="text" className={this.fieldClass(cronString)}/>
+            </div>
 
-            {!this.state.dependsOn ? (
-              <div>
-                <label className={formStyles.label}><a className={styles.link} href="https://en.wikipedia.org/wiki/Cron#Format" target="_blank">CRON String</a></label>
-                <input {...cronString} type="text" className={this.fieldClass(cronString)}/>
-
-                {whenRun ? (
-                  <div className={styles.fullWidth}>
-                    <span className={styles.localTime}>{`This job will run ${whenRun.toLowerCase()}${useLocalTime ? ' locally' : ''}.`}</span>
-                  </div>
-                ) : null}
+            {whenRun ? (
+              <div className={styles.fullWidth}>
+                <span className={styles.localTime}>{`This job will run ${whenRun.toLowerCase()}${useLocalTime ? ' locally' : ''}.`}</span>
               </div>
             ) : null}
 

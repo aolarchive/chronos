@@ -5,49 +5,10 @@ import {connect} from 'react-redux';
 import {queryHistory, queryFuture, queryQueue, rerunRun, cancelRun, changeTab} from '../RunStore/RunStore';
 import moment from 'moment';
 import {routeJobUpdate} from '../RouterStore/RouterStore';
-import _ from 'lodash';
 import cn from 'classnames';
 import styles from './RunsList.css';
 import shared from '../Styles/Shared.css';
-
-// fns
-
-function formatRun(run) {
-  return _.assign(run, {
-    niceName: run.name ? run.name.replace(/_/g, '_<wbr>') : null,
-  });
-}
-
-function formatLast(run) {
-  return formatRun({
-    id: run.jobId,
-    jobId: run.plannedJob.jobSpec.id,
-    name: run.plannedJob.jobSpec.name,
-    time: run.start ? moment(run.start) : null,
-    err: run.exceptionMessage,
-    error: run.finish !== 0 && run.status !== 0,
-    pending: run.finish === 0,
-  });
-}
-
-function formatQueue(run) {
-  return formatRun({
-    id: null,
-    jobId: run.jobSpec.id,
-    name: run.jobSpec.name,
-    time: run.start ? moment(run.start) : null,
-    err: null,
-    error: false,
-    pending: false,
-  });
-}
-
-function formatNext(run) {
-  return formatRun({
-    name: run.name,
-    time: run.time ? moment(run.time) : null,
-  });
-}
+import {getRunTags, formatNext, formatLast, formatQueue} from '../JobsHelper/JobsHelper.js';
 
 // export
 
@@ -151,7 +112,7 @@ export default class RunsList extends Component {
           <div className={this.navLinkClassName('queue')} onClick={::this.changeTab('queue')}>queue</div>
           <div className={this.navLinkClassName('next')} onClick={::this.changeTab('next')}>next</div>
         </nav>
-        
+
         <div className={cn(shared.sidebarContent)}>
           {this.getRunsArray().map((run, i) => {
             run = this.props.tab === 'last' ? formatLast(run) : this.props.tab === 'queue' ? formatQueue(run) : formatNext(run);
@@ -161,22 +122,29 @@ export default class RunsList extends Component {
                 <header className={styles.itemHeader}>
                   <div className={styles.name} dangerouslySetInnerHTML={{__html: run.niceName}}/>
 
-                  {run.time ? (
-                    <time className={styles.time}>
-                      {run.time[useLocalTime ? 'local' : 'utc']().format('M/D/YY')}
-                    </time>
-                  ) : null}
+                  {run.replaceTime && (
+                    <div className={styles.replaceTime}>
+                      {moment(run.replaceTime).format('M/D/YY')}
+                      <br/>
+                      {moment(run.replaceTime).format('H:mm:ss')}
+                    </div>
+                  )}
                 </header>
 
-                {run.err &&
+                <div className={styles.tagWrap}>
+                  {getRunTags(run)}
+                </div>
+
+                {run.err && (
                   <div className={styles.body}>
                     {run.err}
-                  </div>}
+                  </div>
+                )}
 
                 <footer className={cn(styles.itemFooter, shared.clearfix)}>
                   {run.time ? (
                     <time className={styles.time}>
-                      {run.time[useLocalTime ? 'local' : 'utc']().format('h:mm A')}
+                      {run.time[useLocalTime ? 'local' : 'utc']().format('M/D/YY h:mm A')}
                     </time>
                   ) : null}
 

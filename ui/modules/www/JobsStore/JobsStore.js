@@ -15,6 +15,7 @@ const initialState = {
   versions: {},
   versionSelected: {},
   deleted: [],
+  diffView: 'current',
 };
 
 let cache = {};
@@ -29,11 +30,13 @@ export const types = {
   updateJob: 'JOBS_UPDATE',
   deleteJob: 'JOBS_DELETE',
   selectJobVersion: 'JOBS_SELECT_VERSION',
+  selectDiffView: 'JOBS_SELECT_DIFFVIEW',
 };
 
 // actions
 
 export const selectJobVersion = createAction(types.selectJobVersion, ['job', 'version']);
+export const selectDiffView = createAction(types.selectDiffView, ['view']);
 
 export const queryJobs = createRequestAction({
   type: types.queryJobs,
@@ -73,14 +76,23 @@ export const getJobVersions = createRequestAction({
 
 function updateParent(action, after) {
   const {parentID} = action.query;
+  const childID = action.id || action.res.body.id;
+  const parents = [];
 
-  if (parentID) {
-    const parent = _.cloneDeep(cache.byID[parentID]);
-    const childID = action.id || action.res.body.id;
+  cache.query.forEach((job) => {
+    if (job.children && job.children.indexOf(childID) > -1 && job.id !== parseInt(parentID)) {
+      job = _.cloneDeep(job);
+      job.children.splice(job.children.indexOf(childID), 1);
+      parents.push(updateJob(job.id, {silent: 1}, job));
+    } else if (job.id === parseInt(parentID)) {
+      job = _.cloneDeep(job);
+      job.children = job.children ? _.uniq(job.children.concat(childID)) : [childID];
+      parents.push(updateJob(job.id, {silent: 1}, job));
+    }
+  });
 
-    parent.children = parent.children ? _.uniq(parent.children.concat(childID)) : [childID];
-
-    updateJob(parentID, {silent: 1}, parent).then(after);
+  if (parents.length) {
+    Promise.all(parents).then(after);
   } else {
     after();
   }
@@ -171,21 +183,21 @@ function queryJobsReducer(state, action) {
       return job.children ? arr.concat(job.children) : arr;
     }, []).uniq().value();
 
-    state.byParent = clones.reduce((arr, job, id) => {
-      if (children.indexOf(id) === -1) {
+    state.byParent = clones.reduce((arr, job) => {
+      if (children.indexOf(job.id) === -1) {
         arr.push(job);
       }
 
-      if (job.children) {
+      if (job.children.length) {
         job.children = job.children.map((child) => {
-          return clones[child];
+          return _.find(clones, thisJob => thisJob.id === child);
         });
       }
 
       return arr;
     }, []);
 
-    cache = _.clone(state);
+    cache = _.cloneDeep(state);
     return _.clone(state);
   }
 
@@ -250,6 +262,11 @@ function selectJobVersionReducer(state, action) {
   return _.clone(state);
 }
 
+function selectDiffViewReducer(state, action) {
+  state.diffView = action.view;
+  return _.clone(state);
+}
+
 export function jobsReducer(state = initialState, action) {
   switch (action.type) {
   case types.queryJobs:
@@ -272,6 +289,9 @@ export function jobsReducer(state = initialState, action) {
 
   case types.selectJobVersion:
     return selectJobVersionReducer(state, action);
+
+  case types.selectDiffView:
+    return selectDiffViewReducer(state, action);
   }
 
   return state;

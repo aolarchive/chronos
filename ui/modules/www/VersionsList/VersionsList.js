@@ -5,8 +5,13 @@ import {connect} from 'react-redux';
 import cn from 'classnames';
 import styles from './VersionsList.css';
 import shared from '../Styles/Shared.css';
-import {getJobVersions, selectJobVersion} from '../JobsStore/JobsStore.js';
+import {getJobVersions, selectJobVersion, selectDiffView} from '../JobsStore/JobsStore.js';
+import {getJobDiff} from '../JobsHelper/JobsHelper.js';
 import moment from 'moment';
+import Codemirror from 'react-codemirror';
+import {diffOpts} from '../CodeHelper/CodeHelper.js';
+import _ from 'lodash';
+import formStyles from '../Styles/Form.css';
 
 // export
 
@@ -15,11 +20,13 @@ import moment from 'moment';
     job: state.jobs.jobs[props.id] || null,
     version: state.jobs.versionSelected[props.id],
     versions: state.jobs.versions[props.id],
+    diffView: state.jobs.diffView,
   };
 })
 export default class VersionsList extends Component {
   static propTypes = {
     className: PropTypes.string,
+    diffView: PropTypes.string.isRequired,
     id: PropTypes.string,
     job: PropTypes.object,
     version: PropTypes.object,
@@ -36,8 +43,21 @@ export default class VersionsList extends Component {
     });
   }
 
+  selectView(e) {
+    selectDiffView(e.target.value);
+  }
+
+  makeOpts(opts) {
+    return _.assign({
+      readOnly: 'nocursor',
+      showCursorWhenSelecting: false,
+    }, opts, {
+      lineNumbers: false,
+    });
+  }
+
   render() {
-    const {className, version, versions, job} = this.props;
+    const {className, version, versions, job, diffView} = this.props;
     const reversed = (versions || []).slice(0).reverse();
 
     return (
@@ -46,13 +66,44 @@ export default class VersionsList extends Component {
           <div className={cn(shared.tab, shared.activeTab)}>revisions</div>
         </nav>
 
-        <div className={cn(shared.sidebarContent)}>
-          {reversed.map((v, i) => {
+        <footer className={cn(styles.footer)}>
+          <div className={formStyles.selectOverlay}/>
+          <select onChange={::this.selectView} className={cn(formStyles.input, styles.input)} defaultValue={diffView}>
+            <option value="current">Compare with current version</option>
+            <option value="history">Compare with previous version</option>
+            <option value="none">Disable comparison</option>
+          </select>
+        </footer>
+
+        <div className={cn(shared.sidebarContent, styles.sidebarContent)}>
+          {job && reversed.map((v, i) => {
+            const prev = diffView === 'current' ? job : reversed[i + 1];
+
+            const diff = (getJobDiff(prev, v, 'code') || getJobDiff(prev, v, 'resultQuery'))
+            .split('\n')
+            .reduce((agg, line) => {
+              if (line.slice(0, 1) !== ' ' && line.trim().length > 2) {
+                agg.push(line);
+              }
+
+              return agg;
+            }, [])
+            .slice(0, 5)
+            .join('\n');
+
             return (
               <section key={i} className={cn(styles.item, styles.version, {
                 [styles.activeVersion]: version ? v.lastModified === version.lastModified : i === 0,
               })} onClick={() => selectJobVersion(job, v)}>
-                {moment(v.lastModified).format('h:mma on MMM D, YYYY')}
+                <header className={styles.itemHeader}>
+                  <div className={styles.name}>
+                    {moment(v.lastModified).format('h:mma on MMM D, YYYY')}
+                  </div>
+                </header>
+
+                {diff && diffView !== 'none' && (
+                  <Codemirror key={i + diffView} value={diff} options={this.makeOpts(diffOpts)}/>
+                )}
               </section>
             );
           })}
