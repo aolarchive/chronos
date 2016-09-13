@@ -621,4 +621,23 @@ public class TestChronosController {
            .andExpect(status().isOk())
            .andExpect(content().string(OM.writeValueAsString(expectResult1)));
   }
+
+  @Test
+  public void testGetChildren() throws Exception {
+    String name = "Watt";
+    JobSpec aJob = getTestJob(name);
+
+    JobSpec aJobChild = getTestJob(name + " by Samuel Beckett");
+    when(jobDao.getJob(1)).thenReturn(aJob);
+
+    aJob.setLastModified(new DateTime());
+    List<JobSpec> expected = new ArrayList<>();
+    expected.add(aJobChild);
+    when(jobDao.getChildren(1)).thenReturn(expected);
+
+    mockMvc.perform(get("/api/job/1/children"))
+      .andExpect(status().isOk())
+      .andExpect(content().string(OM.writeValueAsString(expected)));
+    verify(jobDao, times(1)).getChildren(1);
+  }
 }

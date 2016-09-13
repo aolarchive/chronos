@@ -136,6 +136,17 @@ public class ChronosController {
     return aJob;
   }
 
+  @RequestMapping(value="/job/{id}/children", method=RequestMethod.GET)
+  public @ResponseBody List<JobSpec> getChildren(@PathVariable("id") Long id)
+    throws NotFoundException {
+    JobSpec aJob = jobDao.getJob(id);
+    if (aJob == null) {
+      throw new NotFoundException(
+        String.format("Job with id \"%d\" was not found", id));
+    }
+    return jobDao.getChildren(id);
+  }
+
   @RequestMapping(value="/job/version/{id}", method=RequestMethod.GET)
   public @ResponseBody List<JobSpec> getJobVersions(@PathVariable("id") Long id)
       throws NotFoundException {
