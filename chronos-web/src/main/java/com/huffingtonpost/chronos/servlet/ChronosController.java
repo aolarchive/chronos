@@ -98,14 +98,8 @@ public class ChronosController {
       FutureRunInfo fri =
         new FutureRunInfo(jobName, nextRun);
       toRet.add(fri);
-      List<Long> child = parent.getChildren();
-      if (child.size() > 0) {
-        List<JobSpec> children = new ArrayList<>();
-        for (Long id : child) {
-          children.add(jobDao.getJob(id));
-        }
-        innerJobFuture(toRet, nextRun, children);
-      }
+      List<JobSpec> children = jobDao.getChildren(parent.getId());
+      innerJobFuture(toRet, nextRun, children);
     }
   }
 

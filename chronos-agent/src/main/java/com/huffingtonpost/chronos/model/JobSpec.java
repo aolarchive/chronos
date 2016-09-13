@@ -1,11 +1,11 @@
 package com.huffingtonpost.chronos.model;
 
+import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-
-import org.apache.log4j.Logger;
-import org.joda.time.DateTime;
 
 public class JobSpec {
   static final long serialVersionUID = 3L;
@@ -36,7 +36,7 @@ public class JobSpec {
   private List<String> resultEmail = new ArrayList<>();
   private List<String> statusEmail = new ArrayList<>();
   private DateTime lastModified;
-  private List<Long> children = new ArrayList<>();
+  private Long parent;
 
   public JobSpec(){
     
@@ -65,7 +65,7 @@ public class JobSpec {
       ", resultTable:" + resultTable + ", driver:" + driver +
       ", enabled:" + enabled + ", shouldRerun:" + shouldRerun +
       ", statusEmail:" + statusEmail + ", lastModified:" + lastModified +
-      ", children:" + children + ">";
+      ", parent:" + parent + ">";
   }
 
   @Override
@@ -73,7 +73,7 @@ public class JobSpec {
     return Objects.hash(name, description, code,
                         resultTable, cronString, driver, enabled, shouldRerun,
                         resultQuery, resultEmail, statusEmail, jobType,
-                        children);
+                        parent);
   }
   
   @Override
@@ -96,7 +96,7 @@ public class JobSpec {
              Objects.equals(resultEmail, other.resultEmail) &&
              Objects.equals(statusEmail, other.statusEmail) &&
              Objects.equals(jobType, other.jobType) &&
-             Objects.equals(children, other.children)
+             Objects.equals(parent, other.parent)
              ;
     }
     return false;
@@ -246,16 +246,12 @@ public class JobSpec {
     return jobType;
   }
 
-  public List<Long> getChildren() {
-    return children;
+  public Long getParent() {
+    return parent;
   }
 
-  public void setChildren(List<Long> children) {
-    this.children = children;
-  }
-
-  public void addChild(Long childId) {
-    this.children.add(childId);
+  public void setParent(Long parent) {
+    this.parent = parent;
   }
 
 }

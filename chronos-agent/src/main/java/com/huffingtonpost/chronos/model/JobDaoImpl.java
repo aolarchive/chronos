@@ -191,4 +191,11 @@ public class JobDaoImpl extends WithSql implements JobDao {
     }
   }
 
+  public List<JobSpec> getChildren(long id) {
+    try {
+      return super.getChildren(id);
+    } catch (BackendException e) {
+      throw new RuntimeException("Exception when getting children:" + e);
+    }
+  }
 }

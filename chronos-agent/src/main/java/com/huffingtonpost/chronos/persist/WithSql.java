@@ -92,7 +92,7 @@ public class WithSql implements WithBackend {
         + "cronString VARCHAR(250), "
         + "driver VARCHAR(100), enabled BIT, "
         + "shouldRerun BIT, resultEmail TEXT, statusEmail TEXT, lastModified DATETIME, "
-        + "children TEXT, PRIMARY KEY (id, lastModified))",
+        + "parent BIGINT DEFAULT NULL, PRIMARY KEY (id, lastModified))",
         jobTableName));
     jobs.execute();
     jobs.close();
@@ -271,7 +271,7 @@ public class WithSql implements WithBackend {
             + "description, jobType, `code`, resultQuery, resultTable, "
             + "cronString, driver, "
             + "enabled, shouldRerun, resultEmail, statusEmail, lastModified, "
-            + "children) "
+            + "parent) "
             + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", jobTableName),
             Statement.RETURN_GENERATED_KEYS);
       int i = 1;
@@ -296,7 +296,7 @@ public class WithSql implements WithBackend {
           new Timestamp(new DateTime().getMillis()) :
           new Timestamp(job.getLastModified().getMillis());
       stat.setTimestamp(i++, ts);
-      stat.setString(i++, objToString(job.getChildren()));
+      stat.setObject(i++, job.getParent(), Types.BIGINT);
 
       int rows = stat.executeUpdate();
       ResultSet rs = stat.getGeneratedKeys();
@@ -326,7 +326,7 @@ public class WithSql implements WithBackend {
             + "description, jobType, `code`, resultQuery, resultTable, "
             + "cronString, driver, "
             + "enabled, shouldRerun, resultEmail, statusEmail, lastModified, "
-            + "children) "
+            + "parent) "
             + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ", jobTableName),
           Statement.RETURN_GENERATED_KEYS);
       int i = 1;
@@ -349,7 +349,7 @@ public class WithSql implements WithBackend {
        objToString(job.getStatusEmail()));
       Timestamp ts = new Timestamp(new DateTime().getMillis());
       stat.setTimestamp(i++, ts);
-      stat.setString(i++, objToString(job.getChildren()));
+      stat.setObject(i++, job.getParent(), Types.BIGINT);
 
       int rows = stat.executeUpdate();
       LOG.info(String.format("Rows updated: %d", rows));
@@ -416,20 +416,7 @@ public class WithSql implements WithBackend {
     DateTime lm =
       new DateTime(rs.getTimestamp("lastModified")).withZone(DateTimeZone.UTC);
     job.setLastModified(lm);
-    String children = rs.getString("children");
-    try {
-      List<Long> toSet;
-      if (children == null) {
-        toSet = new ArrayList<>();
-      } else {
-        toSet = (List<Long>)
-          OBJECT_MAPPER.readValue(children,
-            new TypeReference<List<Long>>(){});
-      }
-      job.setChildren(toSet);
-    } catch (IOException e) {
-      LOG.error("Failed to parse children:", e);
-    }
+    job.setParent((Long)rs.getObject("parent"));
     return job;
   }
 
@@ -522,7 +509,41 @@ public class WithSql implements WithBackend {
     }
     return toRet;
   }
-  
+
+  @Override
+  public List<JobSpec> getChildren(long id)
+    throws BackendException {
+    List<JobSpec> toRet = new ArrayList<>();
+    Connection conn = null;
+    PreparedStatement stat = null;
+    try {
+      conn = newConnection();
+      stat =
+        conn.prepareStatement(
+          String.format("SELECT a.* FROM %s a " +
+            "INNER JOIN " +
+            "(SELECT id, MAX(lastModified) AS MaxModified " +
+            "FROM %s " +
+            "GROUP BY id) b " +
+            "ON a.id = b.id " +
+            "AND a.lastModified = b.MaxModified " +
+            "WHERE a.parent = ? " +
+            "ORDER BY a.name ASC", jobTableName, jobTableName));
+      int i = 1;
+      stat.setLong(i++, id);
+      ResultSet rs = stat.executeQuery();
+      while (rs != null && rs.next()) {
+        toRet.add(parseJob(rs));
+      }
+      rs.close();
+    } catch (SQLException ex) {
+      throw new BackendException(ex);
+    } finally {
+      closeConnections(conn, stat);
+    }
+    return toRet;
+  }
+
   public static PlannedJob parsePlannedJob(ResultSet rs) throws SQLException {
     DateTime replaceTime =
       new DateTime(rs.getTimestamp("replaceTime"))

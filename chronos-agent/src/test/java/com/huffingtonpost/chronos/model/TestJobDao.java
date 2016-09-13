@@ -90,10 +90,8 @@ public class TestJobDao {
     JobSpec childJob = TestAgent.getTestJob("A child", dao);
     try {
       dao.createJob(expected);
+      childJob.setParent(expected.getId());
       dao.createJob(childJob);
-      childJob = dao.getJob(expected.getId());
-      expected.addChild(childJob.getId());
-      dao.updateJob(expected);
     } catch (Exception ex) { ex.printStackTrace(); }
 
     JobSpec actual = dao.getJob(expected.getId());

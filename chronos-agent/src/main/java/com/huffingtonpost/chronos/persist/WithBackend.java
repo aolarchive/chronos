@@ -1,16 +1,14 @@
 package com.huffingtonpost.chronos.persist;
 
-import java.io.Closeable;
-import java.util.List;
-import java.util.Map;
-
-import javax.sql.DataSource;
-
-import org.joda.time.DateTime;
-
 import com.huffingtonpost.chronos.agent.CallableJob;
 import com.huffingtonpost.chronos.model.JobSpec;
 import com.huffingtonpost.chronos.model.PlannedJob;
+import org.joda.time.DateTime;
+
+import javax.sql.DataSource;
+import java.io.Closeable;
+import java.util.List;
+import java.util.Map;
 
 public interface WithBackend extends Closeable {
   
@@ -32,7 +30,7 @@ public interface WithBackend extends Closeable {
 
   public void updateJobRun(DateTime dt, CallableJob cq) throws BackendException;
 
-  List<JobSpec> getJobVersions(long id) throws BackendException;
+  public List<JobSpec> getJobVersions(long id) throws BackendException;
 
   public void setDataSource(DataSource ds);
   
@@ -43,4 +41,6 @@ public interface WithBackend extends Closeable {
   public PlannedJob removeFromQueue() throws BackendException;
 
   public int deleteFromQueue(PlannedJob pj) throws BackendException;
+
+  public List<JobSpec> getChildren(long id) throws BackendException;
 }
