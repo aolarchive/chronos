@@ -1,14 +1,13 @@
 package com.huffingtonpost.chronos.model;
 
+import com.huffingtonpost.chronos.agent.CallableJob;
+import com.huffingtonpost.chronos.persist.BackendException;
+
+import javax.sql.DataSource;
 import java.io.Closeable;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
-
-import javax.sql.DataSource;
-
-import com.huffingtonpost.chronos.agent.CallableJob;
-import com.huffingtonpost.chronos.persist.BackendException;
 
 public interface JobDao extends Closeable {
 
@@ -48,5 +47,7 @@ public interface JobDao extends Closeable {
   List<JobSpec> getJobVersions(long id);
 
   public void setDataSource(DataSource ds);
+
+  List<JobSpec> getChildren(long id);
 
 }

@@ -414,9 +414,8 @@ public class TestAgent {
     child.setCronString(null);
     try {
       dao.createJob(parent);
+      child.setParent(parent.getId());
       long id = dao.createJob(child);
-      parent.addChild(id);
-      dao.updateJob(parent);
     } catch (Exception ex) {
       ex.printStackTrace();
     }

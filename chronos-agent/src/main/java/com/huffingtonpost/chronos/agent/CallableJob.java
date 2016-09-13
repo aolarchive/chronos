@@ -72,13 +72,10 @@ public abstract class CallableJob implements Callable<Void> {
     reporting.histogram("chronos.query." + jobName + "." + "querytime",
         finish.get() - start.get());
     dao.updateJobRun(this);
-    final JobSpec latest = dao.getJob(plannedJob.getJobSpec().getId());
-    List<Long> children = latest.getChildren();
-    if (children.size() > 0) {
-      for (Long id : children) {
-        JobSpec aChild = dao.getJob(id);
-        dao.addToQueue(new PlannedJob(aChild, plannedJob.getReplaceTime()));
-      }
+    final Long jobId = plannedJob.getJobSpec().getId();
+    List<JobSpec> children = dao.getChildren(jobId);
+    for (JobSpec aChild : children) {
+      dao.addToQueue(new PlannedJob(aChild, plannedJob.getReplaceTime()));
     }
   }
 
