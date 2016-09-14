@@ -15,7 +15,7 @@ import styles from './JobRevertForm.css';
 import formStyles from '../Styles/Form.css';
 import sharedStyles from '../Styles/Shared.css';
 import cn from 'classnames';
-import {getJobNiceInterval, findRoot, getJobDiff} from '../JobsHelper/JobsHelper.js';
+import {getJobNiceInterval, getRoot, getJobDiff} from '../JobsHelper/JobsHelper.js';
 import {queryJobs} from '../JobsStore/JobsStore.js';
 import CopyJobModal from '../CopyJobModal/CopyJobModal.js';
 
@@ -108,7 +108,7 @@ export default class JobRevertForm extends Component {
       return null;
     }
 
-    return jobsByID[findRoot(job.id, jobsByID)];
+    return getRoot(job, jobsByID);
   }
 
   selectStyle(val) {
