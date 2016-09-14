@@ -12,13 +12,13 @@ import java.util.List;
 
 public class AgentDriver extends Stoppable {
   public static Logger LOG = Logger.getLogger(AgentDriver.class);
-  
+
   private final JobDao dao;
-  
+
   private final Thread me;
-  
+
   private final Reporting reporting;
-  
+
   public AgentDriver(JobDao dao, Reporting reporting) {
     this.dao = dao;
     this.reporting = reporting;
@@ -28,7 +28,7 @@ public class AgentDriver extends Stoppable {
   public void init(){
     me.start();
   }
-  
+
   public static boolean shouldJobRun(JobSpec aJob, DateTime now) {
     if (aJob.getParent() != null || aJob.isEnabled() == false) {
       return false;
@@ -54,20 +54,20 @@ public class AgentDriver extends Stoppable {
       e.printStackTrace();
     }
   }
-  
+
   @Override
   public void run() {
     while (isAlive) {
       doRun();
     }
   }
-  
+
   @Override
   public void close() throws IOException {
     super.close();
     if (dao != null) {
       dao.close();
-    } 
+    }
   }
- 
+
 }
