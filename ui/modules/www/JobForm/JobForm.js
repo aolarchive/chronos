@@ -227,17 +227,22 @@ export default class JobForm extends Component {
   }
 
   getJobRoot() {
-    const {job, jobsByID} = this.props;
-    return job && jobsByID ? getRoot(job, jobsByID) : null;
+    const {job, jobsByID, fields: {parent: {value}}} = this.props;
+    return job && jobsByID ? getRoot(jobsByID[value] || job, jobsByID) : null;
+  }
+
+  hasParent() {
+    const {fields: {parent: {value}}} = this.props;
+    return value !== null && value !== '';
   }
 
   render() {
     const {fields: {enabled, shouldRerun, type, name, description, driver, user, password, cronString, resultEmail, statusEmail, id, lastModified, code, resultQuery, parent}, handleSubmit, hideSidebar, useLocalTime} = this.props;
 
-    const jobRoot = this.getJobRoot();
-
     const thisQuery = this.state.thisQuery === 'code' ? code : resultQuery;
-    const whenRun = getJobNiceInterval(_.isNumber(parent.value) && jobRoot ? jobRoot.cronString : cronString.value, useLocalTime);
+
+    const jobRoot = this.getJobRoot();
+    const whenRun = getJobNiceInterval(this.hasParent() && jobRoot ? jobRoot.cronString : cronString.value, useLocalTime);
 
     return (
       <form className={styles.JobForm} onSubmit={handleSubmit}>
@@ -312,7 +317,7 @@ export default class JobForm extends Component {
 
             <hr/>
 
-            <label className={formStyles.label}>Depends On</label>
+            <label className={formStyles.label}>Run After</label>
             <div className={formStyles.selectOverlay}/>
             <select {...parent} className={this.fieldClass(parent)} defaultValue={null} style={this.selectStyle(parent.value)}>
               <option value={null}></option>
@@ -320,7 +325,7 @@ export default class JobForm extends Component {
             </select>
 
             <label className={formStyles.label}><a className={styles.link} href="https://en.wikipedia.org/wiki/Cron#Format" target="_blank">CRON String</a></label>
-            <input {...cronString} type="text" disabled={_.isNumber(parent.value)} className={this.fieldClass(cronString)}/>
+            <input {...cronString} type="text" disabled={this.hasParent()} value={this.hasParent() ? '' : cronString.value} className={this.fieldClass(cronString)}/>
 
             {whenRun ? (
               <div className={styles.fullWidth}>
