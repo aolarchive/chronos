@@ -235,6 +235,7 @@ export default class JobForm extends Component {
 
   hasParent() {
     const {fields: {parent: {value}}} = this.props;
+    console.log(value);
     return value !== null && value !== '';
   }
 
@@ -322,7 +323,7 @@ export default class JobForm extends Component {
             <label className={formStyles.label}>Run After</label>
             <div className={formStyles.selectOverlay}/>
             <select {...parent} className={this.fieldClass(parent)} defaultValue={null} style={this.selectStyle(parent.value)}>
-              <option value={null}>No Dependency</option>
+              <option value={''}>No Dependency</option>
               {this.getDependsDOM()}
             </select>
 
