@@ -235,7 +235,6 @@ export default class JobForm extends Component {
 
   hasParent() {
     const {fields: {parent: {value}}} = this.props;
-    console.log(value);
     return value !== null && value !== '';
   }
 
