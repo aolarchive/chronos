@@ -30,7 +30,7 @@ const requiredFields = ['driver', 'name'];
 
 @reduxForm({
   form: 'job',
-  fields: ['enabled', 'shouldRerun', 'name', 'type', 'description', 'driver', 'user', 'password', 'resultEmail', 'statusEmail', 'id', 'lastModified', 'code', 'resultQuery', 'cronString', 'parentID', 'children'],
+  fields: ['enabled', 'shouldRerun', 'name', 'type', 'description', 'driver', 'user', 'password', 'resultEmail', 'statusEmail', 'id', 'lastModified', 'code', 'resultQuery', 'cronString', 'parent', 'children'],
   validate(vals) {
     const errors = {};
     const required = requiredFields.slice();
@@ -49,8 +49,8 @@ const requiredFields = ['driver', 'name'];
       delete errors.driver;
     }
 
-    if (!vals.cronString && !vals.parentID) {
-      errors.cronString = errors.parentID = 'Either cron string or parent job is required.';
+    if (!vals.cronString && !vals.parent) {
+      errors.cronString = errors.parent = 'Either cron string or parent job is required.';
     }
 
     return errors;
@@ -89,7 +89,6 @@ export default class JobForm extends Component {
 
   state = {
     thisQuery: 'code',
-    dependsOn: null,
   };
 
   componentDidMount() {
@@ -180,19 +179,17 @@ export default class JobForm extends Component {
   }
 
   getDependsDOM() {
-    const {job, jobs, jobsByID} = this.props;
+    const {job, jobs} = this.props;
 
-    if (!jobsByID || _.isEmpty(jobsByID)) {
+    if (!jobs || !jobs.length) {
       return null;
     }
 
-    const children = collectChildren(job ? job.children : [], jobsByID);
+    const children = [_.find(jobs, (j) => {
+      return job ? j.id === job.id : false;
+    })].concat(collectChildren(job, jobs, true));
 
-    return jobs
-    .filter((thisJob) => {
-      return children.indexOf(thisJob.id) === -1 && (!job || thisJob.id !== job.id);
-    })
-    .map((thisJob, i) => {
+    return _.difference(jobs, children).map((thisJob, i) => {
       return <option key={i} value={thisJob.id}>{thisJob.name}</option>;
     });
   }
@@ -231,44 +228,24 @@ export default class JobForm extends Component {
     });
   }
 
-  toggleDependsOn() {
-    this.setDependsOn(!this.getDependsOn());
-  }
-
-  setDependsOn(dependsOn, soft) {
-    console.warn('change', dependsOn, soft);
-
-    if (!soft) {
-      this.props.fields[dependsOn ? 'cronString' : 'parentID'].onChange(null);
-    }
-
-    this.setState({dependsOn});
-  }
-
-  getDependsOn() {
-    const {dependsOn} = this.state;
-    const {fields: {parentID}} = this.props;
-    console.log('get', dependsOn, this.props.job);
-
-    return dependsOn === null ? !!parentID.value : dependsOn;
-  }
-
   getJobRoot() {
-    return getRoot(this.props.fields.parentID.value, this.props.jobsByID);
+    const {job, jobsByID, fields: {parent: {value}}} = this.props;
+    return job && jobsByID ? getRoot(jobsByID[value] || job, jobsByID) : null;
   }
 
-  getJobParent() {
-    return this.props.jobsByID[this.props.fields.parentID.value];
+  hasParent() {
+    const {fields: {parent: {value}}} = this.props;
+    console.log(value);
+    return value !== null && value !== '';
   }
 
   render() {
-    const {fields: {enabled, shouldRerun, type, name, description, driver, user, password, cronString, resultEmail, statusEmail, id, lastModified, code, resultQuery, parentID}, handleSubmit, hideSidebar, useLocalTime} = this.props;
-
-    const jobRoot = this.getJobRoot();
-    const jobParent = this.getJobParent();
+    const {fields: {enabled, shouldRerun, type, name, description, driver, user, password, cronString, resultEmail, statusEmail, id, lastModified, code, resultQuery, parent}, handleSubmit, hideSidebar, useLocalTime} = this.props;
 
     const thisQuery = this.state.thisQuery === 'code' ? code : resultQuery;
-    const whenRun = getJobNiceInterval(this.getDependsOn() && jobRoot ? jobRoot.cronString : cronString.value, useLocalTime);
+
+    const jobRoot = this.getJobRoot();
+    const whenRun = getJobNiceInterval(this.hasParent() && jobRoot ? jobRoot.cronString : cronString.value, useLocalTime);
 
     return (
       <form className={styles.JobForm} onSubmit={handleSubmit}>
@@ -343,24 +320,15 @@ export default class JobForm extends Component {
 
             <hr/>
 
-            <label className={formStyles.checkboxLabel}>
-              <input type="checkbox" className={cn(formStyles.input, styles.input)} onChange={::this.toggleDependsOn} checked={this.getDependsOn()}/>
-              This job depends on another job.
-            </label>
+            <label className={formStyles.label}>Run After</label>
+            <div className={formStyles.selectOverlay}/>
+            <select {...parent} className={this.fieldClass(parent)} defaultValue={null} style={this.selectStyle(parent.value)}>
+              <option value={''}>No Dependency</option>
+              {this.getDependsDOM()}
+            </select>
 
-            <div style={{display: this.getDependsOn() ? 'block' : 'none'}}>
-              <label className={formStyles.label}>Depends On</label>
-              <div className={formStyles.selectOverlay}/>
-              <select {...parentID} className={this.fieldClass(parentID)} defaultValue="" style={this.selectStyle(parentID.value)} value={jobParent && jobParent.id}>
-                <option disabled value=""></option>
-                {this.getDependsDOM()}
-              </select>
-            </div>
-
-            <div style={{display: !this.getDependsOn() ? 'block' : 'none'}}>
-              <label className={formStyles.label}><a className={styles.link} href="https://en.wikipedia.org/wiki/Cron#Format" target="_blank">CRON String</a></label>
-              <input {...cronString} type="text" className={this.fieldClass(cronString)}/>
-            </div>
+            <label className={formStyles.label}><a className={styles.link} href="https://en.wikipedia.org/wiki/Cron#Format" target="_blank">CRON String</a></label>
+            <input {...cronString} type="text" disabled={this.hasParent()} value={this.hasParent() ? '' : cronString.value} className={this.fieldClass(cronString)}/>
 
             {whenRun ? (
               <div className={styles.fullWidth}>

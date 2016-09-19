@@ -69,7 +69,9 @@ export function jobToClient(job) {
 }
 
 export function jobToServer(job) {
-  delete job.parentID;
+  if (_.isNumber(job.parent)) {
+    job.cronString = null;
+  }
 
   return _.assign(job, {
     resultEmail: _.isArray(job.resultEmail) ? job.resultEmail : job.resultEmail.split('\n').map((line) => {
@@ -174,54 +176,40 @@ export const orderJobsBy = {
 
 // parents
 
-export function collectChildren(children, jobsByID) {
-  const newChildren = [];
+export function collectChildren(job, jobs, deep = false) {
+  const children = [];
 
-  children.forEach((child) => {
-    if (jobsByID[child].children && jobsByID[child].children.length) {
-      newChildren.push.apply(newChildren, collectChildren(jobsByID[child].children, jobsByID));
+  if (!job) {
+    return children;
+  }
+
+  jobs.forEach((thisJob) => {
+    if (thisJob.parent === job.id) {
+      children.push(thisJob);
+
+      if (deep) {
+        const deepChildren = collectChildren(thisJob, jobs, deep);
+        children.push.apply(children, deepChildren);
+      }
     }
   });
 
-  return children.concat(newChildren);
+  return children;
 }
 
-export function findParent(id, jobsByID) {
-  id = parseInt(id);
+export function getRoot(job, jobsByID) {
+  let found = false;
+  let current = job;
 
-  const key = _.findKey(jobsByID, (job) => {
-    return job.children && job.children.indexOf(id) > -1;
-  });
-
-  return key ? parseInt(key) : null;
-}
-
-export function getParent(id, jobsByID) {
-  if (!id || !jobsByID) {
-    return null;
+  while (!found) {
+    if (_.isNumber(current.parent) && jobsByID[current.parent]) {
+      current = jobsByID[current.parent];
+    } else {
+      found = true;
+    }
   }
 
-  return jobsByID[findParent(id, jobsByID)];
-}
-
-export function findRoot(id, jobsByID) {
-  let searchID = id;
-  let foundID = null;
-
-  while (searchID) {
-    searchID = findParent(searchID, jobsByID);
-    foundID = searchID || foundID;
-  }
-
-  return foundID;
-}
-
-export function getRoot(id, jobsByID) {
-  if (!id || !jobsByID) {
-    return null;
-  }
-
-  return jobsByID[findRoot(id, jobsByID)];
+  return current;
 }
 
 /* runs */

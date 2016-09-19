@@ -94,6 +94,10 @@
   &.filterInput {
     margin-bottom: 0;
   }
+
+  &[disabled] {
+    background-color: color(var(--palewhite) l(+5%));
+  }
 }
 
 .textarea {
