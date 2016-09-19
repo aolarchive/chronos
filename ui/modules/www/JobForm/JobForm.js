@@ -185,7 +185,9 @@ export default class JobForm extends Component {
       return null;
     }
 
-    const children = [job].concat(collectChildren(job, jobs, true));
+    const children = [_.find(jobs, (j) => {
+      return job ? j.id === job.id : false;
+    })].concat(collectChildren(job, jobs, true));
 
     return _.difference(jobs, children).map((thisJob, i) => {
       return <option key={i} value={thisJob.id}>{thisJob.name}</option>;
@@ -320,7 +322,7 @@ export default class JobForm extends Component {
             <label className={formStyles.label}>Run After</label>
             <div className={formStyles.selectOverlay}/>
             <select {...parent} className={this.fieldClass(parent)} defaultValue={null} style={this.selectStyle(parent.value)}>
-              <option value={null}></option>
+              <option value={null}>No Dependency</option>
               {this.getDependsDOM()}
             </select>
 
