@@ -75,7 +75,7 @@ export default class RerunJobsForm extends Component {
 
     return (event) => {
       if (event.target.checked) {
-        intervals.onChange((intervals.value || intervals.defaultValue).concat(interval));
+        intervals.onChange((intervals.value || []).concat(interval));
       } else {
         intervals.onChange(intervals.value.splice(intervals.value.indexOf(interval), 1));
       }
