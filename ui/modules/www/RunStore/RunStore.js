@@ -54,6 +54,23 @@ function collectRuns(runs, now) {
   };
 }
 
+function matchesInterval(job, intervals) {
+  if (!job.cronString) {
+    return false;
+  }
+
+  if (!intervals) {
+    return true;
+  }
+
+  return job.cronString
+  .trim()
+  .split(' ')
+  .some((bit, i) => {
+    return (bit !== '*') && intervals.includes(i);
+  });
+}
+
 // types
 
 export const types = {
@@ -204,7 +221,7 @@ export const rerunJobs = createDispatcher((jobs, start, end, intervals) => {
 
   const collector = collectRuns(runs, now);
   jobs = jobs.filter((job) => {
-    return job.enabled && (!intervals || intervals.indexOf(job.interval) > -1);
+    return job.enabled && job.cronString && matchesInterval(job, intervals);
   });
 
   while (now.isBefore(then)) {

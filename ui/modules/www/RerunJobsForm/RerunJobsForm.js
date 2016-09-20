@@ -13,8 +13,9 @@ import {connect} from 'react-redux';
 const jobIntervals = [
   'Hourly',
   'Daily',
-  'Weekly',
   'Monthly',
+  'Yearly',
+  'Weekly',
 ];
 
 // export
@@ -103,8 +104,8 @@ export default class RerunJobsForm extends Component {
             {jobIntervals.map((interval, i) => {
               return (
                 <label key={i} className={formStyles.checkboxLabel}>
-                  <input type="checkbox" value={interval}
-                    onChange={::this.intervalSelect(interval)}/>
+                  <input type="checkbox" value={i}
+                    onChange={::this.intervalSelect(i)}/>
                   <span>{_.capitalize(interval)}</span>
                 </label>
               );

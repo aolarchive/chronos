@@ -69,9 +69,19 @@ export function jobToClient(job) {
 }
 
 export function jobToServer(job) {
-  if (_.isNumber(job.parent)) {
+  job = _.cloneDeep(job);
+  job.parent = parseInt(job.parent);
+
+  if (_.isNaN(job.parent)) {
+    job.parent = null;
+  } else if (_.isNumber(job.parent)) {
     job.cronString = null;
   }
+
+  delete job.depth;
+  delete job.shouldKeep;
+  delete job.children;
+  delete job.statusTags;
 
   return _.assign(job, {
     resultEmail: _.isArray(job.resultEmail) ? job.resultEmail : job.resultEmail.split('\n').map((line) => {
