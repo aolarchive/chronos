@@ -21,6 +21,12 @@ import org.springframework.http.converter.json.MappingJackson2HttpMessageConvert
 import org.springframework.web.servlet.config.annotation.*;
 import org.springframework.web.servlet.resource.GzipResourceResolver;
 import org.springframework.web.servlet.resource.PathResourceResolver;
+import springfox.documentation.builders.PathSelectors;
+import springfox.documentation.builders.RequestHandlerSelectors;
+import springfox.documentation.service.ApiInfo;
+import springfox.documentation.spi.DocumentationType;
+import springfox.documentation.spring.web.plugins.Docket;
+import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
 import javax.mail.PasswordAuthentication;
 import javax.mail.Session;
@@ -35,6 +41,7 @@ import java.util.Properties;
  * And here: http://www.robinhowlett.com/blog/2013/02/13/spring-app-migration-from-xml-to-java-based-config/
  */
 @ComponentScan( basePackageClasses = { ChronosController.class, OtherController.class } )
+@EnableSwagger2
 @Configuration
 @EnableWebMvc
 public class TestConfig extends WebMvcConfigurerAdapter {
@@ -68,13 +75,14 @@ public class TestConfig extends WebMvcConfigurerAdapter {
 
   @Override
   public void addResourceHandlers(ResourceHandlerRegistry registry) {
-    registry.addResourceHandler("/*.*", "/ico/**", "/reports/**")
-      .addResourceLocations("/site/", "/site/ico/", "file:" + reportRootPath())
+    registry.addResourceHandler("/*.*", "/ico/**", "/reports/**", "swagger-ui.html", "/webjars/**")
+      .addResourceLocations("/site/", "/site/ico/", "file:" + reportRootPath(),
+        "classpath:/META-INF/resources/", "classpath:/META-INF/resources/webjars/")
       .resourceChain(true)
       .addResolver(new GzipResourceResolver())
       .addResolver(new PathResourceResolver());
   }
-  
+
   @Override
   public void addViewControllers(ViewControllerRegistry registry) {
     registry.addViewController("/").setViewName("/WEB-INF/site/index.html");
@@ -92,7 +100,7 @@ public class TestConfig extends WebMvcConfigurerAdapter {
     return new ChronosMapper();
   }
 
-  @Bean 
+  @Bean
   public Properties authMailProperties() {
     Properties props = new Properties();
     props.put("mail.smtp.auth", "true");
@@ -102,8 +110,8 @@ public class TestConfig extends WebMvcConfigurerAdapter {
     props.put("mail.smtp.port", "25");
     return props;
   }
-  
-  @Bean 
+
+  @Bean
   public Properties relayMailProperties() {
     Properties props = new Properties();
     props.put("mail.smtp.auth", "false");
@@ -112,12 +120,12 @@ public class TestConfig extends WebMvcConfigurerAdapter {
     props.put("mail.smtp.port", "25");
     return props;
   }
-  
+
   @Bean
   public Session relaySession() {
     return Session.getDefaultInstance(relayMailProperties());
   }
-  
+
   @Bean
   public MailInfo mailInfo() {
     return new MailInfo("noreply@example.com", "Example From",
@@ -135,7 +143,7 @@ public class TestConfig extends WebMvcConfigurerAdapter {
     });
     return session;
   }
-  
+
   @Bean
   public MappingJackson2HttpMessageConverter converter() {
     MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter();
@@ -158,13 +166,13 @@ public class TestConfig extends WebMvcConfigurerAdapter {
     dao.setDataSource(ds());
     return dao;
   }
-  
+
   @Bean(name="reporting")
   public Reporting reporting() {
     Reporting reporting = new NoReporting();
     return reporting;
   }
-  
+
   @Bean
   public String hostname() {
     String hostname = LOCALHOST;
@@ -172,6 +180,28 @@ public class TestConfig extends WebMvcConfigurerAdapter {
       hostname = InetAddress.getLocalHost().getHostName();
     } catch (Exception ignore) {}
     return hostname;
+  }
+
+  @Bean
+  public Docket api() {
+    return new Docket(DocumentationType.SWAGGER_2)
+      .select()
+      .apis(RequestHandlerSelectors.any())
+      .paths(PathSelectors.any())
+      .build()
+      .apiInfo(apiInfo());
+  }
+
+  private ApiInfo apiInfo() {
+    ApiInfo apiInfo = new ApiInfo(
+      "Chronos API",
+      "Chronos API endpoints",
+      "", // API TOS
+      "", // Terms of service
+      "eng@example.com",
+      "",
+      ""); // API license URL
+    return apiInfo;
   }
 
   @DependsOn(value={"jobDao","reportRootPath"})
