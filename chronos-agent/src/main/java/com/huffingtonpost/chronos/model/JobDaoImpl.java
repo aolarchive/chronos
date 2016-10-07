@@ -198,4 +198,14 @@ public class JobDaoImpl extends WithSql implements JobDao {
       throw new RuntimeException("Exception when getting children:" + e);
     }
   }
+
+  public JobNode getTree(long id, String parent) {
+    JobSpec aJob = getJob(id);
+    JobNode toRet = new JobNode(aJob.getName(), parent);
+    for (JobSpec child : getChildren(id)) {
+      JobNode jn = getTree(child.getId(), aJob.getName());
+      toRet.getChildren().add(jn);
+    }
+    return toRet;
+  }
 }
