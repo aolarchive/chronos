@@ -216,4 +216,37 @@ public class TestJobDao {
     Map<Long, CallableJob> got = dao.getJobRuns(null, limit);
     assertEquals(expected, got);
   }
+
+  @Test
+  public void testGetTree() {
+    JobSpec parent = TestAgent.getTestJob("A", dao);
+    JobSpec childJob = TestAgent.getTestJob("B", dao);
+    JobSpec childJob2 = TestAgent.getTestJob("C", dao);
+    JobSpec childChildJob = TestAgent.getTestJob("D", dao);
+    try {
+      dao.createJob(parent);
+      childJob.setParent(parent.getId());
+      dao.createJob(childJob);
+      childJob2.setParent(parent.getId());
+      dao.createJob(childJob2);
+      childChildJob.setParent(childJob.getId());
+      dao.createJob(childChildJob);
+    } catch (Exception ex) { ex.printStackTrace(); }
+
+    JobNode expected = new JobNode(parent.getName(), null);
+    JobNode eChild = new JobNode(childJob.getName(), parent.getName());
+    expected.getChildren().add(eChild);
+    JobNode eChild2 = new JobNode(childJob2.getName(), parent.getName());
+    expected.getChildren().add(eChild2);
+    JobNode eChildChild = new JobNode(childChildJob.getName(), childJob.getName());
+    eChild.getChildren().add(eChildChild);
+
+    JobNode actual = dao.getTree(parent.getId(), null);
+    assertEquals(expected, actual);
+
+    expected = new JobNode(childJob.getName(), null);
+    expected.getChildren().add(eChildChild);
+    actual = dao.getTree(childJob.getId(), null);
+    assertEquals(expected, actual);
+  }
 }

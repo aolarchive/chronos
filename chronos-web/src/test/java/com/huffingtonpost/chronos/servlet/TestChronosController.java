@@ -640,4 +640,23 @@ public class TestChronosController {
       .andExpect(content().string(OM.writeValueAsString(expected)));
     verify(jobDao, times(1)).getChildren(1);
   }
+
+  @Test
+  public void testGetTree() throws Exception {
+    String name = "Decolonising the Mind";
+    JobSpec aJob = getTestJob(name);
+
+    JobSpec aJobChild = getTestJob(name + " by Ngũgĩ wa Thiong'o");
+    when(jobDao.getJob(1)).thenReturn(aJob);
+
+    aJob.setLastModified(new DateTime());
+    JobNode expected = new JobNode(name, null);
+    expected.getChildren().add(new JobNode(aJobChild.getName(), name));
+    when(jobDao.getTree(1, null)).thenReturn(expected);
+
+    mockMvc.perform(get("/api/job/1/tree"))
+      .andExpect(status().isOk())
+      .andExpect(content().string(OM.writeValueAsString(expected)));
+    verify(jobDao, times(1)).getTree(1, null);
+  }
 }
