@@ -6,11 +6,13 @@
 
 ## Features of _chronos_
 
+* dependent jobs
 * job history tracking
 * job versions
 * automatic rerun with configurable max attempts
 * email notifications (reports, failures, etc)
 * REST [api][api]
+* swagger docs
 * multiple datasource support
 * BSD [license][license]
 

@@ -11,43 +11,45 @@ import java.util.Map;
 
 public interface JobDao extends Closeable {
 
-  public void setDrivers(List<SupportedDriver> drivers);
+  void setDrivers(List<SupportedDriver> drivers);
   
-  public void init() throws BackendException;
+  void init() throws BackendException;
 
-  public long createJob(JobSpec jobSpec);
+  long createJob(JobSpec jobSpec);
 
-  public void updateJob(JobSpec jobSpec);
+  void updateJob(JobSpec jobSpec);
 
-  public void deleteJob(long id);
+  void deleteJob(long id);
   
-  public List<JobSpec> getJobs();
+  List<JobSpec> getJobs();
   
-  public JobSpec getJob(long id);
+  JobSpec getJob(long id);
 
-  public List<Map<String, String>> getJobResults(JobSpec jobSpec, int limit)
-          throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException;
+  List<Map<String, String>> getJobResults(JobSpec jobSpec, int limit)
+   throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException;
 
-  public List<PlannedJob> getQueue(Long id);
+  List<PlannedJob> getQueue(Long id);
 
-  public void addToQueue(PlannedJob aJob);
+  void addToQueue(PlannedJob aJob);
 
-  public PlannedJob removeFromQueue();
+  PlannedJob removeFromQueue();
 
-  public Map<Long, CallableJob> getJobRuns(Long id, int limit);
+  Map<Long, CallableJob> getJobRuns(Long id, int limit);
   
-  public Map<Long, CallableJob> getRunningJobs();
+  Map<Long, CallableJob> getRunningJobs();
 
-  public long createJobRun(CallableJob cq);
+  long createJobRun(CallableJob cq);
 
-  public void updateJobRun(CallableJob cq);
+  void updateJobRun(CallableJob cq);
 
-  public int cancelJob(PlannedJob pj);
+  int cancelJob(PlannedJob pj);
   
   List<JobSpec> getJobVersions(long id);
 
-  public void setDataSource(DataSource ds);
+  void setDataSource(DataSource ds);
 
   List<JobSpec> getChildren(long id);
+
+  JobNode getTree(long id, String parent);
 
 }

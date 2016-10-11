@@ -276,15 +276,19 @@ public class AgentConsumer extends Stoppable {
         ex.getMessage()));
       return;
     }
-    if (attemptNumber < minAttemptsForNotification) {
+    String rerunText = "";
+    if (jobSpec.getShouldRerun() != false &&
+        attemptNumber < minAttemptsForNotification) {
       LOG.debug(String.format(
               "Not sending email for: %s since minAttemptsForNotification has not been reached",
               ex.getMessage()));
       return;
+    } else {
+      rerunText = " - rerun was scheduled";
     }
     String subject =
-      String.format("Chronos job failed - rerun was scheduled - %s",
-        jobSpec.getName());
+      String.format("Chronos job failed%s - %s",
+        rerunText, jobSpec.getName());
     if (attemptNumber >= maxReruns) {
       subject =
         String.format("Chronos - LAST ATTEMPT FAILED - %s", jobSpec.getName());

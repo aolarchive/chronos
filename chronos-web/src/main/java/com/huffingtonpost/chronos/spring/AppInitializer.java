@@ -1,14 +1,13 @@
 package com.huffingtonpost.chronos.spring;
 
-import javax.servlet.ServletContext;
-import javax.servlet.ServletRegistration;
-
+import com.huffingtonpost.chronos.servlet.TestConfig;
 import org.springframework.web.WebApplicationInitializer;
 import org.springframework.web.context.ContextLoaderListener;
 import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
 import org.springframework.web.servlet.DispatcherServlet;
 
-import com.huffingtonpost.chronos.servlet.TestConfig;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletRegistration;
 
 public class AppInitializer implements WebApplicationInitializer {
 
@@ -23,6 +22,7 @@ public class AppInitializer implements WebApplicationInitializer {
     ServletRegistration.Dynamic dispatcher =
       container.addServlet("chronos-dispatcher", new DispatcherServlet(rootContext));
     dispatcher.setLoadOnStartup(1);
+    dispatcher.addMapping("/swagger-ui.html");
     dispatcher.addMapping("/*");
   }
 }
