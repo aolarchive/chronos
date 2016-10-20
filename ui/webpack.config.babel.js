@@ -51,7 +51,7 @@ if (__PRODUCTION__) {
 
 // export
 
-module.exports = {
+export default {
   devtool: !__PRODUCTION__ && 'eval-source-map',
   debug: false,
   entry,

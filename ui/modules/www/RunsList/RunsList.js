@@ -124,9 +124,9 @@ export default class RunsList extends Component {
 
                   {run.replaceTime && (
                     <div className={styles.replaceTime}>
-                      {moment(run.replaceTime).format('M/D/YY')}
+                      {moment(run.replaceTime)[useLocalTime ? 'local' : 'utc']().format('M/D/YY')}
                       <br/>
-                      {moment(run.replaceTime).format('H:mm:ss')}
+                      {moment(run.replaceTime)[useLocalTime ? 'local' : 'utc']().format('H:mm:ss')}
                     </div>
                   )}
                 </header>
@@ -144,7 +144,7 @@ export default class RunsList extends Component {
                 <footer className={cn(styles.itemFooter, shared.clearfix)}>
                   {run.time ? (
                     <time className={styles.time}>
-                      {run.time[useLocalTime ? 'local' : 'utc']().format('M/D/YY h:mm A')}
+                      {run.time[useLocalTime ? 'local' : 'utc']().format('M/D/YY H:mm:ss')}
                     </time>
                   ) : null}
 
