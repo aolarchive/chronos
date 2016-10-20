@@ -1,10 +1,10 @@
 // import
 
-const webpack = require('webpack');
-const WebpackDevServer = require('webpack-dev-server');
-const config = require('./webpack.config.babel.js');
-const proxy = require('express-http-proxy');
-const url = require('url');
+import webpack from 'webpack';
+import WebpackDevServer from 'webpack-dev-server';
+import config from './webpack.config.babel.js';
+import proxy from 'express-http-proxy';
+import url from 'url';
 import dotenv from 'dotenv';
 
 // env
@@ -36,9 +36,5 @@ if (process.env.CHRONOS_PROXY_URL) {
 // run
 
 server.listen(8000, 'localhost', (err) => {
-  if (err) {
-    return console.log(err);
-  }
-
-  console.log('Listening at localhost:8000');
+  console.log(err || 'Listening at localhost:8000');
 });
