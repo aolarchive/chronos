@@ -234,6 +234,7 @@ export function formatRun(run) {
 
 export function formatLast(run) {
   return formatRun({
+    run,
     id: run.jobId,
     jobId: run.plannedJob.jobSpec.id,
     enabled: run.plannedJob.jobSpec.enabled,
@@ -250,6 +251,7 @@ export function formatLast(run) {
 
 export function formatQueue(run) {
   return formatRun({
+    run,
     id: null,
     jobId: run.jobSpec.id,
     name: run.jobSpec.name,
@@ -263,6 +265,7 @@ export function formatQueue(run) {
 
 export function formatNext(run) {
   return formatRun({
+    run,
     name: run.name,
     time: run.time ? moment(run.time) : null,
     attemptNumber: run.attemptNumber,

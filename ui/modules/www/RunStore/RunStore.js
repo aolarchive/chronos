@@ -184,10 +184,10 @@ export const cancelRun = createRequestAction({
   endpoint: '/api/queue',
   method: 'delete',
   staticUrl: true,
-  requestFn(job) {
+  requestFn(run) {
     return {
       id: null,
-      send: job.plannedJob || job,
+      send: run.run || run,
     };
   },
   successFn(action) {
