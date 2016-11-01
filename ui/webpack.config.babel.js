@@ -113,7 +113,11 @@ export default {
       postcssCssnano({
         autoprefixer: false,
       }),
-      postcssReporter(),
+      postcssReporter({
+        plugins: [
+          '!postcss-discard-empty',
+        ],
+      }),
     ];
   },
 
