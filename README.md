@@ -1,4 +1,5 @@
 # chronos
+**Please Note:** This project has known security vulnerabilities. Use at your own risk!
 
 > cron-like jobs for back-end systems
 
